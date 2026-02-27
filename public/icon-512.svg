@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#800000"/>
+  <rect x="8" y="8" width="176" height="176" rx="28" fill="#6B0000"/>
+  <text x="96" y="120" font-family="serif" font-size="100" font-weight="bold" fill="#FFD700" text-anchor="middle">Lê</text>
+  <text x="96" y="155" font-family="serif" font-size="18" fill="#FFD700" text-anchor="middle" opacity="0.8">GIA PHẢ</text>
+</svg>

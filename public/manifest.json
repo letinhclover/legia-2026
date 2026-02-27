@@ -1,14 +1,33 @@
 {
   "name": "Gia Phả Dòng Họ Lê",
   "short_name": "Gia Phả Lê",
-  "description": "Cây gia phả dòng họ Lê",
+  "description": "Cây gia phả dòng họ Lê - Truyền thống, Đoàn kết, Phát triển",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#FFFDD0",
+  "background_color": "#800000",
   "theme_color": "#800000",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "lang": "vi",
   "icons": [
-    { "src": "https://via.placeholder.com/192/800000/FFFFFF?text=GL", "sizes": "192x192", "type": "image/png" },
-    { "src": "https://via.placeholder.com/512/800000/FFFFFF?text=GL", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
   ]
 }
