@@ -127,13 +127,27 @@ export default function MemberBottomSheet({ member, members, onClose, onEdit, is
         )}
 
         {/* Địa danh */}
-        {(member.birthPlace || member.residence || member.burialPlace) && (
+        {(member.birthPlace || member.residence || member.burialAddress || member.burialPlace || member.deathPlace) && (
           <div className="bg-green-50 rounded-2xl p-4">
             <h4 className="text-xs font-bold text-green-700 uppercase mb-2 tracking-wide">📍 Địa danh</h4>
             <Row label="Nơi sinh" value={member.birthPlace} />
             <Row label="Cư trú" value={member.residence} />
             <Row label="Nơi mất" value={member.deathPlace} />
-            <Row label="Chôn cất" value={member.burialPlace} />
+            {/* YC3: Hiển thị mộ phần với nút Maps */}
+            {(member.burialAddress || member.burialPlace) && (
+              <div className="flex gap-3 py-2 border-b border-gray-100 last:border-0">
+                <span className="text-xs font-bold text-gray-400 uppercase w-28 flex-shrink-0 pt-0.5">Mộ phần</span>
+                <div className="flex-1 flex items-start gap-2">
+                  <span className="text-sm text-gray-700 flex-1">{member.burialAddress || member.burialPlace}</span>
+                  {member.burialMapLink && (
+                    <a href={member.burialMapLink} target="_blank" rel="noreferrer"
+                      className="flex-shrink-0 bg-blue-600 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 font-bold whitespace-nowrap">
+                      🗺️ Maps
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -143,10 +157,29 @@ export default function MemberBottomSheet({ member, members, onClose, onEdit, is
           <Row label="Cha" value={father?.name} />
           <Row label="Mẹ" value={mother?.name} />
           <Row label={member.gender === 'Nam' ? 'Vợ' : 'Chồng'} value={spouse?.name} />
+          {/* YC3: Hiển thị danh sách con cái chi tiết */}
           {children.length > 0 && (
-            <div className="flex gap-3 py-2">
-              <span className="text-xs font-bold text-gray-400 uppercase w-28 flex-shrink-0 pt-0.5">Con ({children.length})</span>
-              <span className="text-sm text-gray-700">{children.map(c => c.name).join(' · ')}</span>
+            <div className="mt-2 pt-2 border-t border-pink-100">
+              <div className="text-xs font-bold text-gray-400 uppercase mb-2">Con cái ({children.length})</div>
+              <div className="space-y-1.5">
+                {children
+                  .sort((a,b) => (a.birthDate||'').localeCompare(b.birthDate||''))
+                  .map(c => (
+                  <div key={c.id} className="flex items-center gap-2 bg-white rounded-xl px-3 py-2">
+                    <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center text-sm">
+                      {c.photoUrl ? <img src={c.photoUrl} alt={c.name} className="w-full h-full object-cover"/> : (c.gender==='Nam'?'👦':'👧')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-gray-800 truncate">{c.name}</div>
+                      <div className="text-xs text-gray-400">
+                        {c.gender} · {c.birthDate ? new Date(c.birthDate).getFullYear() : '?'}
+                        {c.deathDate ? ` — ${new Date(c.deathDate).getFullYear()}` : ''}
+                      </div>
+                    </div>
+                    {c.deathDate && <span className="text-xs">🕯️</span>}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

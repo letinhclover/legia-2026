@@ -18,7 +18,8 @@ const emptyForm = {
   name:'',tenHuy:'',tenTu:'',tenThuy:'',chucTuoc:'',
   gender:'Nam' as 'Nam'|'Nữ', generation:'1',
   birthDate:'',birthDateLunar:'',birthPlace:'',
-  deathDate:'',deathDateLunar:'',deathPlace:'',burialPlace:'',
+  deathDate:'',deathDateLunar:'',deathPlace:'',
+  burialAddress:'',burialMapLink:'',   // YC3: tách mộ phần thành 2 trường
   residence:'',fatherId:'',motherId:'',spouseId:'',
   photoUrl:'',biography:'',email:'',
 };
@@ -47,7 +48,9 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
         deathDate:editingMember.deathDate||'',
         deathDateLunar:editingMember.deathDateLunar||'',
         deathPlace:editingMember.deathPlace||'',
-        burialPlace:editingMember.burialPlace||'',
+        // YC3: migrate burialPlace cũ → burialAddress nếu chưa có
+        burialAddress:editingMember.burialAddress||editingMember.burialPlace||'',
+        burialMapLink:editingMember.burialMapLink||'',
         residence:editingMember.residence||'',
         fatherId:editingMember.fatherId||'',
         motherId:editingMember.motherId||'',
@@ -113,16 +116,41 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
     const gen=parseInt(form.generation)||1;
     onSave({
       ...form,
-      generation:gen,
+      generation: Number(gen),           // YC2: ép kiểu Number tường minh
       fatherId:form.fatherId||null,
       motherId:form.motherId||null,
       spouseId:form.spouseId||null,
+      burialAddress:form.burialAddress||null,
+      burialMapLink:form.burialMapLink||null,
+      burialPlace:form.burialAddress||null, // sync ngược để GraveMap vẫn dùng được
       id:editingMember?.id,
     });
   };
 
   const prevGen=members.filter(m=>m.generation===parseInt(form.generation)-1&&m.id!==editingMember?.id);
-  const sameGen=members.filter(m=>m.generation===parseInt(form.generation)&&m.id!==editingMember?.id);
+
+  // YC4: Spouse pool thông minh — chỉ hiện giới tính đối lập, loại con cháu trực hệ
+  const getDescendantIds = (rootId: string): Set<string> => {
+    const result = new Set<string>();
+    const queue = [rootId];
+    while (queue.length) {
+      const id = queue.shift()!;
+      members.forEach(m => {
+        if ((m.fatherId === id || m.motherId === id) && !result.has(m.id)) {
+          result.add(m.id);
+          queue.push(m.id);
+        }
+      });
+    }
+    return result;
+  };
+  const descendantIds = editingMember ? getDescendantIds(editingMember.id) : new Set<string>();
+  const oppositeGender = form.gender === 'Nam' ? 'Nữ' : 'Nam';
+  const spousePool = members.filter(m =>
+    m.gender === oppositeGender &&          // giới tính đối lập
+    m.id !== editingMember?.id &&           // không phải bản thân
+    !descendantIds.has(m.id)               // không phải con cháu
+  );
 
   const inp="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[#800000] focus:outline-none text-sm transition-colors";
   const lbl="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide";
@@ -288,13 +316,33 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                 {label:'Nơi sinh',key:'birthPlace',ph:'Làng Đông Ngạc, Từ Liêm, Hà Nội'},
                 {label:'Nơi cư trú',key:'residence',ph:'TP. Hồ Chí Minh'},
                 {label:'Nơi mất',key:'deathPlace',ph:'Bệnh viện Chợ Rẫy...'},
-                {label:'Nơi chôn cất / Mộ phần',key:'burialPlace',ph:'Nghĩa trang Bình Dương, khu A, lô 5'},
               ].map(f=>(
                 <div key={f.key}>
                   <label className={lbl}>{f.label}</label>
                   <input className={inp} value={(form as any)[f.key]} onChange={e=>set(f.key,e.target.value)} placeholder={f.ph}/>
                 </div>
               ))}
+              {/* YC3: Tách mộ phần thành 2 trường */}
+              <div>
+                <label className={lbl}>📍 Địa chỉ mộ phần</label>
+                <input className={inp} value={form.burialAddress}
+                  onChange={e=>set('burialAddress',e.target.value)}
+                  placeholder="Nghĩa trang Bình Dương, khu A, lô 5"/>
+              </div>
+              <div>
+                <label className={lbl}>🗺️ Link Google Maps (dán link từ app Maps)</label>
+                <input className={inp} value={form.burialMapLink}
+                  onChange={e=>set('burialMapLink',e.target.value)}
+                  placeholder="https://maps.app.goo.gl/..." type="url"/>
+                {form.burialMapLink && (
+                  <a href={form.burialMapLink} target="_blank" rel="noreferrer"
+                    className="text-xs text-blue-600 underline mt-1 block">
+                    ✅ Xem trước link Maps →
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
             </div>
           )}
 
@@ -307,7 +355,6 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
               {[
                 {label:`Người cha (Đời ${parseInt(form.generation)-1})`,key:'fatherId',pool:prevGen.filter(m=>m.gender==='Nam'),ph:'-- Cụ tổ / Không rõ --'},
                 {label:`Người mẹ (Đời ${parseInt(form.generation)-1})`,key:'motherId',pool:prevGen.filter(m=>m.gender==='Nữ'),ph:'-- Không rõ --'},
-                {label:`Vợ / Chồng (Đời ${form.generation})`,key:'spouseId',pool:sameGen,ph:'-- Chưa có / Không rõ --'},
               ].map(f=>(
                 <div key={f.key}>
                   <label className={lbl}>{f.label}</label>
@@ -319,6 +366,23 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                   </select>
                 </div>
               ))}
+              {/* YC4: Spouse thông minh - chỉ giới tính đối lập, không có con cháu */}
+              <div>
+                <label className={lbl}>
+                  {form.gender==='Nam' ? '💑 Vợ' : '💑 Chồng'}
+                  <span className="font-normal text-gray-400 ml-1">
+                    (Chỉ hiện {form.gender==='Nam'?'Nữ':'Nam'} · {spousePool.length} người)
+                  </span>
+                </label>
+                <select className={inp} value={form.spouseId} onChange={e=>set('spouseId',e.target.value)}>
+                  <option value="">-- Chưa có --</option>
+                  {spousePool.map(m=>(
+                    <option key={m.id} value={m.id}>
+                      {m.name}{m.tenHuy?` (Húy: ${m.tenHuy})`:''} · Đời {m.generation}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 
