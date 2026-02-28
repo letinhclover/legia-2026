@@ -343,8 +343,6 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
               </div>
             </div>
           )}
-            </div>
-          )}
 
           {/* TAB: Quan hệ */}
           {tab==='relations'&&(
