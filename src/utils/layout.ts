@@ -7,6 +7,71 @@ export const NODE_H = 110;
 const SPOUSE_GAP = 36;   // khoảng cách ngang giữa vợ và chồng
 const RANK_SEP = 160;    // khoảng dọc giữa các đời
 
+// ─── Hàm lấy năm sinh (trả về Infinity nếu không có để đẩy xuống cuối) ───
+function getBirthYear(m: Member): number {
+  if (!m.birthDate) return Infinity;
+  const y = parseInt(m.birthDate.slice(0, 4));
+  return isNaN(y) ? Infinity : y;
+}
+
+// ─── Sắp xếp anh em ruột theo năm sinh ────────────────────────────────────
+// Trả về bản sao của members đã được sắp xếp:
+//   - Anh/chị (năm sinh nhỏ hơn) → bên TRÁI (trước trong mảng)
+//   - Em (năm sinh lớn hơn)      → bên PHẢI (sau trong mảng)
+//   - Không có năm sinh           → cuối danh sách, phụ theo id
+function sortSiblings(members: Member[]): Member[] {
+  // Map parentKey → danh sách con (dùng fatherId ưu tiên, fallback motherId)
+  const siblingGroups = new Map<string, Member[]>();
+
+  members.forEach(m => {
+    const parentKey = m.fatherId ?? m.motherId ?? '__root__';
+    if (!siblingGroups.has(parentKey)) siblingGroups.set(parentKey, []);
+    siblingGroups.get(parentKey)!.push(m);
+  });
+
+  // Sắp xếp từng nhóm anh em ruột theo năm sinh tăng dần
+  siblingGroups.forEach(group => {
+    group.sort((a, b) => {
+      const ya = getBirthYear(a);
+      const yb = getBirthYear(b);
+      if (ya !== yb) return ya - yb;          // năm sinh nhỏ hơn → trái
+      return a.id.localeCompare(b.id);        // tie-break bằng id
+    });
+  });
+
+  // Dựng lại mảng members theo thứ tự BFS từ tổ → các con đã sắp xếp
+  const visited = new Set<string>();
+  const sorted: Member[] = [];
+
+  // Hàng đợi BFS: bắt đầu từ thế hệ 1
+  const rootMembers = members.filter(m => !m.fatherId && !m.motherId);
+  // Thêm root trước (cũng sắp xếp theo năm sinh)
+  rootMembers.sort((a, b) => {
+    const ya = getBirthYear(a);
+    const yb = getBirthYear(b);
+    if (ya !== yb) return ya - yb;
+    return a.id.localeCompare(b.id);
+  });
+
+  const queue: Member[] = [...rootMembers];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (visited.has(current.id)) continue;
+    visited.add(current.id);
+    sorted.push(current);
+
+    // Thêm con của current vào queue (đã được sắp xếp theo nhóm anh em)
+    const children = siblingGroups.get(current.id) ?? [];
+    queue.push(...children.filter(c => !visited.has(c.id)));
+  }
+
+  // Thêm nốt những thành viên chưa được duyệt (edge case: dữ liệu thiếu liên kết)
+  members.forEach(m => { if (!visited.has(m.id)) sorted.push(m); });
+
+  return sorted;
+}
+
 // ─── Build toàn bộ layout vợ/chồng đúng vị trí ──────────────────────────────
 export function buildFamilyLayout(
   members: Member[],
@@ -16,13 +81,17 @@ export function buildFamilyLayout(
 
   const memberMap = new Map(members.map(m => [m.id, m]));
 
+  // ── Bước 0: Sắp xếp anh em ruột theo năm sinh TRƯỚC KHI tạo groups ──────
+  // Thứ tự của mảng này ảnh hưởng trực tiếp đến thứ tự ngang trong dagre
+  const sortedMembers = sortSiblings(members);
+
   // ── Bước 1: Tạo danh sách cặp vợ chồng (duy nhất) ──────────────────────
   const processedSpouse = new Set<string>();
   // groupId → [husbandId, wifeId] hoặc [singleId]
   const coupleGroups: Array<{ id: string; members: string[] }> = [];
   const memberToGroup = new Map<string, string>();
 
-  members.forEach(m => {
+  sortedMembers.forEach(m => {  // ← dùng sortedMembers thay vì members
     if (processedSpouse.has(m.id)) return;
     const spouse = m.spouseId ? memberMap.get(m.spouseId) : null;
 
