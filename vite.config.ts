@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',        // KHÔNG auto-update cache
+      registerType: 'prompt',       
       injectRegister: 'auto',
-      includeAssets: ['icon-192.svg', 'icon-512.svg'],
+      includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
         short_name: 'Gia Phả Họ Lê',
@@ -21,17 +21,32 @@ export default defineConfig({
         scope: '/',
         lang: 'vi',
         icons: [
-          { src:'/icon-192.svg', sizes:'192x192', type:'image/svg+xml', purpose:'any maskable' },
-          { src:'/icon-512.svg', sizes:'512x512', type:'image/svg+xml', purpose:'any maskable' }
+          {
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          }
         ],
       },
       workbox: {
-        navigateFallback: null,  // KHÔNG cache HTML → luôn load mới
+        navigateFallback: null,
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
           {
-            // Firebase Firestore → luôn cập nhật dữ liệu
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
@@ -41,7 +56,6 @@ export default defineConfig({
             },
           },
           {
-            // Cloudinary images → StaleWhileRevalidate
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
@@ -50,7 +64,6 @@ export default defineConfig({
             },
           },
           {
-            // Google Fonts → CacheFirst
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
@@ -68,7 +81,12 @@ export default defineConfig({
     open: true,
   },
   build: {
-    outDir: 'dist',   // Thư mục output cần cho Netlify / Cloudflare
-    sourcemap: true,
+    outDir: 'dist',        // thư mục build
+    sourcemap: true,       // tạo source map để debug
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,  // gộp chunk nếu cần giảm lỗi deploy
+      },
+    },
   },
 });
