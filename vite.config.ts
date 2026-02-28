@@ -6,13 +6,13 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt', // Không auto-update cache
+      registerType: 'prompt', // Người dùng quyết định update cache
       injectRegister: 'auto',
       includeAssets: [
-        'favicon.ico',      // Trình duyệt desktop
-        'icon-192.png',     // PWA Android
-        'icon-512.png',     // PWA Android
-        'icon-maskable.png' // Maskable icon cho Android/iOS
+        'favicon.ico',        // Desktop
+        'icon-192.png',       // Android/iOS small
+        'icon-512.png',       // Android/iOS large
+        'icon-maskable.png'   // Maskable cho iOS/Android
       ],
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
@@ -26,34 +26,14 @@ export default defineConfig({
         scope: '/',
         lang: 'vi',
         icons: [
-          {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/icon-maskable.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-          {
-            src: '/favicon.ico',
-            sizes: 'any',
-            type: 'image/x-icon',
-            purpose: 'any'
-          }
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/favicon.ico', sizes: 'any', type: 'image/x-icon', purpose: 'any' }
         ],
       },
       workbox: {
-        navigateFallback: null, // Luôn load HTML mới
+        navigateFallback: null, // luôn load mới HTML
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
@@ -87,17 +67,11 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: { exclude: ['lucide-react'] },
-  server: {
-    port: 5173,
-    open: true,
-  },
   build: {
-    outDir: 'dist',       // Thư mục build chuẩn Netlify/Cloudflare
-    sourcemap: true,      // Tạo source map để debug
+    outDir: 'dist', // thư mục chuẩn deploy Netlify/Cloudflare
+    sourcemap: true,
     rollupOptions: {
-      output: {
-        manualChunks: undefined, // Gộp chunk để tránh lỗi deploy
-      },
+      output: { manualChunks: undefined },
     },
   },
 });
