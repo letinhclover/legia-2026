@@ -6,9 +6,14 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',       
+      registerType: 'prompt', // Không auto-update cache
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
+      includeAssets: [
+        'favicon.ico',      // Trình duyệt desktop
+        'icon-192.png',     // PWA Android
+        'icon-512.png',     // PWA Android
+        'icon-maskable.png' // Maskable icon cho Android/iOS
+      ],
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
         short_name: 'Gia Phả Họ Lê',
@@ -34,15 +39,21 @@ export default defineConfig({
             purpose: 'any maskable'
           },
           {
-            src: '/favicon.svg',
+            src: '/icon-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/favicon.ico',
             sizes: 'any',
-            type: 'image/svg+xml',
+            type: 'image/x-icon',
             purpose: 'any'
           }
         ],
       },
       workbox: {
-        navigateFallback: null,
+        navigateFallback: null, // Luôn load HTML mới
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
@@ -81,11 +92,11 @@ export default defineConfig({
     open: true,
   },
   build: {
-    outDir: 'dist',        // thư mục build
-    sourcemap: true,       // tạo source map để debug
+    outDir: 'dist',       // Thư mục build chuẩn Netlify/Cloudflare
+    sourcemap: true,      // Tạo source map để debug
     rollupOptions: {
       output: {
-        manualChunks: undefined,  // gộp chunk nếu cần giảm lỗi deploy
+        manualChunks: undefined, // Gộp chunk để tránh lỗi deploy
       },
     },
   },
