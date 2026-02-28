@@ -1,23 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
 
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',       // User quyết định update cache
+      registerType: 'prompt',        // KHÔNG auto-update cache
       injectRegister: 'auto',
-      includeAssets: [
-        'favicon.ico',              // Desktop favicon
-        'icon-192.png',             // Small Android/iOS
-        'icon-512.png',             // Large Android/iOS
-        'icon-maskable.png'         // Maskable icon
-      ],
+      includeAssets: ['icon-192.svg','icon-512.svg'],
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
-        short_name: 'GiaPhảHọLê',
+        short_name: 'Gia Phả Lê',
         description: 'Gia phả số – Truyền thống · Đoàn kết · Phát triển',
         theme_color: '#800000',
         background_color: '#800000',
@@ -27,18 +21,17 @@ export default defineConfig({
         scope: '/',
         lang: 'vi',
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
-          { src: '/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-          { src: '/favicon.ico', sizes: 'any', type: 'image/x-icon', purpose: 'any' }
+          { src:'/icon-192.svg', sizes:'192x192', type:'image/svg+xml', purpose:'any maskable' },
+          { src:'/icon-512.svg', sizes:'512x512', type:'image/svg+xml', purpose:'any maskable' },
         ],
       },
       workbox: {
-        navigateFallback: null,      // luôn load mới HTML, không cache
+        navigateFallback: null,      // KHÔNG cache HTML → luôn load mới
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
           {
+            // Firebase Firestore → NetworkFirst: dữ liệu luôn mới nhất
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
@@ -48,19 +41,21 @@ export default defineConfig({
             },
           },
           {
+            // Cloudinary images → StaleWhileRevalidate
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'cloudinary-images',
-              expiration: { maxEntries: 300, maxAgeSeconds: 2592000 }, // 30 ngày
+              cacheName: 'cloudinary-imgs',
+              expiration: { maxEntries: 300, maxAgeSeconds: 2592000 },
             },
           },
           {
+            // Google Fonts → CacheFirst (hiếm thay đổi)
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 }, // 1 năm
+              cacheName: 'gfonts',
+              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 },
             },
           },
         ],
@@ -68,18 +63,4 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: { exclude: ['lucide-react'] },
-  build: {
-    outDir: path.resolve(__dirname, 'dist'), // quan trọng cho Netlify/Cloudflare Pages
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: undefined,
-      },
-    },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
-  },
 });
