@@ -156,22 +156,53 @@ export function buildFamilyLayout(
     if (group.members.length === 2) {
       const [husbandId, wifeId] = group.members;
       const groupLeft = gPos.x - gPos.width / 2;
-      // Chồng bên trái
-      positions.set(husbandId, {
-        x: groupLeft,
-        y: gPos.y - NODE_H / 2,
-      });
-      // Vợ bên phải, ngay cạnh chồng, CÙNG Y
-      positions.set(wifeId, {
-        x: groupLeft + NODE_W + SPOUSE_GAP,
-        y: gPos.y - NODE_H / 2,
-      });
+      positions.set(husbandId, { x: groupLeft, y: gPos.y - NODE_H / 2 });
+      // Vợ bên phải, CÙNG Y chính xác
+      positions.set(wifeId, { x: groupLeft + NODE_W + SPOUSE_GAP, y: gPos.y - NODE_H / 2 });
     } else {
-      positions.set(group.members[0], {
-        x: gPos.x - NODE_W / 2,
-        y: gPos.y - NODE_H / 2,
-      });
+      positions.set(group.members[0], { x: gPos.x - NODE_W / 2, y: gPos.y - NODE_H / 2 });
     }
+  });
+
+  // ── YC5: Staircase post-processing ────────────────────────────────────────
+  // Nhóm các anh em ruột (cùng cha hoặc mẹ) → dịch Y theo bậc thang
+  const STAIRCASE_OFFSET = 80; // px mỗi bậc
+
+  // Tìm các nhóm anh em (đã được sort theo birthYear từ Bước 0)
+  const siblingGroupsForStaircase = new Map<string, string[]>(); // parentId → [childId...]
+  sortedMembers.forEach(m => {
+    const parentId = m.fatherId ?? m.motherId;
+    if (!parentId) return;
+    if (!siblingGroupsForStaircase.has(parentId)) siblingGroupsForStaircase.set(parentId, []);
+    siblingGroupsForStaircase.get(parentId)!.push(m.id);
+  });
+
+  siblingGroupsForStaircase.forEach(siblingIds => {
+    if (siblingIds.length < 2) return; // chỉ áp dụng khi có >= 2 anh em
+
+    // baseY = Y của người anh cả (index 0, đã sort theo năm sinh)
+    const basePos = positions.get(siblingIds[0]);
+    if (!basePos) return;
+    const baseY = basePos.y;
+
+    siblingIds.forEach((id, idx) => {
+      const pos = positions.get(id);
+      if (!pos) return;
+      // Áp dụng công thức bậc thang: y = baseY + (siblingIndex * offset)
+      positions.set(id, { x: pos.x, y: baseY + idx * STAIRCASE_OFFSET });
+
+      // Nếu là chồng, dịch vợ theo cùng Y
+      const member = memberMap.get(id);
+      if (member?.spouseId) {
+        const spousePos = positions.get(member.spouseId);
+        if (spousePos) {
+          positions.set(member.spouseId, {
+            x: spousePos.x,
+            y: baseY + idx * STAIRCASE_OFFSET,
+          });
+        }
+      }
+    });
   });
 
   // ── Bước 4: Tạo React Flow nodes ─────────────────────────────────────────
