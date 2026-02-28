@@ -145,17 +145,29 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
         {/* Xuất / Nhập dữ liệu */}
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase px-4 mb-2 tracking-wider">Xuất / Nhập Dữ Liệu</p>
+          {/* YC7: Cảnh báo nếu chưa đăng nhập */}
+          {!isAdmin && (
+            <div className="mx-4 mb-2 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-start gap-2">
+              <span className="text-lg flex-shrink-0">🔒</span>
+              <p className="text-xs text-amber-700 font-semibold">
+                Xuất PDF và Excel chỉ dành cho Quản trị viên.
+                Vui lòng đăng nhập bên dưới để mở khoá.
+              </p>
+            </div>
+          )}
           <div className="bg-white rounded-2xl mx-4 overflow-hidden shadow-sm divide-y divide-gray-50">
 
-            {/* Xuất Excel */}
-            <MenuItem
-              icon={<FileSpreadsheet size={18} color="#16A34A" />}
-              label="Xuất Excel (Sao lưu)"
-              sub="Tất cả dữ liệu · Có thể sửa và nhập lại"
-              onClick={handleExportExcel}
-            />
+            {/* Xuất Excel — YC7: chỉ admin */}
+            <div className={!isAdmin ? 'opacity-40 pointer-events-none select-none' : ''}>
+              <MenuItem
+                icon={<FileSpreadsheet size={18} color={isAdmin ? '#16A34A' : '#9CA3AF'} />}
+                label={`Xuất Excel (Sao lưu)${!isAdmin ? ' 🔒' : ''}`}
+                sub={isAdmin ? 'Tất cả dữ liệu · Có thể sửa và nhập lại' : 'Yêu cầu đăng nhập Admin'}
+                onClick={handleExportExcel}
+              />
+            </div>
 
-            {/* Nhập Excel */}
+            {/* Nhập Excel — YC7: chỉ admin */}
             {isAdmin && (
               <>
                 <input ref={importRef} type="file" accept=".xlsx,.xls" onChange={handleImportExcel} className="hidden" />
@@ -168,13 +180,15 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
               </>
             )}
 
-            {/* Xuất PDF */}
-            <MenuItem
-              icon={<FileText size={18} color="#800000" />}
-              label={pdfProgress || "Xuất PDF in ấn"}
-              sub="Phả đồ khổ lớn · In họp dòng họ"
-              onClick={handleExportPDF}
-            />
+            {/* Xuất PDF — YC7: chỉ admin */}
+            <div className={!isAdmin ? 'opacity-40 pointer-events-none select-none' : ''}>
+              <MenuItem
+                icon={<FileText size={18} color={isAdmin ? '#800000' : '#9CA3AF'} />}
+                label={`${pdfProgress || `Xuất PDF in ấn${!isAdmin ? ' 🔒' : ''}`}`}
+                sub={isAdmin ? 'Phả đồ khổ lớn · In họp dòng họ' : 'Yêu cầu đăng nhập Admin'}
+                onClick={handleExportPDF}
+              />
+            </div>
           </div>
         </div>
 
