@@ -4,91 +4,148 @@ import { motion } from 'framer-motion';
 import { Member } from '../types';
 
 interface FamilyNodeProps {
-  data: Member & { onEdit: (m: Member) => void; spouseName?: string };
+  data: Member & {
+    onEdit: (member: Member) => void;
+    spouseName?: string;
+  };
 }
 
+// Dùng memo để tránh re-render không cần thiết khi cây lớn
 const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
   const isAlive  = !data.deathDate;
   const isMale   = data.gender === 'Nam';
-  const birthY   = data.birthDate ? new Date(data.birthDate).getFullYear() : null;
-  const deathY   = data.deathDate ? new Date(data.deathDate).getFullYear() : null;
 
-  // Màu viền avatar: vàng gold cho trưởng, xanh nam, hồng nữ
-  const ringColor = isMale ? '#60A5FA' : '#F472B6';
+  // Màu viền theo giới tính
+  const borderColor = isMale ? '#1D4ED8' : '#BE185D';
+  const bgColor     = isAlive
+    ? (isMale ? '#F0F7FF' : '#FFF0F7')
+    : '#F0F0F0';
+
+  const birthYear = data.birthDate ? new Date(data.birthDate).getFullYear() : null;
+  const deathYear = data.deathDate ? new Date(data.deathDate).getFullYear() : null;
 
   return (
     <motion.div
       onClick={() => data.onEdit(data)}
-      whileHover={{ scale: 1.06, y: -4 }}
-      whileTap={{ scale: 0.94 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-      className="flex flex-col items-center cursor-pointer select-none"
-      style={{ width: 90 }}
+      // Hover scale nhẹ (framer-motion với whileHover)
+      whileHover={{ scale: 1.04, y: -3 }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+      className="relative cursor-pointer rounded-2xl select-none"
+      style={{
+        minWidth: 220,
+        background: bgColor,
+        border: `2.5px solid ${borderColor}`,
+        boxShadow: isAlive
+          ? '0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)'
+          : '0 2px 8px rgba(0,0,0,0.08)',
+        // Grayscale 100% khi đã mất
+        filter: isAlive ? 'none' : 'grayscale(100%) opacity(0.82)',
+      }}
     >
+      {/* Handle kết nối phía trên (nhận edge từ cha/mẹ) */}
       <Handle
         type="target"
         position={Position.Top}
-        style={{ background: '#D4AF37', width: 8, height: 8, border: '2px solid #101922' }}
+        style={{ background: '#800000', width: 10, height: 10, border: '2px solid white' }}
       />
 
-      {/* Avatar tròn — kiểu Stitch */}
-      <div className="relative">
+      <div className="flex items-center gap-3 px-3 py-2.5">
+        {/* Avatar */}
         <div
-          className="rounded-full overflow-hidden flex items-center justify-center"
+          className="flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center text-2xl"
           style={{
-            width: 64, height: 64,
-            border: `3px solid ${ringColor}`,
-            background: '#192633',
-            filter: isAlive ? 'none' : 'grayscale(80%) brightness(0.7)',
-            boxShadow: `0 0 0 2px #101922, 0 4px 16px rgba(0,0,0,0.5)`,
+            width: 52,
+            height: 52,
+            background: '#E5E7EB',
+            border: `2.5px solid ${borderColor}`,
           }}
         >
           {data.photoUrl
-            ? <img src={data.photoUrl} alt={data.name} className="w-full h-full object-cover" loading="lazy" />
-            : <span style={{ fontSize: 28 }}>{isMale ? '👨' : '👩'}</span>
+            ? <img
+                src={data.photoUrl}
+                alt={data.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            : <span style={{ fontSize: 26 }}>{isMale ? '👨' : '👩'}</span>
           }
         </div>
 
-        {/* Badge đời */}
-        <div
-          className="absolute -top-1 -right-1 rounded-full flex items-center justify-center font-black"
-          style={{
-            width: 18, height: 18, fontSize: 8,
-            background: '#D4AF37', color: '#101922',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
-          }}
-        >
-          {data.generation}
-        </div>
-
-        {/* Indicator mất */}
-        {!isAlive && (
-          <div className="absolute -bottom-1 -right-1 text-sm">🕯️</div>
-        )}
-      </div>
-
-      {/* Tên + năm */}
-      <div
-        className="mt-2 rounded-xl px-2 py-1.5 text-center w-full"
-        style={{ background: '#192633', border: '1px solid #233648' }}
-      >
-        <div className="font-bold text-white leading-tight truncate" style={{ fontSize: 11 }}>
-          {data.name.split(' ').slice(-2).join(' ')}
-        </div>
-        {(birthY || deathY) && (
-          <div style={{ fontSize: 9, color: '#92adc9' }} className="mt-0.5">
-            {birthY}{deathY ? ` — ${deathY}` : ''}
+        {/* Thông tin */}
+        <div className="flex-1 min-w-0">
+          {/* Tên */}
+          <div className="font-bold text-gray-900 leading-tight text-sm truncate">
+            {data.name}
           </div>
-        )}
-        {data.chucTuoc && (
-          <div style={{ fontSize: 9, color: '#D4AF37' }} className="truncate">{data.chucTuoc}</div>
-        )}
+
+          {/* Húy */}
+          {data.tenHuy && (
+            <div className="text-xs text-gray-400 italic truncate">
+              Húy: {data.tenHuy}
+            </div>
+          )}
+
+          {/* Chức tước */}
+          {data.chucTuoc && (
+            <div
+              className="text-xs font-semibold truncate"
+              style={{ color: '#B8860B' }}
+            >
+              {data.chucTuoc}
+            </div>
+          )}
+
+          {/* Năm sinh — mất */}
+          <div className="flex items-center gap-1 mt-0.5">
+            {birthYear && (
+              <span className="text-xs text-gray-400">{birthYear}</span>
+            )}
+            {deathYear && (
+              <span className="text-xs text-gray-400">— {deathYear}</span>
+            )}
+            {!isAlive && !deathYear && (
+              <span className="text-xs">🕯️</span>
+            )}
+          </div>
+
+          {/* Vợ/chồng */}
+          {data.spouseName && (
+            <div className="text-xs text-gray-400 truncate mt-0.5">
+              💑 {data.spouseName.split(' ').slice(-2).join(' ')}
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Badge đời — góc trên phải */}
+      <div
+        className="absolute top-2 right-2 flex items-center justify-center rounded-full font-black text-white"
+        style={{
+          width: 20, height: 20,
+          fontSize: 9,
+          background: '#800000',
+          boxShadow: '0 1px 4px rgba(128,0,0,0.4)',
+        }}
+      >
+        {data.generation}
+      </div>
+
+      {/* Indicator đã mất — góc trên trái */}
+      {!isAlive && (
+        <div
+          className="absolute top-2 left-2 text-gray-400"
+          style={{ fontSize: 11 }}
+        >
+          🕯️
+        </div>
+      )}
+
+      {/* Handle kết nối phía dưới (xuất edge xuống con) */}
       <Handle
         type="source"
         position={Position.Bottom}
-        style={{ background: '#D4AF37', width: 8, height: 8, border: '2px solid #101922' }}
+        style={{ background: '#800000', width: 10, height: 10, border: '2px solid white' }}
       />
     </motion.div>
   );
