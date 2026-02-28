@@ -11,7 +11,7 @@ export default defineConfig({
       includeAssets: ['icon-192.svg','icon-512.svg'],
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
-        short_name: 'Gia Phả Lê',
+        short_name: 'Gia Phả Họ Lê',
         description: 'Gia phả số – Truyền thống · Đoàn kết · Phát triển',
         theme_color: '#800000',
         background_color: '#800000',
