@@ -146,10 +146,13 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
   };
   const descendantIds = editingMember ? getDescendantIds(editingMember.id) : new Set<string>();
   const oppositeGender = form.gender === 'Nam' ? 'Nữ' : 'Nam';
+  const currentGen = parseInt(form.generation) || 1;
   const spousePool = members.filter(m =>
-    m.gender === oppositeGender &&          // giới tính đối lập
-    m.id !== editingMember?.id &&           // không phải bản thân
-    !descendantIds.has(m.id)               // không phải con cháu
+    m.gender === oppositeGender &&                        // giới tính đối lập
+    m.id !== editingMember?.id &&                         // không phải bản thân
+    !descendantIds.has(m.id) &&                           // không phải con cháu
+    m.generation === currentGen &&                        // cùng thế hệ
+    (!m.spouseId || m.spouseId === editingMember?.id)     // chưa có spouse (hoặc đang là spouse hiện tại)
   );
 
   const inp="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:border-[#800000] focus:outline-none text-sm transition-colors";
@@ -369,7 +372,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                 <label className={lbl}>
                   {form.gender==='Nam' ? '💑 Vợ' : '💑 Chồng'}
                   <span className="font-normal text-gray-400 ml-1">
-                    (Chỉ hiện {form.gender==='Nam'?'Nữ':'Nam'} · {spousePool.length} người)
+                    (Đời {currentGen} · {oppositeGender} · {spousePool.length} người)
                   </span>
                 </label>
                 <select className={inp} value={form.spouseId} onChange={e=>set('spouseId',e.target.value)}>
