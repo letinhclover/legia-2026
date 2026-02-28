@@ -1,22 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import path from 'path';
 
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt', // Người dùng quyết định update cache
+      registerType: 'prompt',       // User quyết định update cache
       injectRegister: 'auto',
       includeAssets: [
-        'favicon.ico',        // Desktop
-        'icon-192.png',       // Android/iOS small
-        'icon-512.png',       // Android/iOS large
-        'icon-maskable.png'   // Maskable cho iOS/Android
+        'favicon.ico',              // Desktop favicon
+        'icon-192.png',             // Small Android/iOS
+        'icon-512.png',             // Large Android/iOS
+        'icon-maskable.png'         // Maskable icon
       ],
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
-        short_name: 'Gia Phả Họ Lê',
+        short_name: 'GiaPhảHọLê',
         description: 'Gia phả số – Truyền thống · Đoàn kết · Phát triển',
         theme_color: '#800000',
         background_color: '#800000',
@@ -33,7 +34,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        navigateFallback: null, // luôn load mới HTML
+        navigateFallback: null,      // luôn load mới HTML, không cache
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
@@ -50,16 +51,16 @@ export default defineConfig({
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'cloudinary-imgs',
-              expiration: { maxEntries: 300, maxAgeSeconds: 2592000 },
+              cacheName: 'cloudinary-images',
+              expiration: { maxEntries: 300, maxAgeSeconds: 2592000 }, // 30 ngày
             },
           },
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'gfonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 },
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 }, // 1 năm
             },
           },
         ],
@@ -68,10 +69,17 @@ export default defineConfig({
   ],
   optimizeDeps: { exclude: ['lucide-react'] },
   build: {
-    outDir: 'dist', // thư mục chuẩn deploy Netlify/Cloudflare
+    outDir: path.resolve(__dirname, 'dist'), // quan trọng cho Netlify/Cloudflare Pages
     sourcemap: true,
     rollupOptions: {
-      output: { manualChunks: undefined },
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
     },
   },
 });
