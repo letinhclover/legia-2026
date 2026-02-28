@@ -1,3 +1,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-primary: #800000;
+  --color-secondary: #B8860B;
+  --color-bg: #F8F9FA;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #F8F9FA;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Scrollable areas */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Safe area */
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* React Flow overrides */
+.react-flow__renderer { touch-action: auto !important; }
+.react-flow__node { cursor: pointer; }
+
+/* Scrollbar hidden on mobile */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* Button tap feel */
+button, [role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+}
