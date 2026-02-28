@@ -1,5 +1,5 @@
 {
-  "name": "legia-2026",
+  "name": "giaPha-legia",
   "private": true,
   "version": "2.2.0",
   "type": "module",
@@ -9,22 +9,24 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vite": "^5.4.2",
-    "@vitejs/plugin-react": "^4.3.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "@types/dagre": "^0.7.54",
+    "dagre": "^0.8.5",
     "firebase": "^10.12.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.344.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "reactflow": "^11.11.4"
   },
   "devDependencies": {
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
+    "vite": "^5.4.2",
     "vite-plugin-pwa": "^0.20.0"
   }
 }
