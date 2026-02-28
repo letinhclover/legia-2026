@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',        // KHÔNG auto-update cache
+      registerType: 'prompt',        // Không tự động cập nhật cache
       injectRegister: 'auto',
-      includeAssets: ['icon-192.svg','icon-512.svg'],
+      includeAssets: ['icon-192.svg', 'icon-512.svg', 'favicon.ico'], // Thêm favicon
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
         short_name: 'Gia Phả Lê',
@@ -21,12 +21,12 @@ export default defineConfig({
         scope: '/',
         lang: 'vi',
         icons: [
-          { src:'/icon-192.svg', sizes:'192x192', type:'image/svg+xml', purpose:'any maskable' },
-          { src:'/icon-512.svg', sizes:'512x512', type:'image/svg+xml', purpose:'any maskable' },
+          { src: 'icon-192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: 'icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' },
         ],
       },
       workbox: {
-        navigateFallback: null,      // KHÔNG cache HTML → luôn load mới
+        navigateFallback: null,      // Luôn load HTML mới, không cache
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
@@ -62,5 +62,11 @@ export default defineConfig({
       },
     }),
   ],
-  optimizeDeps: { exclude: ['lucide-react'] },
+  build: {
+    outDir: 'dist',       // Output directory chuẩn cho Netlify/Cloudflare
+    emptyOutDir: true,
+  },
+  optimizeDeps: {
+    exclude: ['lucide-react'], // Giữ nguyên để tránh lỗi
+  },
 });
