@@ -81,19 +81,36 @@ export default function App() {
     let savedId = id;
     if (id) {
       await updateDoc(doc(db, 'members', id), payload);
+      // YC2: Cập nhật local state NGAY LẬP TỨC — UI phản hồi tức thì, không chờ reload
+      setMembers(prev => prev.map(m =>
+        m.id === id ? { ...m, ...payload, id } as Member : m
+      ));
     } else {
       const ref = await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() });
       savedId = ref.id;
+      // YC2: Thêm member mới vào local state ngay
+      setMembers(prev => [...prev, { ...payload, id: savedId } as Member]);
     }
     // Cập nhật vợ/chồng 2 chiều
     if (payload.spouseId && savedId) {
-      try { await updateDoc(doc(db, 'members', payload.spouseId), { spouseId: savedId }); } catch {}
+      try {
+        await updateDoc(doc(db, 'members', payload.spouseId), { spouseId: savedId });
+        setMembers(prev => prev.map(m =>
+          m.id === payload.spouseId ? { ...m, spouseId: savedId } : m
+        ));
+      } catch {}
     }
     const prev = members.find(m => m.id === id);
     if (prev?.spouseId && prev.spouseId !== payload.spouseId) {
-      try { await updateDoc(doc(db, 'members', prev.spouseId), { spouseId: null }); } catch {}
+      try {
+        await updateDoc(doc(db, 'members', prev.spouseId), { spouseId: null });
+        setMembers(prev2 => prev2.map(m =>
+          m.id === prev.spouseId ? { ...m, spouseId: null } : m
+        ));
+      } catch {}
     }
-    await loadMembers();
+    // Sau đó vẫn reload từ Firestore để đảm bảo đồng bộ hoàn toàn
+    loadMembers();
     setIsFormOpen(false);
     setEditingMember(null);
   };

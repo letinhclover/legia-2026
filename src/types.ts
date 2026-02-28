@@ -13,8 +13,12 @@ export interface Member {
   deathDate?: string;
   deathDateLunar?: string;
   deathPlace?: string;
-  burialPlace?: string;
-  burialLat?: number | null;   // tọa độ GPS mộ phần
+  // Mộ phần — tách thành 2 trường rõ ràng
+  burialAddress?: string;       // Địa chỉ văn bản
+  burialMapLink?: string;       // Link Google Maps
+  /** @deprecated Dùng burialAddress thay thế */
+  burialPlace?: string;         // giữ lại để không mất dữ liệu cũ
+  burialLat?: number | null;
   burialLng?: number | null;
   residence?: string;
   fatherId?: string | null;
