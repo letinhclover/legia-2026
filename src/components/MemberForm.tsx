@@ -67,6 +67,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
   if(!isOpen)return null;
 
   const set=(k:string,v:string)=>setForm(f=>({...f,[k]:v}));
+  // Note: outer modal wrapper removed — BottomSheet handles it
 
   // Auto chuyển dương → âm lịch
   const handleBirthDate=(v:string)=>{
@@ -135,8 +136,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
   ] as const;
 
   return(
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-end sm:items-center justify-center z-40 p-0 sm:p-4">
-      <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[95vh] flex flex-col">
+    <div className="flex flex-col h-full bg-white">
 
         {/* Header */}
         <div className="bg-gradient-to-r from-[#800000] to-[#A00000] text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
@@ -351,7 +351,6 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
             )}
           </div>
         </form>
-      </div>
     </div>
   );
 }
