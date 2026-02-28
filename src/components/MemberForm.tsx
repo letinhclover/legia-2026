@@ -167,10 +167,10 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
   ] as const;
 
   return(
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full" style={{background:"#101922"}}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#800000] to-[#A00000] text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
+        <div className=" text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
           <div>
             <h3 className="font-bold text-lg">{editingMember?'✏️ Sửa thông tin':'➕ Thêm thành viên'}</h3>
             <p className="text-xs text-[#FFD700] opacity-80">Gia Phả Dòng Họ Lê</p>
