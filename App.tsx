@@ -1,0 +1,267 @@
+import { useEffect, useState, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from './firebase';
+import { Member, AuthUser } from './types';
+
+import BottomNav, { TabId } from './components/BottomNav';
+import BottomSheet from './components/BottomSheet';
+import MemberBottomSheet from './components/MemberBottomSheet';
+import MemberForm from './components/MemberForm';
+import StatsPanel from './components/StatsPanel';
+import MemorialPage from './components/MemorialPage';
+import GraveMap from './components/GraveMap';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+
+import TreeTab from './tabs/TreeTab';
+import DirectoryTab from './tabs/DirectoryTab';
+import EventsTab from './tabs/EventsTab';
+import SettingsTab from './tabs/SettingsTab';
+import FundTab from './tabs/FundTab';
+import LibraryTab from './tabs/LibraryTab';
+
+const ADMIN_EMAILS = ['letinhclover@gmail.com'];
+const TAB_ORDER: TabId[] = ['tree', 'directory', 'events', 'fund', 'library', 'settings'];
+
+const tabVariants = {
+  enter:  (d: number) => ({ x: d > 0 ? '30%' : '-30%', opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit:   (d: number) => ({ x: d < 0 ? '30%' : '-30%', opacity: 0 }),
+};
+
+export default function App() {
+  const [user, setUser]         = useState<AuthUser | null>(null);
+  const [members, setMembers]   = useState<Member[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [activeTab, setActiveTab] = useState<TabId>('tree');
+  const [prevTab, setPrevTab]   = useState<TabId>('tree');
+
+  const [viewingMember, setViewingMember] = useState<Member | null>(null);
+  const [isFormOpen, setIsFormOpen]       = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [filterGen, setFilterGen]         = useState<number | 'all'>('all');
+  const [showStats, setShowStats]         = useState(false);
+  const [showMemorial, setShowMemorial]   = useState(false);
+  const [showGraveMap, setShowGraveMap]   = useState(false);
+  const [toast, setToast]                 = useState('');
+
+  const isAdmin   = ADMIN_EMAILS.includes(user?.email || '');
+  const direction = TAB_ORDER.indexOf(activeTab) - TAB_ORDER.indexOf(prevTab);
+
+  useEffect(() => {
+    let prev: any = null;
+    return onAuthStateChanged(auth, u => {
+      if (u && !prev && ADMIN_EMAILS.includes(u.email || '')) {
+        setToast('✅ Đăng nhập thành công!');
+        setTimeout(() => setToast(''), 3000);
+      }
+      prev = u;
+      setUser(u ? { uid: u.uid, email: u.email, displayName: u.displayName } : null);
+      setLoading(false);
+    });
+  }, []);
+
+  const loadMembers = useCallback(async () => {
+    const snap = await getDocs(collection(db, 'members'));
+    setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Member[]);
+  }, []);
+
+  useEffect(() => { if (!loading) loadMembers(); }, [loading]);
+
+  const handleTabChange = (tab: TabId) => { setPrevTab(activeTab); setActiveTab(tab); };
+
+  const handleSave = async (data: Partial<Member>) => {
+    const payload = { ...data };
+    const id = payload.id;
+    delete (payload as any).id;
+    let savedId = id;
+
+    if (id) {
+      await updateDoc(doc(db, 'members', id), payload);
+      setMembers(prev => prev.map(m => m.id === id ? { ...m, ...payload, id } as Member : m));
+    } else {
+      const ref = await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() });
+      savedId = ref.id;
+      setMembers(prev => [...prev, { ...payload, id: savedId } as Member]);
+    }
+    if (payload.spouseId && savedId) {
+      try {
+        await updateDoc(doc(db, 'members', payload.spouseId), { spouseId: savedId });
+        setMembers(prev => prev.map(m => m.id === payload.spouseId ? { ...m, spouseId: savedId } : m));
+      } catch {}
+    }
+    const prev = members.find(m => m.id === id);
+    if (prev?.spouseId && prev.spouseId !== payload.spouseId) {
+      try {
+        await updateDoc(doc(db, 'members', prev.spouseId), { spouseId: null });
+        setMembers(prev2 => prev2.map(m => m.id === prev.spouseId ? { ...m, spouseId: null } : m));
+      } catch {}
+    }
+    await loadMembers();
+    setIsFormOpen(false);
+    setEditingMember(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Xác nhận xóa thành viên này?')) return;
+    const m = members.find(m => m.id === id);
+    if (m?.spouseId) { try { await updateDoc(doc(db, 'members', m.spouseId), { spouseId: null }); } catch {} }
+    await deleteDoc(doc(db, 'members', id));
+    setViewingMember(null);
+    await loadMembers();
+  };
+
+  const handleEdit = (m: Member) => { setViewingMember(null); setEditingMember(m); setIsFormOpen(true); };
+
+  const handleImportMembers = async (data: Partial<Member>[]) => {
+    for (const m of data) {
+      if (m.id) {
+        const { id, ...payload } = m as any;
+        try { await updateDoc(doc(db, 'members', id), payload); }
+        catch { await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() }); }
+      } else {
+        const { id: _id, ...payload } = m as any;
+        await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() });
+      }
+    }
+    await loadMembers();
+  };
+
+  // ── Loading screen ─────────────────────────────────────────────────────
+  if (loading) return (
+    <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#101922' }}>
+      <div className="text-center px-8">
+        <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+          className="text-7xl mb-6">🏛️</motion.div>
+        <h1 className="text-2xl font-black text-white tracking-tight">Gia Phả Dòng Họ Lê</h1>
+        <p className="text-sm mt-2" style={{ color: '#92adc9' }}>Truyền thống · Đoàn kết · Phát triển</p>
+        <div className="mt-8 flex justify-center gap-2">
+          {[0, 1, 2].map(i => (
+            <motion.div key={i} className="w-2 h-2 rounded-full"
+              style={{ background: '#D4AF37' }}
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.3 }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const maxGen = Math.max(...members.map(m => m.generation), 1);
+
+  return (
+    <div className="fixed inset-0 flex flex-col" style={{ background: '#101922' }}>
+
+      {/* ── Header ── */}
+      <div className="flex-shrink-0 safe-top" style={{ background: '#192633', borderBottom: '1px solid #233648' }}>
+        <div className="flex items-center gap-3 px-4 py-3">
+          {/* Logo */}
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black flex-shrink-0"
+            style={{ background: '#D4AF37', color: '#101922', fontFamily: 'serif', fontSize: 16 }}>
+            Lê
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-white text-sm leading-tight">Gia Phả Dòng Họ Lê</h1>
+            <p className="text-xs" style={{ color: '#D4AF37', opacity: 0.8 }}>
+              {members.length} thành viên · {maxGen} đời
+            </p>
+          </div>
+          {/* Filter đời (chỉ tab cây) */}
+          {activeTab === 'tree' && (
+            <select value={filterGen}
+              onChange={e => setFilterGen(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              className="text-xs rounded-xl px-3 py-2 focus:outline-none flex-shrink-0"
+              style={{ background: '#233648', color: '#D4AF37', border: '1px solid #233648' }}>
+              <option value="all">Tất cả đời</option>
+              {Array.from({ length: maxGen }, (_, i) => i + 1).map(g => (
+                <option key={g} value={g}>Đời {g}</option>
+              ))}
+            </select>
+          )}
+          {isAdmin && (
+            <div className="flex-shrink-0 px-2 py-1 rounded-full text-xs font-black"
+              style={{ background: '#D4AF37', color: '#101922' }}>ADMIN</div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Toast ── */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ y: -48, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -48, opacity: 0 }}
+            className="fixed top-20 left-4 right-4 z-50 text-white px-4 py-3 rounded-2xl shadow-xl text-sm font-semibold text-center"
+            style={{ background: '#059669' }}>
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Tab content ── */}
+      <div className="flex-1 overflow-hidden relative">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div key={activeTab} custom={direction} variants={tabVariants}
+            initial="enter" animate="center" exit="exit"
+            transition={{ type: 'spring', stiffness: 380, damping: 38, mass: 0.8 }}
+            className="absolute inset-0">
+
+            {activeTab === 'tree' && (
+              <TreeTab members={members} filterGen={filterGen} isAdmin={isAdmin}
+                onNodeClick={setViewingMember}
+                onAddMember={() => { setEditingMember(null); setIsFormOpen(true); }} />
+            )}
+            {activeTab === 'directory' && (
+              <DirectoryTab members={members} onSelectMember={setViewingMember} />
+            )}
+            {activeTab === 'events' && (
+              <EventsTab members={members} onSelectMember={setViewingMember} />
+            )}
+            {activeTab === 'fund' && <FundTab />}
+            {activeTab === 'library' && <LibraryTab />}
+            {activeTab === 'settings' && (
+              <SettingsTab user={user} isAdmin={isAdmin} members={members}
+                adminEmails={ADMIN_EMAILS}
+                onShowStats={() => setShowStats(true)}
+                onShowMemorial={() => setShowMemorial(true)}
+                onShowGraveMap={() => setShowGraveMap(true)}
+                onImportMembers={handleImportMembers} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* ── Bottom Nav ── */}
+      <BottomNav active={activeTab} onChange={handleTabChange} />
+
+      {/* ── Sheets ── */}
+      <BottomSheet isOpen={!!viewingMember} onClose={() => setViewingMember(null)} height="95vh">
+        {viewingMember && (
+          <MemberBottomSheet member={viewingMember} members={members}
+            onClose={() => setViewingMember(null)} onEdit={handleEdit} isAdmin={isAdmin} />
+        )}
+      </BottomSheet>
+
+      <BottomSheet isOpen={isAdmin && isFormOpen} onClose={() => { setIsFormOpen(false); setEditingMember(null); }} height="95vh">
+        {isAdmin && (
+          <MemberForm isOpen={isFormOpen}
+            onClose={() => { setIsFormOpen(false); setEditingMember(null); }}
+            onSave={handleSave} onDelete={handleDelete}
+            members={members} editingMember={editingMember} isAdmin={isAdmin} />
+        )}
+      </BottomSheet>
+
+      <BottomSheet isOpen={showGraveMap} onClose={() => setShowGraveMap(false)} height="90vh">
+        <GraveMap members={members} onClose={() => setShowGraveMap(false)}
+          onViewMember={m => { setViewingMember(m); setShowGraveMap(false); }} />
+      </BottomSheet>
+
+      {showStats && <StatsPanel members={members} onClose={() => setShowStats(false)} />}
+      {showMemorial && (
+        <MemorialPage members={members} onClose={() => setShowMemorial(false)}
+          onViewMember={m => { setViewingMember(m); setShowMemorial(false); }} />
+      )}
+
+      <PWAInstallPrompt />
+    </div>
+  );
+}
