@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',        // KHÔNG auto-update cache
       injectRegister: 'auto',
-      includeAssets: ['icon-192.svg','icon-512.svg'],
+      includeAssets: ['icon-192.svg', 'icon-512.svg'],
       manifest: {
         name: 'Gia Phả Dòng Họ Lê',
         short_name: 'Gia Phả Họ Lê',
@@ -21,17 +21,16 @@ export default defineConfig({
         scope: '/',
         lang: 'vi',
         icons: [
-          { src:'/icon-192.svg', sizes:'192x192', type:'image/svg+xml', purpose:'any maskable' },
-          { src:'/icon-512.svg', sizes:'512x512', type:'image/svg+xml', purpose:'any maskable' },
+          { src: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
         ],
       },
       workbox: {
-        navigateFallback: null,      // KHÔNG cache HTML → luôn load mới
+        navigateFallback: null, // KHÔNG cache HTML → luôn load mới
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
           {
-            // Firebase Firestore → NetworkFirst: dữ liệu luôn mới nhất
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
@@ -41,7 +40,6 @@ export default defineConfig({
             },
           },
           {
-            // Cloudinary images → StaleWhileRevalidate
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
@@ -50,7 +48,6 @@ export default defineConfig({
             },
           },
           {
-            // Google Fonts → CacheFirst (hiếm thay đổi)
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
@@ -63,4 +60,12 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: { exclude: ['lucide-react'] },
+  build: {
+    outDir: 'dist',   // <--- cực quan trọng cho Cloudflare/Netlify
+    sourcemap: false,
+  },
+  server: {
+    port: 5173,
+    open: true,
+  },
 });
