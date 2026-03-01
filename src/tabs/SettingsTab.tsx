@@ -144,7 +144,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
           <p className="text-xs font-bold text-gray-400 uppercase px-4 mb-2 tracking-wider">Công Cụ</p>
           <div className="bg-white rounded-2xl mx-4 overflow-hidden shadow-sm divide-y divide-gray-50">
             <MenuItem icon={<BarChart2 size={18} color="#800000" />} label="Thống kê dòng họ" sub="Biểu đồ theo đời, nam/nữ" onClick={onShowStats} />
-            <MenuItem icon={<Flame size={18} color="#800000" />} label="Trang tưởng nhớ" sub="Thắp hương tiên tổ" onClick={onShowMemorial} />
+            <MenuItem icon={<Flame size={18} color="#800000" />} label="Trang tưởng nhớ" sub="Tưởng nhớ người đã mất" onClick={onShowMemorial} />
             <MenuItem icon={<Map size={18} color="#800000" />} label="Bản đồ mộ phần" sub={`${withGrave} mộ có địa chỉ · Chỉ đường Google Maps`} onClick={onShowGraveMap} />
           </div>
         </div>
@@ -286,7 +286,8 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
             </button>
           </div>
 
-          {/* GEDCOM export */}
+          {/* GEDCOM export — chỉ admin */}
+          {isAdmin && (
           <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: border }}>
             <div>
               <p className="text-xs font-bold" style={{ color: textMain }}>Sao lưu GEDCOM</p>
@@ -300,6 +301,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
               <Download size={13}/> .ged
             </button>
           </div>
+          )}
 
           {/* Nhà phát triển */}
           <div className="px-5 py-3.5 border-b" style={{ borderColor: border }}>
