@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Edit2, QrCode, X, MapPin, ExternalLink } from 'lucide-react';
-import { Member } from '../types';
+import { Member, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 
 interface Props {
   member: Member | null;
@@ -135,6 +135,16 @@ export default function MemberBottomSheet({ member, members, onClose, onEdit, is
             <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${isDeceased ? 'bg-gray-100 text-gray-500' : 'bg-green-100 text-green-700'}`}>
               {isDeceased ? '🕯️ Đã mất' : '💚 Còn sống'}
             </span>
+            {(() => {
+              const mt = member.memberType || 'chinh';
+              const col = MEMBER_TYPE_COLOR[mt];
+              return (
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold"
+                  style={{ background: col.bg, color: col.text }}>
+                  {MEMBER_TYPE_LABEL[mt]}
+                </span>
+              );
+            })()}
           </div>
         </div>
 

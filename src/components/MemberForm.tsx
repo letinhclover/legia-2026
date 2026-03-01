@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Save, Trash2, Upload, User, Camera } from 'lucide-react';
-import { Member } from '../types';
+import { Member, MemberType, MEMBER_TYPE_LABEL } from '../types';
 import { uploadToCloudinary } from '../utils/imageCompress';
 import { solarToLunarString } from '../utils/lunarCalendar';
 
@@ -15,7 +15,7 @@ interface MemberFormProps {
 }
 
 const emptyForm = {
-  name:'',tenHuy:'',tenTu:'',tenThuy:'',chucTuoc:'',
+  name:'',tenHuy:'',tenTu:'',tenThuy:'',chucTuoc:'',memberType:'chinh' as MemberType,
   gender:'Nam' as 'Nam'|'Nữ', generation:'1',
   birthDate:'',birthDateLunar:'',birthPlace:'',
   deathDate:'',deathDateLunar:'',deathPlace:'',
@@ -40,6 +40,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
         tenTu:editingMember.tenTu||'',
         tenThuy:editingMember.tenThuy||'',
         chucTuoc:editingMember.chucTuoc||'',
+        memberType:(editingMember.memberType||'chinh') as MemberType,
         gender:editingMember.gender||'Nam',
         generation:String(editingMember.generation||1),
         birthDate:editingMember.birthDate||'',
@@ -116,6 +117,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
     const gen=parseInt(form.generation)||1;
     onSave({
       ...form,
+      memberType: form.memberType as MemberType,
       generation: Number(gen),           // YC2: ép kiểu Number tường minh
       fatherId:form.fatherId||null,
       motherId:form.motherId||null,
@@ -244,6 +246,16 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                 <div>
                   <label className={lbl}>Chức tước</label>
                   <input className={inp} value={form.chucTuoc} onChange={e=>set('chucTuoc',e.target.value)} placeholder="Chánh tổng, Hương lý..."/>
+                </div>
+                <div>
+                  <label className={lbl}>Vai vế trong họ</label>
+                  <select className={inp} value={form.memberType} onChange={e=>set('memberType',e.target.value)}>
+                    <option value="chinh">🔴 Chính tộc (họ Lê)</option>
+                    <option value="dau">💍 Con dâu (vợ của con trai Lê)</option>
+                    <option value="re">🤝 Con rể (chồng con gái Lê)</option>
+                    <option value="chau_ngoai">👶 Cháu ngoại (con của con gái Lê)</option>
+                    <option value="ngoai_toc">🔗 Ngoại tộc khác</option>
+                  </select>
                 </div>
                 <div>
                   <label className={lbl}>Giới tính <span className="text-red-500">*</span></label>
