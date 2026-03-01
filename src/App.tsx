@@ -286,10 +286,10 @@ export default function App() {
               />
             )}
             {activeTab === 'directory' && (
-              <DirectoryTab members={members} onSelectMember={setViewingMember} />
+              <DirectoryTab members={members} onSelectMember={setViewingMember} darkMode={darkMode} />
             )}
             {activeTab === 'events' && (
-              <EventsTab members={members} onSelectMember={setViewingMember} />
+              <EventsTab members={members} onSelectMember={setViewingMember} darkMode={darkMode} />
             )}
             {activeTab === 'settings' && (
               <SettingsTab
@@ -299,6 +299,7 @@ export default function App() {
                 onShowMemorial={() => setShowMemorial(true)}
                 onShowGraveMap={() => setShowGraveMap(true)}
                 onImportMembers={handleImportMembers}
+                darkMode={darkMode}
               />
             )}
           </motion.div>
