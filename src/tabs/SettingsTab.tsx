@@ -257,7 +257,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-black text-base" style={{ color: textMain }}>Gia Phả Dòng Họ Lê</p>
-              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#800000' }}>v12 — Phiên bản chính thức</p>
+              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#800000' }}>v15 — Phiên bản chính thức</p>
               <p className="text-[10px] mt-1 leading-relaxed" style={{ color: textSub }}>
                 Firebase · Cloudinary · Cloudflare Pages · GitHub
               </p>
