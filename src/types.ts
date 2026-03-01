@@ -1,6 +1,20 @@
+/**
+ * memberType — phân loại mối quan hệ trong dòng họ
+ *
+ *  chinh      : thành viên chính, mang họ Lê hoặc con ruột dòng họ
+ *  dau        : con dâu — vợ của con trai Lê (ngoại tộc kết hôn vào)
+ *  re         : con rể — chồng của con gái Lê (ngoại tộc kết hôn vào)
+ *  chau_ngoai : cháu ngoại — con của con gái Lê (mang họ cha/rể)
+ *  ngoai_toc  : người ngoại tộc khác (ông bà ngoại, họ hàng bên vợ/chồng...)
+ *
+ * Mặc định (undefined / 'chinh'): thành viên chính dòng họ Lê
+ */
+export type MemberType = 'chinh' | 'dau' | 're' | 'chau_ngoai' | 'ngoai_toc';
+
 export interface Member {
   id: string;
   name: string;
+  memberType?: MemberType;   // phân loại quan hệ dòng họ — mặc định 'chinh'
   tenHuy?: string;
   tenTu?: string;
   tenThuy?: string;
@@ -13,11 +27,10 @@ export interface Member {
   deathDate?: string;
   deathDateLunar?: string;
   deathPlace?: string;
-  // Mộ phần — tách thành 2 trường rõ ràng
-  burialAddress?: string;       // Địa chỉ văn bản
-  burialMapLink?: string;       // Link Google Maps
-  /** @deprecated Dùng burialAddress thay thế */
-  burialPlace?: string;         // giữ lại để không mất dữ liệu cũ
+  burialAddress?: string;
+  burialMapLink?: string;
+  /** @deprecated dùng burialAddress */
+  burialPlace?: string;
   burialLat?: number | null;
   burialLng?: number | null;
   residence?: string;
@@ -35,3 +48,20 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
 }
+
+// ── Label & màu cho từng loại thành viên ─────────────────────────────────
+export const MEMBER_TYPE_LABEL: Record<string, string> = {
+  chinh:      '🔴 Chính tộc',
+  dau:        '💍 Con dâu',
+  re:         '🤝 Con rể',
+  chau_ngoai: '👶 Cháu ngoại',
+  ngoai_toc:  '🔗 Ngoại tộc',
+};
+
+export const MEMBER_TYPE_COLOR: Record<string, { bg: string; text: string }> = {
+  chinh:      { bg: '#FEF2F2', text: '#991B1B' },
+  dau:        { bg: '#FDF4FF', text: '#7E22CE' },
+  re:         { bg: '#EFF6FF', text: '#1D4ED8' },
+  chau_ngoai: { bg: '#F0FDF4', text: '#15803D' },
+  ngoai_toc:  { bg: '#FFFBEB', text: '#92400E' },
+};
