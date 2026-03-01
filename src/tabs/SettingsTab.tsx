@@ -8,6 +8,7 @@ import { exportToExcel, importFromExcel } from '../utils/excelIO';
 import { exportToPDF } from '../utils/pdfExport';
 
 interface Props {
+  darkMode?: boolean;
   user: { email: string | null } | null;
   isAdmin: boolean;
   members: Member[];
@@ -18,7 +19,12 @@ interface Props {
   adminEmails: string[];
 }
 
-export default function SettingsTab({ user, isAdmin, members, onShowStats, onShowMemorial, onShowGraveMap, onImportMembers, adminEmails }: Props) {
+export default function SettingsTab({ user, isAdmin, members, onShowStats, onShowMemorial, onShowGraveMap, onImportMembers, adminEmails, darkMode }: Props) {
+  const bg       = darkMode ? '#0f1724' : '#F3F4F6';
+  const cardBg   = darkMode ? '#1e2a3a' : 'white';
+  const textMain = darkMode ? '#f1f5f9' : '#111827';
+  const textSub  = darkMode ? '#64748b' : '#6B7280';
+  const border   = darkMode ? '#2d3d52' : '#F3F4F6';
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [error, setError] = useState('');
@@ -101,7 +107,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
   );
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto" style={{ background: bg }}>
       {/* Header */}
       <div className="flex-shrink-0 px-4 pt-4 pb-3 bg-white border-b border-gray-100 shadow-sm">
         <h2 className="text-lg font-bold text-gray-900">Quản Trị & Cài Đặt</h2>
@@ -238,26 +244,59 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
           </div>
         </div>
 
-        {/* App info */}
-        <div className="mx-4 bg-white rounded-2xl shadow-sm p-4 flex items-start gap-3">
-          <Info size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-bold text-gray-700">Gia Phả Dòng Họ Lê v10</p>
-            <p className="text-xs text-gray-400 mt-0.5">Firebase · Cloudinary · Cloudflare Pages · GitHub · Miễn phí</p>
-            <button
-              onClick={() => {
-                const url = 'https://legia-2026.pages.dev';
-                if (navigator.share) {
-                  navigator.share({ title: 'Gia Phả Dòng Họ Lê', url });
-                } else {
-                  navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!'));
-                }
-              }}
-              className="flex items-center gap-1 mt-1 text-xs font-semibold hover:underline"
-              style={{ color: '#800000' }}
-            >
-              🔗 legia-2026.pages.dev · Nhấn để chia sẻ
-            </button>
+        {/* Footer thông tin ứng dụng */}
+        <div className="mx-4 rounded-2xl shadow-sm overflow-hidden" style={{ background: cardBg, border: `1px solid ${border}` }}>
+          {/* App title */}
+          <div className="px-4 pt-4 pb-3 border-b" style={{ borderColor: border }}>
+            <div className="flex items-start gap-3">
+              <Info size={18} className="flex-shrink-0 mt-0.5" style={{ color: textSub }} />
+              <div className="flex-1">
+                <p className="text-sm font-bold" style={{ color: textMain }}>Gia Phả Dòng Họ Lê v11</p>
+                <p className="text-xs mt-0.5" style={{ color: textSub }}>
+                  Firebase · Cloudinary · Cloudflare Pages · GitHub
+                </p>
+                <button
+                  onClick={() => {
+                    const url = 'https://legia-2026.pages.dev';
+                    if (navigator.share) {
+                      navigator.share({ title: 'Gia Phả Dòng Họ Lê', url });
+                    } else {
+                      navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!'));
+                    }
+                  }}
+                  className="flex items-center gap-1 mt-1 text-xs font-semibold"
+                  style={{ color: '#800000' }}
+                >
+                  🔗 legia-2026.pages.dev · Chia sẻ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Liên hệ & bản quyền */}
+          <div className="px-4 py-3">
+            <p className="text-xs font-bold mb-2" style={{ color: textSub }}>LIÊN HỆ & BẢN QUYỀN</p>
+            <p className="text-xs leading-relaxed mb-1" style={{ color: textSub }}>
+              Bản quyền thuộc về <span className="font-semibold" style={{ color: textMain }}>Dòng Họ Lê</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-bold">LT</span>
+              </div>
+              <div>
+                <p className="text-xs font-semibold" style={{ color: textMain }}>Người phát triển: Lê Tỉnh</p>
+                <p className="text-xs" style={{ color: textSub }}>Muốn bổ sung thông tin dòng họ?</p>
+              </div>
+              <a
+                href="https://zalo.me/0708312789"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs text-white"
+                style={{ background: '#0068FF' }}
+              >
+                <span>💬</span> Zalo
+              </a>
+            </div>
           </div>
         </div>
       </div>
