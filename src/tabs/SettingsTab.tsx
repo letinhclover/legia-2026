@@ -242,9 +242,22 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
         <div className="mx-4 bg-white rounded-2xl shadow-sm p-4 flex items-start gap-3">
           <Info size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-gray-700">Gia Phả Dòng Họ Lê v2.1</p>
-            <p className="text-xs text-gray-400 mt-0.5">Firebase · Cloudinary · Netlify · Miễn phí</p>
-            <p className="text-xs text-gray-400 mt-0.5">legia-2026.netlify.app</p>
+            <p className="text-sm font-bold text-gray-700">Gia Phả Dòng Họ Lê v2.2</p>
+            <p className="text-xs text-gray-400 mt-0.5">Firebase · Cloudinary · Cloudflare Pages · Miễn phí</p>
+            <button
+              onClick={() => {
+                const url = 'https://legia-2026.pages.dev';
+                if (navigator.share) {
+                  navigator.share({ title: 'Gia Phả Dòng Họ Lê', url });
+                } else {
+                  navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!'));
+                }
+              }}
+              className="flex items-center gap-1 mt-1 text-xs font-semibold hover:underline"
+              style={{ color: '#800000' }}
+            >
+              🔗 legia-2026.pages.dev · Nhấn để chia sẻ
+            </button>
           </div>
         </div>
       </div>
