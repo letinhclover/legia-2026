@@ -314,6 +314,7 @@ export default function App() {
         {viewingMember && (
           <MemberBottomSheet
             member={viewingMember} members={members}
+            onSelectMember={setViewingMember}
             onClose={() => setViewingMember(null)}
             onEdit={handleEdit} isAdmin={isAdmin}
           />
