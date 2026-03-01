@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, LogIn, LogOut, BarChart2, Flame, ChevronRight, Info, Download, Upload, FileSpreadsheet, Map, FileText } from 'lucide-react';
+import { Shield, LogIn, LogOut, BarChart2, Flame, ChevronRight, Info, Download, Upload, FileSpreadsheet, Map, FileText, Share2 } from 'lucide-react';
+import { downloadGedcom } from '../utils/gedcom';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Member } from '../types';
@@ -244,60 +245,95 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
           </div>
         </div>
 
-        {/* Footer thông tin ứng dụng */}
+        {/* ── Footer card gom tất cả ── */}
         <div className="mx-4 rounded-2xl shadow-sm overflow-hidden" style={{ background: cardBg, border: `1px solid ${border}` }}>
-          {/* App title */}
-          <div className="px-4 pt-4 pb-3 border-b" style={{ borderColor: border }}>
-            <div className="flex items-start gap-3">
-              <Info size={18} className="flex-shrink-0 mt-0.5" style={{ color: textSub }} />
-              <div className="flex-1">
-                <p className="text-sm font-bold" style={{ color: textMain }}>Gia Phả Dòng Họ Lê v11</p>
-                <p className="text-xs mt-0.5" style={{ color: textSub }}>
-                  Firebase · Cloudinary · Cloudflare Pages · GitHub
-                </p>
-                <button
-                  onClick={() => {
-                    const url = 'https://legia-2026.pages.dev';
-                    if (navigator.share) {
-                      navigator.share({ title: 'Gia Phả Dòng Họ Lê', url });
-                    } else {
-                      navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!'));
-                    }
-                  }}
-                  className="flex items-center gap-1 mt-1 text-xs font-semibold"
-                  style={{ color: '#800000' }}
-                >
-                  🔗 legia-2026.pages.dev · Chia sẻ
-                </button>
-              </div>
+
+          {/* Logo + App name */}
+          <div className="px-5 pt-5 pb-4 flex items-center gap-4 border-b" style={{ borderColor: border }}>
+            {/* Logo ô vuông đỏ */}
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
+              style={{ background: 'linear-gradient(135deg, #800000 0%, #4a0000 60%, #B8860B 100%)' }}>
+              <span className="text-white text-2xl font-black" style={{ fontFamily: 'serif', letterSpacing: -1 }}>Lê</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-base" style={{ color: textMain }}>Gia Phả Dòng Họ Lê</p>
+              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#800000' }}>v12 — Phiên bản chính thức</p>
+              <p className="text-[10px] mt-1 leading-relaxed" style={{ color: textSub }}>
+                Firebase · Cloudinary · Cloudflare Pages · GitHub
+              </p>
             </div>
           </div>
 
-          {/* Liên hệ & bản quyền */}
-          <div className="px-4 py-3">
-            <p className="text-xs font-bold mb-2" style={{ color: textSub }}>LIÊN HỆ & BẢN QUYỀN</p>
-            <p className="text-xs leading-relaxed mb-1" style={{ color: textSub }}>
-              Bản quyền thuộc về <span className="font-semibold" style={{ color: textMain }}>Dòng Họ Lê</span>
+          {/* Link chia sẻ */}
+          <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: border }}>
+            <div>
+              <p className="text-xs font-bold" style={{ color: textMain }}>Truy cập & Chia sẻ</p>
+              <p className="text-[11px] mt-0.5" style={{ color: textSub }}>legia-2026.pages.dev</p>
+            </div>
+            <button
+              onClick={() => {
+                const url = 'https://legia-2026.pages.dev';
+                if (navigator.share) {
+                  navigator.share({ title: 'Gia Phả Dòng Họ Lê', url });
+                } else {
+                  navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!'));
+                }
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
+              style={{ background: '#800000' }}
+            >
+              <Share2 size={13}/> Chia sẻ
+            </button>
+          </div>
+
+          {/* GEDCOM export */}
+          <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: border }}>
+            <div>
+              <p className="text-xs font-bold" style={{ color: textMain }}>Sao lưu GEDCOM</p>
+              <p className="text-[11px] mt-0.5" style={{ color: textSub }}>Chuẩn quốc tế — dùng cho Ancestry, MyHeritage…</p>
+            </div>
+            <button
+              onClick={() => downloadGedcom(members)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold"
+              style={{ background: darkMode ? '#253040' : '#F3F4F6', color: darkMode ? '#94a3b8' : '#374151' }}
+            >
+              <Download size={13}/> .ged
+            </button>
+          </div>
+
+          {/* Nhà phát triển */}
+          <div className="px-5 py-3.5 border-b" style={{ borderColor: border }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2.5" style={{ color: textSub }}>
+              Nhà Phát Triển
             </p>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">LT</span>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-black text-sm text-white"
+                style={{ background: 'linear-gradient(135deg, #0068FF, #0044CC)' }}>
+                LT
               </div>
-              <div>
-                <p className="text-xs font-semibold" style={{ color: textMain }}>Người phát triển: Lê Tỉnh</p>
-                <p className="text-xs" style={{ color: textSub }}>Muốn bổ sung thông tin dòng họ?</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold" style={{ color: textMain }}>Lê Tỉnh</p>
+                <p className="text-[11px]" style={{ color: textSub }}>Muốn bổ sung thông tin dòng họ? Liên hệ ngay</p>
               </div>
-              <a
-                href="https://zalo.me/0708312789"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs text-white"
-                style={{ background: '#0068FF' }}
-              >
+              <a href="https://zalo.me/0708312789" target="_blank" rel="noopener noreferrer"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-sm"
+                style={{ background: '#0068FF' }}>
                 <span>💬</span> Zalo
               </a>
             </div>
           </div>
+
+          {/* Copyright */}
+          <div className="px-5 py-3 text-center">
+            <p className="text-[11px]" style={{ color: textSub }}>
+              © {new Date().getFullYear()} Bản quyền thuộc về{' '}
+              <span className="font-semibold" style={{ color: textMain }}>Dòng Họ Lê</span>
+            </p>
+            <p className="text-[10px] mt-0.5" style={{ color: textSub }}>
+              Dữ liệu được bảo vệ và lưu trữ an toàn trên Firebase
+            </p>
+          </div>
+
         </div>
       </div>
     </div>

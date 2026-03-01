@@ -38,10 +38,7 @@ function TreeSkeleton({ dark }: { dark: boolean }) {
         {[2,4,3].map((n, row) => (
           <div key={row} className="flex justify-center gap-4">
             {Array(n).fill(0).map((_, i) => (
-              <div key={i} className="rounded-2xl" style={{
-                width: 145, height: 148,
-                background: dark ? '#253040' : '#e8e0d0'
-              }} />
+              <div key={i} className="rounded-2xl" style={{ width: 138, height: 150, background: dark ? '#253040' : '#e8e0d0' }} />
             ))}
           </div>
         ))}
@@ -51,38 +48,26 @@ function TreeSkeleton({ dark }: { dark: boolean }) {
   );
 }
 
-// ── Helper: tìm tất cả node kết nối với 1 node (huyết thống) ─────────────
 function getBloodlineIds(memberId: string, members: Member[]): Set<string> {
   const ids = new Set<string>();
-  const memberMap = new Map(members.map(m => [m.id, m]));
-
-  // Đi ngược lên (tổ tiên)
-  function goUp(id: string) {
-    if (ids.has(id)) return;
-    ids.add(id);
-    const m = memberMap.get(id);
-    if (!m) return;
-    if (m.fatherId) goUp(m.fatherId);
-    if (m.motherId) goUp(m.motherId);
+  const map = new Map(members.map(m => [m.id, m]));
+  function up(id: string) {
+    if (ids.has(id)) return; ids.add(id);
+    const m = map.get(id); if (!m) return;
+    if (m.fatherId) up(m.fatherId);
+    if (m.motherId) up(m.motherId);
     if (m.spouseId) ids.add(m.spouseId);
   }
-
-  // Đi xuống (con cháu)
-  function goDown(id: string) {
-    if (ids.has(id)) return;
-    ids.add(id);
-    const m = memberMap.get(id);
-    if (!m) return;
+  function down(id: string) {
+    if (ids.has(id)) return; ids.add(id);
+    const m = map.get(id); if (!m) return;
     if (m.spouseId) ids.add(m.spouseId);
-    members.filter(c => c.fatherId === id || c.motherId === id).forEach(c => goDown(c.id));
+    members.filter(c => c.fatherId === id || c.motherId === id).forEach(c => down(c.id));
   }
-
-  goUp(memberId);
-  goDown(memberId);
+  up(memberId); down(memberId);
   return ids;
 }
 
-// ── Inner component ────────────────────────────────────────────────────────
 function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, darkMode, onToggleDark }: Props) {
   const [ready, setReady] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -92,61 +77,48 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
 
   const filtered = filterGen === 'all' ? members : members.filter(m => m.generation === filterGen);
 
-  // Bloodline set
   const bloodlineIds = useMemo(() =>
     highlightId ? getBloodlineIds(highlightId, filtered) : null,
     [highlightId, filtered]
   );
 
   const handleNodeClick = useCallback((m: Member) => {
-    setHighlightId(prev => prev === m.id ? null : m.id); // toggle
+    setHighlightId(prev => prev === m.id ? null : m.id);
     onNodeClick(m);
   }, [onNodeClick]);
 
   const { nodes: initNodes, edges: initEdges } = useMemo(
     () => buildFamilyLayout(filtered, handleNodeClick),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [filtered.map(m => `${m.id}:${m.spouseId}:${m.fatherId}:${m.birthDate}`).join(','), darkMode]
   );
 
-  // Inject highlight/dim/darkMode vào node data
   const themedNodes: Node[] = useMemo(() => initNodes.map(n => ({
     ...n,
     data: {
-      ...n.data,
-      darkMode,
+      ...n.data, darkMode,
       highlighted: bloodlineIds ? bloodlineIds.has(n.id) : false,
       dimmed: bloodlineIds ? !bloodlineIds.has(n.id) : false,
     },
   })), [initNodes, darkMode, bloodlineIds]);
 
-  // Highlight edges trong bloodline
   const themedEdges: Edge[] = useMemo(() => initEdges.map(e => {
     if (!bloodlineIds) return e;
     const inLine = bloodlineIds.has(e.source) && bloodlineIds.has(e.target);
-    return {
-      ...e,
-      style: {
-        ...e.style,
-        opacity: inLine ? 1 : 0.12,
-        strokeWidth: inLine ? (e.style?.strokeWidth as number ?? 2) + 1 : 1,
-      },
-    };
+    return { ...e, style: { ...e.style, opacity: inLine ? 1 : 0.1, strokeWidth: inLine ? (e.style?.strokeWidth as number ?? 2) + 1 : 1 } };
   }), [initEdges, bloodlineIds]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(themedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(themedEdges);
 
   useEffect(() => {
-    setNodes(themedNodes);
-    setEdges(themedEdges);
+    setNodes(themedNodes); setEdges(themedEdges);
     if (ready && themedNodes.length > 0)
       requestAnimationFrame(() => fitView({ padding: 0.18, duration: 500 }));
   }, [themedNodes, themedEdges, ready]);
 
   const bgColor    = darkMode ? '#0f1724' : '#FAFAF4';
   const dotColor   = darkMode ? '#8B5A2B' : '#C9A96E';
-  const cardBg     = darkMode ? 'rgba(22,32,48,0.95)' : 'rgba(255,253,248,0.96)';
+  const cardBg     = darkMode ? 'rgba(22,32,48,0.95)' : 'rgba(255,253,248,0.97)';
   const cardBorder = darkMode ? '#2d3d52' : '#E5E7EB';
   const cardText   = darkMode ? '#94a3b8' : '#6B7280';
   const mmBg       = darkMode ? '#192633' : '#FFF8E7';
@@ -164,7 +136,6 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           : 'radial-gradient(ellipse at 50% 0%, rgba(201,169,110,0.10) 0%, transparent 65%)',
       }} />
 
-      {/* ReactFlow */}
       <div className="absolute inset-0" style={{ zIndex: 1 }}>
         <ReactFlow
           nodes={nodes} edges={edges}
@@ -181,24 +152,37 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           nodesDraggable={false}
           nodesConnectable={false}
         >
+          {/*
+            Controls: dùng style để đẩy xuống thấp hơn,
+            tránh chồng lên Legend ở góc dưới-trái.
+            ReactFlow đặt Controls mặc định bottom-left.
+            Ta override qua CSS class !important.
+          */}
           <Controls
-            className="!rounded-2xl !overflow-hidden !shadow-lg !border"
+            className="!rounded-2xl !overflow-hidden !shadow-lg !border !bottom-36 !left-4"
             style={{ background: cardBg, borderColor: cardBorder }}
             showInteractive={false}
           />
+
           <Background
             variant={BackgroundVariant.Dots}
             gap={22} size={1.2} color={dotColor} style={{ opacity: 0.28 }}
           />
 
-          {/* Mini-map — Đề xuất #1 */}
+          {/*
+            MiniMap: pannable=true cho phép click+drag trên minimap để pan viewport.
+            NOTE: ReactFlow MiniMap không hỗ trợ hover-pan kiểu trackpad thật —
+            cần click+drag trên minimap để di chuyển.
+            Đặt ở góc PHẢI trên để không chồng lên Controls và Legend.
+          */}
           <MiniMap
             style={{
               background: mmBg,
               border: `1px solid ${cardBorder}`,
-              borderRadius: 16,
+              borderRadius: 12,
               overflow: 'hidden',
             }}
+            position="bottom-right"
             nodeColor={n => {
               if (bloodlineIds && !bloodlineIds.has(n.id)) return darkMode ? '#2a3545' : '#E5E7EB';
               if (n.data?.gender === 'Nam') return '#1D4ED8';
@@ -206,12 +190,16 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
               return mmFill;
             }}
             maskColor={darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)'}
-            zoomable pannable
+            zoomable
+            pannable
           />
         </ReactFlow>
       </div>
 
-      {/* Legend + toggle — góc dưới trái */}
+      {/*
+        Legend + dark toggle — góc DƯỚI TRÁI, dưới Controls.
+        Controls đã bị đẩy lên (!bottom-36), legend ở bottom-4 không chồng.
+      */}
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         className="absolute bottom-4 left-4 rounded-2xl px-3 py-2.5 text-xs space-y-1.5 shadow-md"
@@ -228,7 +216,6 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           </div>
         ))}
 
-        {/* Highlight đang bật */}
         {highlightId && (
           <div className="flex items-center gap-2 pt-1 border-t" style={{ borderColor: cardBorder }}>
             <div className="w-3 h-3 rounded-full border-2 border-yellow-500" />
@@ -239,21 +226,17 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           </div>
         )}
 
-        {/* Toggle dark/light */}
         <div className="pt-1 border-t" style={{ borderColor: cardBorder }}>
-          <motion.button
-            whileTap={{ scale: 0.88 }} onClick={onToggleDark}
-            className="flex items-center gap-2 w-full" style={{ color: cardText }}
-          >
+          <motion.button whileTap={{ scale: 0.88 }} onClick={onToggleDark}
+            className="flex items-center gap-2 w-full" style={{ color: cardText }}>
             {darkMode
               ? <><Sun size={11} className="text-yellow-400" /><span>Chế độ sáng</span></>
-              : <><Moon size={11} className="text-blue-500" /><span>Chế độ tối</span></>
-            }
+              : <><Moon size={11} className="text-blue-500" /><span>Chế độ tối</span></>}
           </motion.button>
         </div>
       </motion.div>
 
-      {/* FAB thêm — góc dưới phải */}
+      {/* FAB thêm — góc dưới phải, trên minimap */}
       <AnimatePresence>
         {isAdmin && (
           <motion.button
@@ -261,12 +244,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
             onClick={onAddMember}
             className="absolute text-white font-bold rounded-2xl shadow-xl px-4 py-3 flex items-center gap-2"
-            style={{
-              background: 'linear-gradient(135deg, #B8860B, #8B6914)',
-              zIndex: 10,
-              // Để không che mini-map, đặt bottom cao hơn một chút
-              bottom: 160, right: 16,
-            }}
+            style={{ background: 'linear-gradient(135deg, #B8860B, #8B6914)', zIndex: 10, bottom: 160, right: 16 }}
           >
             <Plus size={20} strokeWidth={3} />
             <span className="text-sm">Thêm</span>
