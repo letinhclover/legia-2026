@@ -15,13 +15,13 @@ interface MemberFormProps {
 }
 
 const emptyForm = {
-  name:'',tenHuy:'',tenTu:'',tenThuy:'',chucTuoc:'',memberType:'chinh' as MemberType,
+  name:'',tenHuy:'',nickname:'',chucTuoc:'',memberType:'chinh' as MemberType,
   gender:'Nam' as 'Nam'|'Nữ', generation:'1',
   birthDate:'',birthDateLunar:'',birthPlace:'',
   deathDate:'',deathDateLunar:'',deathPlace:'',
   burialAddress:'',burialMapLink:'',   // YC3: tách mộ phần thành 2 trường
   residence:'',fatherId:'',motherId:'',spouseId:'',
-  photoUrl:'',biography:'',email:'',
+  photoUrl:'',biography:'',
 };
 
 export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editingMember,isAdmin}:MemberFormProps){
@@ -37,8 +37,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
       setForm({
         name:editingMember.name||'',
         tenHuy:editingMember.tenHuy||'',
-        tenTu:editingMember.tenTu||'',
-        tenThuy:editingMember.tenThuy||'',
+        nickname:(editingMember as any).nickname||'',
         chucTuoc:editingMember.chucTuoc||'',
         memberType:(editingMember.memberType||'chinh') as MemberType,
         gender:editingMember.gender||'Nam',
@@ -58,7 +57,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
         spouseId:editingMember.spouseId||'',
         photoUrl:editingMember.photoUrl||'',
         biography:editingMember.biography||'',
-        email:editingMember.email||'',
+
       });
     } else {
       setForm(emptyForm);
@@ -169,7 +168,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
   ] as const;
 
   return(
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col bg-white">
 
         {/* Header */}
         <div className="bg-gradient-to-r from-[#800000] to-[#A00000] text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
@@ -192,7 +191,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+        <form onSubmit={handleSubmit}>
           <div className="p-4 space-y-4">
 
           {/* TAB: Cơ bản */}
@@ -232,29 +231,32 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                   <input className={inp} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Nguyễn Văn A" required/>
                 </div>
                 <div>
-                  <label className={lbl}>Tên Húy</label>
-                  <input className={inp} value={form.tenHuy} onChange={e=>set('tenHuy',e.target.value)} placeholder="Tên trong gia phả"/>
+                  <label className={lbl}>Tên Húy
+                    <span className="font-normal text-gray-400 ml-1 normal-case">(tên chính thức trong gia phả)</span>
+                  </label>
+                  <input className={inp} value={form.tenHuy} onChange={e=>set('tenHuy',e.target.value)} placeholder="Tên ghi trong gia phả / bia mộ"/>
                 </div>
                 <div>
-                  <label className={lbl}>Tự</label>
-                  <input className={inp} value={form.tenTu} onChange={e=>set('tenTu',e.target.value)} placeholder="Tên chữ"/>
-                </div>
-                <div>
-                  <label className={lbl}>Thụy</label>
-                  <input className={inp} value={form.tenThuy} onChange={e=>set('tenThuy',e.target.value)} placeholder="Tên sau khi mất"/>
+                  <label className={lbl}>Tên thường gọi
+                    <span className="font-normal text-gray-400 ml-1 normal-case">(biệt danh, nickname)</span>
+                  </label>
+                  <input className={inp} value={(form as any).nickname||''} onChange={e=>set('nickname',e.target.value)} placeholder="VD: Dâu Tây, Bi, Bé..."/>
                 </div>
                 <div>
                   <label className={lbl}>Chức tước</label>
                   <input className={inp} value={form.chucTuoc} onChange={e=>set('chucTuoc',e.target.value)} placeholder="Chánh tổng, Hương lý..."/>
                 </div>
+              </div>
+              {/* ── Hàng 3 ô: Vai vế | Giới tính | Đời thứ ── */}
+              <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className={lbl}>Vai vế trong họ</label>
+                  <label className={lbl}>Vai vế</label>
                   <select className={inp} value={form.memberType} onChange={e=>set('memberType',e.target.value)}>
-                    <option value="chinh">🔴 Chính tộc (họ Lê)</option>
-                    <option value="dau">💍 Con dâu (vợ của con trai Lê)</option>
-                    <option value="re">🤝 Con rể (chồng con gái Lê)</option>
-                    <option value="chau_ngoai">👶 Cháu ngoại (con của con gái Lê)</option>
-                    <option value="ngoai_toc">🔗 Ngoại tộc khác</option>
+                    <option value="chinh">🔴 Chính tộc</option>
+                    <option value="dau">💍 Con dâu</option>
+                    <option value="re">🤝 Con rể</option>
+                    <option value="chau_ngoai">👶 Cháu ngoại</option>
+                    <option value="ngoai_toc">🔗 Ngoại tộc</option>
                   </select>
                 </div>
                 <div>
@@ -266,22 +268,13 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                 </div>
                 <div>
                   <label className={lbl}>Đời thứ <span className="text-red-500">*</span></label>
-                  <input
-                    className={inp}
-                    inputMode="numeric"
-                    value={form.generation}
-                    onChange={e=>{
-                      const v=e.target.value.replace(/[^0-9]/g,'');
-                      set('generation',v);
-                    }}
-                    placeholder="1"
-                    required
-                  />
+                  <input className={inp} inputMode="numeric" value={form.generation}
+                    onChange={e=>set('generation',e.target.value.replace(/[^0-9]/g,''))}
+                    placeholder="1" required/>
                 </div>
-                <div className="col-span-2">
-                  <label className={lbl}>Email nhận thông báo giỗ/sinh nhật</label>
-                  <input type="email" className={inp} value={form.email} onChange={e=>set('email',e.target.value)} placeholder="email@gmail.com"/>
-                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+
               </div>
             </div>
           )}
@@ -414,8 +407,8 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
 
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 p-4 border-t border-gray-100 bg-gray-50">
+          {/* Buttons — sticky bottom, luôn hiển thị */}
+          <div className="flex gap-3 p-4 border-t border-gray-100 bg-gray-50 sticky bottom-0 z-10">
             <button type="submit"
               className="flex-1 bg-[#B8860B] text-white py-3 rounded-xl font-bold hover:bg-[#996B08] transition-colors flex items-center justify-center gap-2 shadow-md">
               <Save size={18}/> Lưu thông tin

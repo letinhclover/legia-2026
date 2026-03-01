@@ -7,6 +7,7 @@ interface Props {
   members: Member[];
   onClose: () => void;
   onEdit: (m: Member) => void;
+  onSelectMember: (m: Member) => void;
   isAdmin: boolean;
 }
 
@@ -33,7 +34,7 @@ const Section = ({ title, color = 'gray', children }: {
   );
 };
 
-export default function MemberBottomSheet({ member, members, onClose, onEdit, isAdmin }: Props) {
+export default function MemberBottomSheet({ member, members, onClose, onEdit, onSelectMember, isAdmin }: Props) {
   if (!member) return null;
 
   const find     = (id: string | null | undefined) => id ? members.find(m => m.id === id) : null;
@@ -200,7 +201,8 @@ export default function MemberBottomSheet({ member, members, onClose, onEdit, is
                   <motion.div key={c.id}
                     initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 shadow-sm">
+                    onClick={() => onSelectMember(c)}
+                    className="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 shadow-sm cursor-pointer active:opacity-70">
                     <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center text-base">
                       {c.photoUrl
                         ? <img src={c.photoUrl} alt={c.name} className="w-full h-full object-cover" />
