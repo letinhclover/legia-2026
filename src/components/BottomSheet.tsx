@@ -29,6 +29,7 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
@@ -37,24 +38,32 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
             onClick={onClose}
           />
 
+          {/* Sheet container — KHÔNG dùng overflow-hidden ở đây
+              vì framer-motion transform + overflow-hidden trên Android
+              block scroll của content bên trong */}
           <motion.div
             drag="y"
             dragControls={dragControls}
-            dragListener={false}
+            dragListener={false}          // drag chỉ bắt đầu từ handle
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0.02, bottom: 0.4 }}
-            style={{ y, maxHeight: height }}
+            style={{
+              y,
+              maxHeight: height,
+              willChange: 'transform',    // gợi ý browser tạo layer riêng
+            }}
             onDragEnd={handleDragEnd}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 340, damping: 32, mass: 0.85 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl flex flex-col overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl flex flex-col"
+            // Không overflow-hidden ở đây — dùng rounded-t-3xl chỉ để bo góc trên
           >
-            {/* Handle — CHỈ kéo từ đây */}
+            {/* Handle — kéo vùng này. touchAction: none để drag hoạt động */}
             <div
-              className="flex-shrink-0 flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
-              style={{ touchAction: 'none' }}   /* ← chặn scroll native ở handle, cho drag hoạt động */
+              className="flex-shrink-0 flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: 'none' }}
               onPointerDown={e => {
                 e.preventDefault();
                 dragControls.start(e);
@@ -69,13 +78,13 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
               </div>
             )}
 
-            {/* Content scroll — touch-action: pan-y cho phép swipe dọc cuộn tự do */}
+            {/* Content — touchAction: pan-y cho phép scroll dọc native trên mobile */}
             <div
               className="flex-1 overflow-y-auto overscroll-contain"
               style={{
+                touchAction: 'pan-y',              // scroll dọc native
+                WebkitOverflowScrolling: 'touch',  // momentum scroll iOS
                 paddingBottom: 'max(env(safe-area-inset-bottom), 24px)',
-                touchAction: 'pan-y',     /* ← QUAN TRỌNG: cho phép scroll dọc native */
-                WebkitOverflowScrolling: 'touch',
               }}
             >
               {children}
