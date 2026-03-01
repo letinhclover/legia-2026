@@ -242,8 +242,8 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
         <div className="mx-4 bg-white rounded-2xl shadow-sm p-4 flex items-start gap-3">
           <Info size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-gray-700">Gia Phả Dòng Họ Lê v2.2</p>
-            <p className="text-xs text-gray-400 mt-0.5">Firebase · Cloudinary · Cloudflare Pages · Miễn phí</p>
+            <p className="text-sm font-bold text-gray-700">Gia Phả Dòng Họ Lê v10</p>
+            <p className="text-xs text-gray-400 mt-0.5">Firebase · Cloudinary · Cloudflare Pages · GitHub · Miễn phí</p>
             <button
               onClick={() => {
                 const url = 'https://legia-2026.pages.dev';
