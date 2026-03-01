@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { motion, AnimatePresence, useDragControls, useMotionValue, useTransform } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 
 interface Props {
   isOpen: boolean;
@@ -10,20 +10,58 @@ interface Props {
 }
 
 export default function BottomSheet({ isOpen, onClose, children, height = '90vh', title }: Props) {
-  const dragControls = useDragControls();
   const y = useMotionValue(0);
-  const backdropOpacity = useTransform(y, [0, 260], [0.48, 0.04]);
+  const backdropOpacity = useTransform(y, [0, 260], [0.48, 0.02]);
+  const handleRef = useRef<HTMLDivElement>(null);
 
+  // Khoá scroll body khi mở
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  useEffect(() => { if (isOpen) y.set(0); }, [isOpen]);
+  // Reset vị trí khi mở
+  useEffect(() => {
+    if (isOpen) animate(y, 0, { duration: 0 });
+  }, [isOpen]);
 
-  const handleDragEnd = (_: any, info: { offset: { y: number }; velocity: { y: number } }) => {
-    if (info.offset.y > 110 || info.velocity.y > 450) onClose();
-  };
+  // ── Manual touch handler CHỈ trên handle ──────────────────────────────
+  // Không đặt `drag` prop trên sheet → nội dung bên trong scroll tự do hoàn toàn
+  useEffect(() => {
+    const handle = handleRef.current;
+    if (!handle || !isOpen) return;
+
+    let startClientY = 0;
+
+    const onTouchStart = (e: TouchEvent) => {
+      startClientY = e.touches[0].clientY;
+      y.set(0);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const delta = e.touches[0].clientY - startClientY;
+      if (delta > 0) y.set(delta); // chỉ cho kéo xuống
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      const delta = e.changedTouches[0].clientY - startClientY;
+      if (delta > 110) {
+        onClose();
+      } else {
+        animate(y, 0, { type: 'spring', stiffness: 380, damping: 34 });
+      }
+    };
+
+    handle.addEventListener('touchstart', onTouchStart, { passive: true });
+    handle.addEventListener('touchmove', onTouchMove, { passive: true });
+    handle.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      handle.removeEventListener('touchstart', onTouchStart);
+      handle.removeEventListener('touchmove', onTouchMove);
+      handle.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -32,42 +70,26 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22 }}
             style={{ opacity: backdropOpacity }}
             className="fixed inset-0 bg-black z-40"
             onClick={onClose}
           />
 
-          {/* Sheet container — KHÔNG dùng overflow-hidden ở đây
-              vì framer-motion transform + overflow-hidden trên Android
-              block scroll của content bên trong */}
+          {/* Sheet — KHÔNG có drag prop → content scroll tự do */}
           <motion.div
-            drag="y"
-            dragControls={dragControls}
-            dragListener={false}          // drag chỉ bắt đầu từ handle
-            dragConstraints={{ top: 0 }}
-            dragElastic={{ top: 0.02, bottom: 0.4 }}
-            style={{
-              y,
-              maxHeight: height,
-              willChange: 'transform',    // gợi ý browser tạo layer riêng
-            }}
-            onDragEnd={handleDragEnd}
+            style={{ y, maxHeight: height, willChange: 'transform' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 340, damping: 32, mass: 0.85 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 34, mass: 0.9 }}
             className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl flex flex-col"
-            // Không overflow-hidden ở đây — dùng rounded-t-3xl chỉ để bo góc trên
           >
-            {/* Handle — kéo vùng này. touchAction: none để drag hoạt động */}
+            {/* Handle — manual touch drag */}
             <div
+              ref={handleRef}
               className="flex-shrink-0 flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
               style={{ touchAction: 'none' }}
-              onPointerDown={e => {
-                e.preventDefault();
-                dragControls.start(e);
-              }}
             >
               <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
             </div>
@@ -78,12 +100,12 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
               </div>
             )}
 
-            {/* Content — touchAction: pan-y cho phép scroll dọc native trên mobile */}
+            {/* Content — hoàn toàn tự do, không có drag interference */}
             <div
               className="flex-1 overflow-y-auto overscroll-contain"
               style={{
-                touchAction: 'pan-y',              // scroll dọc native
-                WebkitOverflowScrolling: 'touch',  // momentum scroll iOS
+                touchAction: 'pan-y',
+                WebkitOverflowScrolling: 'touch',
                 paddingBottom: 'max(env(safe-area-inset-bottom), 24px)',
               }}
             >
