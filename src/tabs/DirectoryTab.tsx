@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
-import { Member } from '../types';
+import { Member, MemberType, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 
 interface Props {
   members: Member[];
@@ -32,6 +32,7 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
   const [showFilter, setShowFilter] = useState(false);
   const [genderF, setGenderF]   = useState<'all'|'Nam'|'Nữ'>('all');
   const [statusF, setStatusF]   = useState<'all'|'alive'|'deceased'>('all');
+  const [typeF, setTypeF]       = useState<'all'|MemberType>('all');
 
   // Theme tokens
   const bg       = darkMode ? '#0f1724' : '#F9FAFB';
@@ -48,17 +49,18 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
   );
   const totalM = members.filter(m => m.gender === 'Nam').length;
   const totalF = members.filter(m => m.gender === 'Nữ').length;
-  const hasFilter = genderF !== 'all' || statusF !== 'all' || genFilter !== 'all';
+  const hasFilter = genderF !== 'all' || statusF !== 'all' || genFilter !== 'all' || typeF !== 'all';
 
   const filtered = useMemo(() => members.filter(m => {
     const q = query.toLowerCase();
     const matchQ   = !q || m.name.toLowerCase().includes(q) || (m.tenHuy||'').toLowerCase().includes(q);
     const matchGen = genFilter === 'all' || m.generation === genFilter;
     const matchG   = genderF === 'all' || m.gender === genderF;
+    const matchT   = typeF === 'all' || (member.memberType || 'chinh') === typeF;
     const matchS   = statusF === 'all'
       || (statusF==='alive' && !m.deathDate)
       || (statusF==='deceased' && !!m.deathDate);
-    return matchQ && matchGen && matchG && matchS;
+    return matchQ && matchGen && matchG && matchS && matchT;
   }).sort((a,b) => a.generation-b.generation || a.name.localeCompare(b.name)),
   [members, query, genFilter, genderF, statusF]);
 
@@ -124,6 +126,22 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
                     </button>
                   ))}
                 </div>
+                {/* Lọc vai vế */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase mb-1" style={{ color: textSub }}>Vai vế trong họ</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {(['all','chinh','dau','re','chau_ngoai','ngoai_toc'] as const).map(tv=>(
+                      <button key={tv} onClick={()=>setTypeF(tv)}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                        style={{
+                          background: typeF===tv ? '#800000' : inputBg,
+                          color: typeF===tv ? 'white' : textSub,
+                        }}>
+                        {tv==='all' ? '👥 Tất cả' : MEMBER_TYPE_LABEL[tv]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -186,11 +204,22 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-bold text-sm leading-snug" style={{ color: textMain }}>{m.name}</p>
-                        <span className="flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                          style={{ background: isDeceased ? (darkMode?'#1e1e1e':'#F3F4F6') : (darkMode?'#0f2010':'#F0FDF4'),
-                                   color:      isDeceased ? textSub : '#16a34a' }}>
-                          {isDeceased?'🕯️':'💚'}
-                        </span>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {(m.memberType && m.memberType !== 'chinh') && (() => {
+                            const col = MEMBER_TYPE_COLOR[m.memberType!];
+                            return (
+                              <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+                                style={{ background: col.bg, color: col.text }}>
+                                {MEMBER_TYPE_LABEL[m.memberType!].split(' ')[0]}
+                              </span>
+                            );
+                          })()}
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ background: isDeceased ? (darkMode?'#1e1e1e':'#F3F4F6') : (darkMode?'#0f2010':'#F0FDF4'),
+                                     color:      isDeceased ? textSub : '#16a34a' }}>
+                            {isDeceased?'🕯️':'💚'}
+                          </span>
+                        </div>
                       </div>
                       {m.tenHuy && <p className="text-xs italic" style={{ color: textSub }}>Húy: {m.tenHuy}</p>}
                       {m.chucTuoc && <p className="text-xs font-semibold" style={{ color:'#B8860B' }}>{m.chucTuoc}</p>}
