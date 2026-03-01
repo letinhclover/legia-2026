@@ -16,8 +16,9 @@ export interface Member {
   name: string;
   memberType?: MemberType;   // phân loại quan hệ dòng họ — mặc định 'chinh'
   tenHuy?: string;
-  tenTu?: string;
-  tenThuy?: string;
+  tenTu?: string;   // giữ để không mất dữ liệu cũ
+  tenThuy?: string; // giữ để không mất dữ liệu cũ
+  nickname?: string; // tên thường gọi / biệt danh
   chucTuoc?: string;
   gender: 'Nam' | 'Nữ';
   generation: number;
