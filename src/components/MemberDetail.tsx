@@ -48,7 +48,7 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
         {/* Header */}
         <div className={`${isDeceased ? 'bg-gradient-to-r from-gray-700 to-gray-600' : 'bg-gradient-to-r from-[#800000] to-[#A00000]'} text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center sticky top-0 z-10`}>
           <h3 className="font-bold">
-            {isDeceased ? '🕯️ Hồ sơ tiên tổ' : '👤 Hồ sơ thành viên'}
+            {isDeceased ? '🕯️ Hồ sơ thành viên' : '👤 Hồ sơ thành viên'}
           </h3>
           <div className="flex gap-2">
             <button onClick={handleQR} className="hover:bg-white hover:bg-opacity-20 rounded-lg px-2 py-1 flex items-center gap-1 text-xs">

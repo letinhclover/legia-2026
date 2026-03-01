@@ -67,7 +67,7 @@ export default function MemorialPage({ members, onClose, onViewMember }: Props) 
             <h3 className="font-bold text-lg flex items-center gap-2">
               🕯️ Trang Tưởng Nhớ
             </h3>
-            <p className="text-xs text-gray-400">{deceased.length} tiên tổ đã khuất</p>
+            <p className="text-xs text-gray-400">{deceased.length} người đã mất</p>
           </div>
           <button onClick={onClose} className="hover:bg-gray-700 rounded-full p-2">
             <X size={20} />
