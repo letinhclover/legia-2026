@@ -160,11 +160,11 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
   const lbl="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide";
 
   const tabs=[
-    {id:'basic',label:'👤 Cơ bản'},
-    {id:'dates',label:'📅 Ngày tháng'},
-    {id:'places',label:'📍 Địa danh'},
+    {id:'basic',    label:'👤 Cơ bản'},
+    {id:'dates',    label:'📅 Ngày'},
+    {id:'places',   label:'📍 Địa'},
     {id:'relations',label:'👨‍👩‍👧 Quan hệ'},
-    {id:'bio',label:'📝 Tiểu sử'},
+    {id:'bio',      label:'📝 Sử'},
   ] as const;
 
   return(
@@ -225,30 +225,40 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                 </div>
               </div>
 
+              {/* Hàng 1: Họ và tên */}
+              <div>
+                <label className={lbl}>Họ và tên <span className="text-red-500">*</span></label>
+                <input className={inp} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Lê Văn A" required/>
+              </div>
+
+              {/* Hàng 2: Tên Húy | Chức tước */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className={lbl}>Họ và tên <span className="text-red-500">*</span></label>
-                  <input className={inp} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Nguyễn Văn A" required/>
-                </div>
                 <div>
-                  <label className={lbl}>Tên Húy
-                    <span className="font-normal text-gray-400 ml-1 normal-case">(tên chính thức trong gia phả)</span>
-                  </label>
-                  <input className={inp} value={form.tenHuy} onChange={e=>set('tenHuy',e.target.value)} placeholder="Tên ghi trong gia phả / bia mộ"/>
-                </div>
-                <div>
-                  <label className={lbl}>Tên thường gọi
-                    <span className="font-normal text-gray-400 ml-1 normal-case">(biệt danh, nickname)</span>
-                  </label>
-                  <input className={inp} value={(form as any).nickname||''} onChange={e=>set('nickname',e.target.value)} placeholder="VD: Dâu Tây, Bi, Bé..."/>
+                  <label className={lbl}>Tên Húy</label>
+                  <input className={inp} value={form.tenHuy} onChange={e=>set('tenHuy',e.target.value)} placeholder="Tên trong gia phả"/>
                 </div>
                 <div>
                   <label className={lbl}>Chức tước</label>
-                  <input className={inp} value={form.chucTuoc} onChange={e=>set('chucTuoc',e.target.value)} placeholder="Chánh tổng, Hương lý..."/>
+                  <input className={inp} value={form.chucTuoc} onChange={e=>set('chucTuoc',e.target.value)} placeholder="Hương lý, Chánh tổng…"/>
                 </div>
               </div>
-              {/* ── Hàng 3 ô: Vai vế | Giới tính | Đời thứ ── */}
-              <div className="grid grid-cols-3 gap-2">
+
+              {/* Hàng 3: Tên thường gọi | Đời thứ */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={lbl}>Tên thường gọi</label>
+                  <input className={inp} value={(form as any).nickname||''} onChange={e=>set('nickname',e.target.value)} placeholder="VD: Dâu Tây, Bé…"/>
+                </div>
+                <div>
+                  <label className={lbl}>Đời thứ <span className="text-red-500">*</span></label>
+                  <input className={inp} inputMode="numeric" value={form.generation}
+                    onChange={e=>set('generation',e.target.value.replace(/[^0-9]/g,''))}
+                    placeholder="1" required/>
+                </div>
+              </div>
+
+              {/* Hàng 4: Vai vế | Giới tính */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={lbl}>Vai vế</label>
                   <select className={inp} value={form.memberType} onChange={e=>set('memberType',e.target.value)}>
@@ -266,15 +276,6 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                     <option value="Nữ">👩 Nữ</option>
                   </select>
                 </div>
-                <div>
-                  <label className={lbl}>Đời thứ <span className="text-red-500">*</span></label>
-                  <input className={inp} inputMode="numeric" value={form.generation}
-                    onChange={e=>set('generation',e.target.value.replace(/[^0-9]/g,''))}
-                    placeholder="1" required/>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-
               </div>
             </div>
           )}
