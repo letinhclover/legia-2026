@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Edit2, Flame, QrCode, X, MapPin, ExternalLink } from 'lucide-react';
+import { Edit2, QrCode, X, MapPin, ExternalLink } from 'lucide-react';
 import { Member } from '../types';
 
 interface Props {
@@ -123,10 +123,10 @@ export default function MemberBottomSheet({ member, members, onClose, onEdit, is
           </div>
         </div>
 
-        {/* Badge đã mất */}
+        {/* Badge đã mất — chỉ label "Đã mất", KHÔNG tự động gán "Tiên tổ" */}
         {isDeceased && (
           <div className="absolute -bottom-3 left-24 bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-            <Flame size={10} /> Tiên tổ
+            🕯️ Đã mất
           </div>
         )}
       </div>

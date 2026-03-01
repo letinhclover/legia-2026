@@ -8,6 +8,8 @@ interface FamilyNodeProps {
     onEdit: (m: Member) => void;
     spouseName?: string;
     darkMode?: boolean;
+    highlighted?: boolean;
+    dimmed?: boolean;
   };
 }
 
@@ -15,6 +17,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
   const isAlive = !data.deathDate;
   const isMale  = data.gender === 'Nam';
   const isDark  = data.darkMode;
+  const dimmed  = data.dimmed;
 
   const borderColor = isAlive ? (isMale ? '#1D4ED8' : '#BE185D') : '#9CA3AF';
   const bgColor = isDark
@@ -25,8 +28,6 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
 
   const birthY = data.birthDate ? new Date(data.birthDate).getFullYear() : null;
   const deathY = data.deathDate ? new Date(data.deathDate).getFullYear() : null;
-  // Tên ngắn — 2 từ cuối vừa khung vuông
-  const shortName = data.name.trim().split(' ').slice(-2).join(' ');
 
   return (
     <motion.div
@@ -37,14 +38,17 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
       className="relative cursor-pointer select-none flex flex-col items-center justify-between"
       style={{
         width: 145, height: 148,
-        padding: '10px 8px 9px',
+        padding: '9px 7px 8px',
         borderRadius: 18,
         background: bgColor,
-        border: `2.5px solid ${borderColor}`,
-        boxShadow: isDark
-          ? '0 4px 22px rgba(0,0,0,0.45)'
-          : '0 3px 16px rgba(0,0,0,0.11)',
-        filter: isAlive ? 'none' : 'grayscale(85%) opacity(0.78)',
+        border: `2.5px solid ${data.highlighted ? '#F59E0B' : borderColor}`,
+        boxShadow: data.highlighted
+          ? '0 0 0 3px rgba(245,158,11,0.4), 0 4px 20px rgba(0,0,0,0.15)'
+          : (isDark ? '0 4px 22px rgba(0,0,0,0.45)' : '0 3px 16px rgba(0,0,0,0.11)'),
+        filter: isAlive
+          ? (dimmed ? 'opacity(0.35)' : 'none')
+          : (dimmed ? 'grayscale(100%) opacity(0.25)' : 'grayscale(80%) opacity(0.8)'),
+        transition: 'filter 0.2s, box-shadow 0.2s',
       }}
     >
       <Handle type="target" position={Position.Top}
@@ -52,52 +56,61 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
 
       {/* Avatar */}
       <div
-        className="rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0"
+        className="rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
         style={{
-          width: 70, height: 68,
+          width: 62, height: 60,
           background: isDark ? '#2d3748' : '#E5E7EB',
           border: `2px solid ${borderColor}`,
         }}
       >
         {data.photoUrl
           ? <img src={data.photoUrl} alt={data.name} className="w-full h-full object-cover" loading="lazy" />
-          : <span style={{ fontSize: 34 }}>{isMale ? '👨' : '👩'}</span>
+          : <span style={{ fontSize: 28 }}>{isMale ? '👨' : '👩'}</span>
         }
       </div>
 
-      {/* Tên */}
+      {/* Tên ĐẦY ĐỦ — wrap 2 dòng, không tắt */}
       <div
         className="font-bold text-center w-full leading-tight"
-        style={{ fontSize: 11.5, color: nameColor, lineHeight: 1.25 }}
+        style={{
+          fontSize: 10.5,
+          color: nameColor,
+          lineHeight: 1.3,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          wordBreak: 'break-word',
+        }}
         title={data.name}
       >
-        {shortName}
+        {data.name}
       </div>
 
       {/* Chức tước */}
       {data.chucTuoc && (
         <div className="text-center w-full truncate"
-          style={{ fontSize: 9.5, color: '#B8860B', fontWeight: 600, lineHeight: 1.2 }}>
+          style={{ fontSize: 9, color: '#B8860B', fontWeight: 700, lineHeight: 1.2 }}>
           {data.chucTuoc}
         </div>
       )}
 
       {/* Năm */}
-      <div className="text-center w-full" style={{ fontSize: 10, color: subColor }}>
+      <div className="text-center w-full" style={{ fontSize: 9.5, color: subColor }}>
         {birthY && <span>{birthY}</span>}
         {deathY  && <span> – {deathY}</span>}
       </div>
 
       {/* Badge đời */}
       <div className="absolute flex items-center justify-center rounded-full font-black text-white"
-        style={{ top: 6, right: 6, width: 18, height: 18, fontSize: 8.5, background: '#800000',
+        style={{ top: 5, right: 5, width: 18, height: 18, fontSize: 8, background: '#800000',
           boxShadow: '0 1px 4px rgba(128,0,0,0.5)' }}>
         {data.generation}
       </div>
 
-      {/* Đã mất indicator */}
+      {/* Đã mất */}
       {!isAlive && (
-        <div className="absolute" style={{ top: 6, left: 6, fontSize: 10 }}>🕯️</div>
+        <div className="absolute" style={{ top: 5, left: 5, fontSize: 10 }}>🕯️</div>
       )}
 
       <Handle type="source" position={Position.Bottom}
