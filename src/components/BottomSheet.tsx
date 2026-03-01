@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence, useDragControls, useMotionValue, useTransform } from 'framer-motion';
 
 interface Props {
@@ -13,29 +13,22 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
   const dragControls = useDragControls();
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 260], [0.48, 0.04]);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  // Reset position mỗi lần mở
   useEffect(() => { if (isOpen) y.set(0); }, [isOpen]);
 
   const handleDragEnd = (_: any, info: { offset: { y: number }; velocity: { y: number } }) => {
-    if (info.offset.y > 110 || info.velocity.y > 450) {
-      onClose();
-    }
-    // Không cần set y = 0 vì animate sẽ reset khi isOpen = false rồi true
+    if (info.offset.y > 110 || info.velocity.y > 450) onClose();
   };
 
-  // Chặn drag sheet khi user đang scroll content (chỉ drag khi ở handle)
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
@@ -44,13 +37,12 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
             onClick={onClose}
           />
 
-          {/* Sheet */}
           <motion.div
             drag="y"
             dragControls={dragControls}
-            dragListener={false}           // chỉ drag từ handle
-            dragConstraints={{ top: 0 }}   // không kéo lên
-            dragElastic={{ top: 0.02, bottom: 0.45 }}
+            dragListener={false}
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0.02, bottom: 0.4 }}
             style={{ y, maxHeight: height }}
             onDragEnd={handleDragEnd}
             initial={{ y: '100%' }}
@@ -59,11 +51,11 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
             transition={{ type: 'spring', stiffness: 340, damping: 32, mass: 0.85 }}
             className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl flex flex-col overflow-hidden"
           >
-            {/* ── Handle — kéo vùng này để dismiss ── */}
+            {/* Handle — CHỈ kéo từ đây */}
             <div
-              className="flex-shrink-0 flex flex-col items-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none"
+              className="flex-shrink-0 flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: 'none' }}   /* ← chặn scroll native ở handle, cho drag hoạt động */
               onPointerDown={e => {
-                // Chỉ bắt drag từ handle, không ảnh hưởng scroll bên trong
                 e.preventDefault();
                 dragControls.start(e);
               }}
@@ -77,11 +69,14 @@ export default function BottomSheet({ isOpen, onClose, children, height = '90vh'
               </div>
             )}
 
-            {/* Content — scroll tự do, không can thiệp drag */}
+            {/* Content scroll — touch-action: pan-y cho phép swipe dọc cuộn tự do */}
             <div
-              ref={contentRef}
               className="flex-1 overflow-y-auto overscroll-contain"
-              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+              style={{
+                paddingBottom: 'max(env(safe-area-inset-bottom), 24px)',
+                touchAction: 'pan-y',     /* ← QUAN TRỌNG: cho phép scroll dọc native */
+                WebkitOverflowScrolling: 'touch',
+              }}
             >
               {children}
             </div>

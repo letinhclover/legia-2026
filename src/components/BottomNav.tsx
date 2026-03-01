@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Network, Users, Calendar, Settings } from 'lucide-react';
+import VisitorCounter from './VisitorCounter';
 
 export type TabId = 'tree' | 'directory' | 'events' | 'settings';
 
@@ -23,9 +24,20 @@ export default function BottomNav({ active, onChange, darkMode }: Props) {
   const inactiveClr= darkMode ? '#64748b' : '#9CA3AF';
 
   return (
-    <div className="flex-shrink-0 safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
-      style={{ background: bg, borderTop: `1px solid ${border}` }}>
-      <div className="flex items-center h-16 px-2">
+    <div
+      className="flex-shrink-0"
+      style={{
+        background: bg,
+        borderTop: `1px solid ${border}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.07)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      {/* Visitor counter — above tabs, very subtle */}
+      <VisitorCounter darkMode={darkMode} />
+
+      {/* Tabs */}
+      <div className="flex items-center h-14 px-2">
         {tabs.map(tab => {
           const Icon     = tab.icon;
           const isActive = active === tab.id;
@@ -44,10 +56,15 @@ export default function BottomNav({ active, onChange, darkMode }: Props) {
                   transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
               )}
-              <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8}
-                color={isActive ? activeClr : inactiveClr} />
-              <span className="text-[10px] font-semibold tracking-wide"
-                style={{ color: isActive ? activeClr : inactiveClr }}>
+              <Icon
+                size={22}
+                strokeWidth={isActive ? 2.5 : 1.8}
+                color={isActive ? activeClr : inactiveClr}
+              />
+              <span
+                className="font-semibold tracking-wide"
+                style={{ fontSize: 10, color: isActive ? activeClr : inactiveClr }}
+              >
                 {tab.label}
               </span>
             </motion.button>
