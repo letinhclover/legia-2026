@@ -157,7 +157,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
             <div className="mx-4 mb-2 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-start gap-2">
               <span className="text-lg flex-shrink-0">🔒</span>
               <p className="text-xs text-amber-700 font-semibold">
-                Xuất PDF và Excel chỉ dành cho Quản trị viên.
+                Xuất PDF, Excel và GEDCOM chỉ dành cho Quản trị viên.
                 Vui lòng đăng nhập bên dưới để mở khoá.
               </p>
             </div>
@@ -194,6 +194,16 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
                 label={`${pdfProgress || `Xuất PDF in ấn${!isAdmin ? ' 🔒' : ''}`}`}
                 sub={isAdmin ? 'Phả đồ khổ lớn · In họp dòng họ' : 'Yêu cầu đăng nhập Admin'}
                 onClick={handleExportPDF}
+              />
+            </div>
+
+            {/* Xuất GEDCOM — chỉ admin, mờ nếu chưa đăng nhập */}
+            <div className={!isAdmin ? 'opacity-40 pointer-events-none select-none' : ''}>
+              <MenuItem
+                icon={<Download size={18} color={isAdmin ? '#6B21A8' : '#9CA3AF'} />}
+                label={`Sao lưu GEDCOM${!isAdmin ? ' 🔒' : ''}`}
+                sub={isAdmin ? 'Chuẩn quốc tế · Dùng cho Ancestry, MyHeritage…' : 'Yêu cầu đăng nhập Admin'}
+                onClick={isAdmin ? () => downloadGedcom(members) : undefined}
               />
             </div>
           </div>
@@ -257,7 +267,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-black text-base" style={{ color: textMain }}>Gia Phả Dòng Họ Lê</p>
-              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#800000' }}>v15 — Phiên bản chính thức</p>
+              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#800000' }}>v16 — Phiên bản chính thức</p>
               <p className="text-[10px] mt-1 leading-relaxed" style={{ color: textSub }}>
                 Firebase · Cloudinary · Cloudflare Pages · GitHub
               </p>
@@ -286,22 +296,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
             </button>
           </div>
 
-          {/* GEDCOM export — chỉ admin */}
-          {isAdmin && (
-          <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: border }}>
-            <div>
-              <p className="text-xs font-bold" style={{ color: textMain }}>Sao lưu GEDCOM</p>
-              <p className="text-[11px] mt-0.5" style={{ color: textSub }}>Chuẩn quốc tế — dùng cho Ancestry, MyHeritage…</p>
-            </div>
-            <button
-              onClick={() => downloadGedcom(members)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold"
-              style={{ background: darkMode ? '#253040' : '#F3F4F6', color: darkMode ? '#94a3b8' : '#374151' }}
-            >
-              <Download size={13}/> .ged
-            </button>
-          </div>
-          )}
+
 
           {/* Nhà phát triển */}
           <div className="px-5 py-3.5 border-b" style={{ borderColor: border }}>
