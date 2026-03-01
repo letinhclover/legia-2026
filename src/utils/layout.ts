@@ -5,9 +5,9 @@ import { Member } from '../types';
 export const NODE_W = 145;
 export const NODE_H = 148;
 
-const SPOUSE_GAP      = 28;
+const SPOUSE_GAP      = 18;
 const RANK_SEP        = 200;
-const NODE_SEP        = 50;
+const NODE_SEP        = 28;
 const SIBLING_STAGGER = 14; // Y stagger nhẹ: anh cả cao nhất
 
 function getBirthYear(m: Member): number {
