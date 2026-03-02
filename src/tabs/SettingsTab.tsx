@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, LogIn, LogOut, BarChart2, Flame, ChevronRight, Info, Download, Upload, FileSpreadsheet, Map, FileText, Share2 } from 'lucide-react';
-import { downloadGedcom } from '../utils/gedcom';
+import { Shield, LogIn, LogOut, BarChart2, Flame, ChevronRight, Info, Download, Upload, FileSpreadsheet, Map, FileText } from 'lucide-react';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Member } from '../types';
@@ -9,9 +8,9 @@ import { exportToExcel, importFromExcel } from '../utils/excelIO';
 import { exportToPDF } from '../utils/pdfExport';
 
 interface Props {
-  darkMode?: boolean;
   user: { email: string | null } | null;
-  isAdmin: boolean;
+  isAdmin: boolean;      // super admin (export/import)
+  isSuperAdmin?: boolean;
   members: Member[];
   onShowStats: () => void;
   onShowMemorial: () => void;
@@ -20,12 +19,8 @@ interface Props {
   adminEmails: string[];
 }
 
-export default function SettingsTab({ user, isAdmin, members, onShowStats, onShowMemorial, onShowGraveMap, onImportMembers, adminEmails, darkMode }: Props) {
-  const bg       = darkMode ? '#0f1724' : '#F3F4F6';
-  const cardBg   = darkMode ? '#1e2a3a' : 'white';
-  const textMain = darkMode ? '#f1f5f9' : '#111827';
-  const textSub  = darkMode ? '#64748b' : '#6B7280';
-  const border   = darkMode ? '#2d3d52' : '#F3F4F6';
+export default function SettingsTab({ user, isAdmin, isSuperAdmin = false, members, onShowStats, onShowMemorial, onShowGraveMap, onImportMembers, adminEmails }: Props) {
+  const canExport = isAdmin || isSuperAdmin; // alias
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [error, setError] = useState('');
@@ -108,7 +103,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
   );
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto" style={{ background: bg }}>
+    <div className="flex flex-col h-full bg-gray-50 overflow-y-auto">
       {/* Header */}
       <div className="flex-shrink-0 px-4 pt-4 pb-3 bg-white border-b border-gray-100 shadow-sm">
         <h2 className="text-lg font-bold text-gray-900">Quản Trị & Cài Đặt</h2>
@@ -144,7 +139,7 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
           <p className="text-xs font-bold text-gray-400 uppercase px-4 mb-2 tracking-wider">Công Cụ</p>
           <div className="bg-white rounded-2xl mx-4 overflow-hidden shadow-sm divide-y divide-gray-50">
             <MenuItem icon={<BarChart2 size={18} color="#800000" />} label="Thống kê dòng họ" sub="Biểu đồ theo đời, nam/nữ" onClick={onShowStats} />
-            <MenuItem icon={<Flame size={18} color="#800000" />} label="Trang tưởng nhớ" sub="Tưởng nhớ người đã mất" onClick={onShowMemorial} />
+            <MenuItem icon={<Flame size={18} color="#800000" />} label="Trang tưởng nhớ" sub="Thắp hương tiên tổ" onClick={onShowMemorial} />
             <MenuItem icon={<Map size={18} color="#800000" />} label="Bản đồ mộ phần" sub={`${withGrave} mộ có địa chỉ · Chỉ đường Google Maps`} onClick={onShowGraveMap} />
           </div>
         </div>
@@ -157,8 +152,8 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
             <div className="mx-4 mb-2 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-start gap-2">
               <span className="text-lg flex-shrink-0">🔒</span>
               <p className="text-xs text-amber-700 font-semibold">
-                Xuất PDF, Excel và GEDCOM chỉ dành cho Quản trị viên.
-                Vui lòng đăng nhập bên dưới để mở khoá.
+                Xuất PDF, Excel và GEDCOM chỉ dành cho Super Admin (letinhclover).
+                Tài khoản Editor không có quyền này.
               </p>
             </div>
           )}
@@ -194,16 +189,6 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
                 label={`${pdfProgress || `Xuất PDF in ấn${!isAdmin ? ' 🔒' : ''}`}`}
                 sub={isAdmin ? 'Phả đồ khổ lớn · In họp dòng họ' : 'Yêu cầu đăng nhập Admin'}
                 onClick={handleExportPDF}
-              />
-            </div>
-
-            {/* Xuất GEDCOM — chỉ admin, mờ nếu chưa đăng nhập */}
-            <div className={!isAdmin ? 'opacity-40 pointer-events-none select-none' : ''}>
-              <MenuItem
-                icon={<Download size={18} color={isAdmin ? '#6B21A8' : '#9CA3AF'} />}
-                label={`Sao lưu GEDCOM${!isAdmin ? ' 🔒' : ''}`}
-                sub={isAdmin ? 'Chuẩn quốc tế · Dùng cho Ancestry, MyHeritage…' : 'Yêu cầu đăng nhập Admin'}
-                onClick={isAdmin ? () => downloadGedcom(members) : undefined}
               />
             </div>
           </div>
@@ -255,82 +240,14 @@ export default function SettingsTab({ user, isAdmin, members, onShowStats, onSho
           </div>
         </div>
 
-        {/* ── Footer card gom tất cả ── */}
-        <div className="mx-4 rounded-2xl shadow-sm overflow-hidden" style={{ background: cardBg, border: `1px solid ${border}` }}>
-
-          {/* Logo + App name */}
-          <div className="px-5 pt-5 pb-4 flex items-center gap-4 border-b" style={{ borderColor: border }}>
-            {/* Logo ô vuông đỏ */}
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
-              style={{ background: 'linear-gradient(135deg, #800000 0%, #4a0000 60%, #B8860B 100%)' }}>
-              <span className="text-white text-2xl font-black" style={{ fontFamily: 'serif', letterSpacing: -1 }}>Lê</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-black text-base" style={{ color: textMain }}>Gia Phả Dòng Họ Lê</p>
-              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#800000' }}>v16 — Phiên bản thử nghiệm</p>
-              <p className="text-[10px] mt-1 leading-relaxed" style={{ color: textSub }}>
-                Firebase · Cloudinary · Cloudflare Pages · GitHub
-              </p>
-            </div>
+        {/* App info */}
+        <div className="mx-4 bg-white rounded-2xl shadow-sm p-4 flex items-start gap-3">
+          <Info size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-gray-700">Gia Phả Dòng Họ Lê v2.1</p>
+            <p className="text-xs text-gray-400 mt-0.5">Firebase · Cloudinary · Netlify · Miễn phí</p>
+            <p className="text-xs text-gray-400 mt-0.5">legia-2026.netlify.app</p>
           </div>
-
-          {/* Link chia sẻ */}
-          <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: border }}>
-            <div>
-              <p className="text-xs font-bold" style={{ color: textMain }}>Truy cập & Chia sẻ</p>
-              <p className="text-[11px] mt-0.5" style={{ color: textSub }}>legia-2026.pages.dev</p>
-            </div>
-            <button
-              onClick={() => {
-                const url = 'https://legia-2026.pages.dev';
-                if (navigator.share) {
-                  navigator.share({ title: 'Gia Phả Dòng Họ Lê', url });
-                } else {
-                  navigator.clipboard.writeText(url).then(() => alert('Đã sao chép link!'));
-                }
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
-              style={{ background: '#800000' }}
-            >
-              <Share2 size={13}/> Chia sẻ
-            </button>
-          </div>
-
-
-
-          {/* Nhà phát triển */}
-          <div className="px-5 py-3.5 border-b" style={{ borderColor: border }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-2.5" style={{ color: textSub }}>
-              Nhà Phát Triển
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-black text-sm text-white"
-                style={{ background: 'linear-gradient(135deg, #0068FF, #0044CC)' }}>
-                LT
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold" style={{ color: textMain }}>Lê Tỉnh</p>
-                <p className="text-[11px]" style={{ color: textSub }}>Muốn bổ sung thông tin ? Liên hệ ngay</p>
-              </div>
-              <a href="https://zalo.me/0708312789" target="_blank" rel="noopener noreferrer"
-                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white shadow-sm"
-                style={{ background: '#0068FF' }}>
-                <span>💬</span> Zalo
-              </a>
-            </div>
-          </div>
-
-          {/* Copyright */}
-          <div className="px-5 py-3 text-center">
-            <p className="text-[11px]" style={{ color: textSub }}>
-              © {new Date().getFullYear()} Bản quyền thuộc về{' '}
-              <span className="font-semibold" style={{ color: textMain }}>Dòng Họ Lê</span>
-            </p>
-            <p className="text-[10px] mt-0.5" style={{ color: textSub }}>
-              Dữ liệu được bảo vệ và lưu trữ an toàn trên Firebase
-            </p>
-          </div>
-
         </div>
       </div>
     </div>
