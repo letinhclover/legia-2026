@@ -1,4 +1,4 @@
-import { Member } from '../types';
+import { Member, MEMBER_TYPE_LABEL } from '../types';
 
 async function loadScript(src: string): Promise<void> {
   if (document.querySelector(`script[src="${src}"]`)) return;
@@ -38,6 +38,7 @@ function memberCard(m: Member): string {
     <div style="font-weight:800;font-size:11px;color:#111;text-align:center;line-height:1.3;margin-bottom:2px;">${m.name}</div>
     ${m.tenHuy ? `<div style="font-size:9px;color:#666;font-style:italic;">Húy: ${m.tenHuy}</div>` : ''}
     ${m.chucTuoc ? `<div style="font-size:9px;color:#B8860B;font-weight:700;">${m.chucTuoc}</div>` : ''}
+    ${(m.memberType && m.memberType !== 'chinh') ? `<div style="font-size:8px;padding:1px 6px;border-radius:8px;margin-top:2px;font-weight:700;background:${m.memberType==='dau'?'#FDF4FF':m.memberType==='re'?'#EFF6FF':m.memberType==='chau_ngoai'?'#F0FDF4':'#FFFBEB'};color:${m.memberType==='dau'?'#7E22CE':m.memberType==='re'?'#1D4ED8':m.memberType==='chau_ngoai'?'#15803D':'#92400E'};">${m.memberType==='dau'?'💍 Con dâu':m.memberType==='re'?'🤝 Con rể':m.memberType==='chau_ngoai'?'👶 Cháu ngoại':'🔗 Ngoại tộc'}</div>` : ''}
     <div style="font-size:9px;color:#888;margin-top:3px;">
       ${birthY}${deathY ? ` — ${deathY}` : ''}
     </div>
