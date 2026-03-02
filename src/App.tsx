@@ -23,7 +23,7 @@ import SettingsTab from './tabs/SettingsTab';
 // superAdmin: toàn quyền (sửa thành viên + xuất nhập dữ liệu)
 const SUPER_ADMIN_EMAILS = ['letinhclover@gmail.com'];
 // editor: chỉ sửa/thêm/xóa thành viên, KHÔNG xuất nhập dữ liệu
-const EDITOR_EMAILS      = ['legia2026@gmail.com'];
+const EDITOR_EMAILS      = ['quanlylegia2026@gmail.com'];
 // giữ để backward-compat
 const ADMIN_EMAILS       = SUPER_ADMIN_EMAILS;
 const TAB_ORDER: TabId[] = ['tree', 'directory', 'events', 'settings'];
