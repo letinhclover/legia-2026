@@ -2,7 +2,7 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Gia Phả Dòng Họ Lê</title>
     <meta name="description" content="Gia Phả Dòng Họ Lê - Truyền thống · Đoàn kết · Phát triển" />
     <meta name="theme-color" content="#800000" />
@@ -15,7 +15,6 @@
     <!-- Preconnect cho CDNs quan trọng (giảm FCP) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
-    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
     <!-- Open Graph -->
     <meta property="og:title" content="Gia Phả Dòng Họ Lê" />
     <meta property="og:description" content="Gia phả số – Truyền thống · Đoàn kết · Phát triển" />
@@ -24,9 +23,11 @@
     <!-- Canonical -->
     <link rel="canonical" href="https://legia-2026.pages.dev/" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Preload font để tránh FOIT, display=swap tránh blocking render -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" /></noscript>
     <style>
-      * { font-family: 'Inter', sans-serif; }
+      * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
       body { margin: 0; background: #F8F9FA; overscroll-behavior: none; }
       /* Safe area cho iPhone */
       .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
