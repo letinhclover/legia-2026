@@ -59,23 +59,17 @@ export async function uploadToCloudinary(
     throw new Error(data?.error?.message || `Lỗi ${res.status}: Upload thất bại`);
   }
 
-  // URL tối ưu: tự chọn format + quality + resize (full size cho detail view)
+  // URL tối ưu: tự chọn format + quality + resize
   const url: string = data.secure_url;
   return url.replace('/upload/', '/upload/f_auto,q_auto,w_500,c_fill,g_face/');
 }
 
-/**
- * Trả về URL ảnh Cloudinary với kích thước nhỏ hơn cho thumbnail.
- * Mặc định w=100 (avatar 48–56px, pixel-ratio 2x = 100px thực).
- * Hoạt động với cả URL cũ (không có transform) và URL đã có transform.
- */
-export function cloudinaryThumb(url: string | undefined, w = 100): string {
+// Trả về URL Cloudinary thu nhỏ cho thumbnail (tránh tải ảnh 500px cho avatar 48px)
+export function cloudinaryThumb(url: string | undefined, w: number = 100): string {
   if (!url) return '';
   if (!url.includes('res.cloudinary.com')) return url;
-  // Nếu URL đã có transform (f_auto...), thay w_500 → w_{w}
   if (url.includes('/upload/f_auto')) {
-    return url.replace(/w_\d+/, `w_${w}`);
+    return url.replace(/w_\d+/, 'w_' + w);
   }
-  // URL gốc không có transform → thêm vào
-  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${w},c_fill,g_face/`);
+  return url.replace('/upload/', '/upload/f_auto,q_auto,w_' + w + ',c_fill,g_face/');
 }
