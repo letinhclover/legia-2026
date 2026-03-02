@@ -231,6 +231,7 @@ export default function App() {
 
           {/* Filter đời — chỉ hiện khi đang ở tab cây */}
           {activeTab === 'tree' && (
+            <>
             <label htmlFor="filter-gen" className="sr-only">Lọc theo đời</label>
             <select id="filter-gen" aria-label="Lọc theo đời" value={filterGen}
               onChange={e => setFilterGen(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
@@ -245,6 +246,7 @@ export default function App() {
                 <option key={g} value={g}>Đời {g}</option>
               ))}
             </select>
+            </>
           )}
 
           {isAdmin && (
