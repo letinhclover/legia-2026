@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Save, Trash2, Upload, User, Camera } from 'lucide-react';
-import { Member, MemberType, MEMBER_TYPE_LABEL } from '../types';
+import { Member } from '../types';
 import { uploadToCloudinary } from '../utils/imageCompress';
 import { solarToLunarString } from '../utils/lunarCalendar';
 
@@ -11,20 +11,21 @@ interface MemberFormProps {
   onDelete?: (id: string) => void;
   members: Member[];
   editingMember?: Member | null;
-  isAdmin: boolean;
+  isAdmin: boolean;      // canEdit
+  isSuperAdmin?: boolean;
 }
 
 const emptyForm = {
-  name:'',tenHuy:'',nickname:'',chucTuoc:'',memberType:'chinh' as MemberType,
+  name:'',tenHuy:'',tenTu:'',tenThuy:'',chucTuoc:'',
   gender:'Nam' as 'Nam'|'Nữ', generation:'1',
   birthDate:'',birthDateLunar:'',birthPlace:'',
   deathDate:'',deathDateLunar:'',deathPlace:'',
   burialAddress:'',burialMapLink:'',   // YC3: tách mộ phần thành 2 trường
   residence:'',fatherId:'',motherId:'',spouseId:'',
-  photoUrl:'',biography:'',
+  photoUrl:'',biography:'',email:'',
 };
 
-export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editingMember,isAdmin}:MemberFormProps){
+export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editingMember,isAdmin,isSuperAdmin=false}:MemberFormProps){
   const [form,setForm]=useState(emptyForm);
   const [tab,setTab]=useState<'basic'|'dates'|'places'|'relations'|'bio'>('basic');
   const [uploading,setUploading]=useState(false);
@@ -37,9 +38,9 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
       setForm({
         name:editingMember.name||'',
         tenHuy:editingMember.tenHuy||'',
-        nickname:(editingMember as any).nickname||'',
+        tenTu:editingMember.tenTu||'',
+        tenThuy:editingMember.tenThuy||'',
         chucTuoc:editingMember.chucTuoc||'',
-        memberType:(editingMember.memberType||'chinh') as MemberType,
         gender:editingMember.gender||'Nam',
         generation:String(editingMember.generation||1),
         birthDate:editingMember.birthDate||'',
@@ -57,7 +58,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
         spouseId:editingMember.spouseId||'',
         photoUrl:editingMember.photoUrl||'',
         biography:editingMember.biography||'',
-
+        email:editingMember.email||'',
       });
     } else {
       setForm(emptyForm);
@@ -116,7 +117,6 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
     const gen=parseInt(form.generation)||1;
     onSave({
       ...form,
-      memberType: form.memberType as MemberType,
       generation: Number(gen),           // YC2: ép kiểu Number tường minh
       fatherId:form.fatherId||null,
       motherId:form.motherId||null,
@@ -146,12 +146,45 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
     return result;
   };
   const descendantIds = editingMember ? getDescendantIds(editingMember.id) : new Set<string>();
+
+  // ── Lọc họ hàng gần: không được cưới anh em ruột, con của anh em ruột ──
+  const getRelatedIds = (memberId: string): Set<string> => {
+    const rel = new Set<string>();
+    if (!memberId) return rel;
+    const me = members.find(m => m.id === memberId);
+    if (!me) return rel;
+
+    // Cha mẹ ruột → không được cưới
+    if (me.fatherId) rel.add(me.fatherId);
+    if (me.motherId) rel.add(me.motherId);
+
+    // Tìm anh chị em ruột (cùng cha hoặc cùng mẹ)
+    const siblings = members.filter(s =>
+      s.id !== memberId &&
+      ((me.fatherId && s.fatherId === me.fatherId) ||
+       (me.motherId && s.motherId === me.motherId))
+    );
+    // Anh em ruột → không được cưới
+    siblings.forEach(s => rel.add(s.id));
+
+    // Con của anh em ruột (cousins ruột) → không được cưới
+    members.forEach(m => {
+      if (siblings.some(s => m.fatherId === s.id || m.motherId === s.id)) {
+        rel.add(m.id);
+      }
+    });
+
+    return rel;
+  };
+  const relatedIds = editingMember ? getRelatedIds(editingMember.id) : new Set<string>();
+
   const oppositeGender = form.gender === 'Nam' ? 'Nữ' : 'Nam';
   const currentGen = parseInt(form.generation) || 1;
   const spousePool = members.filter(m =>
     m.gender === oppositeGender &&                        // giới tính đối lập
     m.id !== editingMember?.id &&                         // không phải bản thân
     !descendantIds.has(m.id) &&                           // không phải con cháu
+    !relatedIds.has(m.id) &&                              // không phải họ hàng gần (anh em, cô cậu ruột)
     m.generation === currentGen &&                        // cùng thế hệ
     (!m.spouseId || m.spouseId === editingMember?.id)     // chưa có spouse (hoặc đang là spouse hiện tại)
   );
@@ -160,18 +193,18 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
   const lbl="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide";
 
   const tabs=[
-    {id:'basic',    label:'👤 Cơ bản'},
-    {id:'dates',    label:'📅 Ngày'},
-    {id:'places',   label:'📍 Địa'},
+    {id:'basic',label:'👤 Cơ bản'},
+    {id:'dates',label:'📅 Ngày tháng'},
+    {id:'places',label:'📍 Địa danh'},
     {id:'relations',label:'👨‍👩‍👧 Quan hệ'},
-    {id:'bio',      label:'📝 Sử'},
+    {id:'bio',label:'📝 Tiểu sử'},
   ] as const;
 
   return(
-    <div className="flex flex-col bg-white">
+    <div className="flex flex-col h-full" style={{background:"#101922"}}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#800000] to-[#A00000] text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
+        <div className=" text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
           <div>
             <h3 className="font-bold text-lg">{editingMember?'✏️ Sửa thông tin':'➕ Thêm thành viên'}</h3>
             <p className="text-xs text-[#FFD700] opacity-80">Gia Phả Dòng Họ Lê</p>
@@ -191,7 +224,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
           ))}
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
 
           {/* TAB: Cơ bản */}
@@ -225,49 +258,26 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                 </div>
               </div>
 
-              {/* Hàng 1: Họ và tên */}
-              <div>
-                <label className={lbl}>Họ và tên <span className="text-red-500">*</span></label>
-                <input className={inp} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Lê Văn A" required/>
-              </div>
-
-              {/* Hàng 2: Tên Húy | Chức tước */}
               <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className={lbl}>Họ và tên <span className="text-red-500">*</span></label>
+                  <input className={inp} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Nguyễn Văn A" required/>
+                </div>
                 <div>
                   <label className={lbl}>Tên Húy</label>
                   <input className={inp} value={form.tenHuy} onChange={e=>set('tenHuy',e.target.value)} placeholder="Tên trong gia phả"/>
                 </div>
                 <div>
+                  <label className={lbl}>Tự</label>
+                  <input className={inp} value={form.tenTu} onChange={e=>set('tenTu',e.target.value)} placeholder="Tên chữ"/>
+                </div>
+                <div>
+                  <label className={lbl}>Thụy</label>
+                  <input className={inp} value={form.tenThuy} onChange={e=>set('tenThuy',e.target.value)} placeholder="Tên sau khi mất"/>
+                </div>
+                <div>
                   <label className={lbl}>Chức tước</label>
-                  <input className={inp} value={form.chucTuoc} onChange={e=>set('chucTuoc',e.target.value)} placeholder="Hương lý, Chánh tổng…"/>
-                </div>
-              </div>
-
-              {/* Hàng 3: Tên thường gọi | Đời thứ */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={lbl}>Tên thường gọi</label>
-                  <input className={inp} value={(form as any).nickname||''} onChange={e=>set('nickname',e.target.value)} placeholder="VD: Dâu Tây, Bé…"/>
-                </div>
-                <div>
-                  <label className={lbl}>Đời thứ <span className="text-red-500">*</span></label>
-                  <input className={inp} inputMode="numeric" value={form.generation}
-                    onChange={e=>set('generation',e.target.value.replace(/[^0-9]/g,''))}
-                    placeholder="1" required/>
-                </div>
-              </div>
-
-              {/* Hàng 4: Vai vế | Giới tính */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={lbl}>Vai vế</label>
-                  <select className={inp} value={form.memberType} onChange={e=>set('memberType',e.target.value)}>
-                    <option value="chinh">🔴 Chính tộc</option>
-                    <option value="dau">💍 Con dâu</option>
-                    <option value="re">🤝 Con rể</option>
-                    <option value="chau_ngoai">👶 Cháu ngoại</option>
-                    <option value="ngoai_toc">🔗 Ngoại tộc</option>
-                  </select>
+                  <input className={inp} value={form.chucTuoc} onChange={e=>set('chucTuoc',e.target.value)} placeholder="Chánh tổng, Hương lý..."/>
                 </div>
                 <div>
                   <label className={lbl}>Giới tính <span className="text-red-500">*</span></label>
@@ -275,6 +285,24 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                     <option value="Nam">👨 Nam</option>
                     <option value="Nữ">👩 Nữ</option>
                   </select>
+                </div>
+                <div>
+                  <label className={lbl}>Đời thứ <span className="text-red-500">*</span></label>
+                  <input
+                    className={inp}
+                    inputMode="numeric"
+                    value={form.generation}
+                    onChange={e=>{
+                      const v=e.target.value.replace(/[^0-9]/g,'');
+                      set('generation',v);
+                    }}
+                    placeholder="1"
+                    required
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className={lbl}>Email nhận thông báo giỗ/sinh nhật</label>
+                  <input type="email" className={inp} value={form.email} onChange={e=>set('email',e.target.value)} placeholder="email@gmail.com"/>
                 </div>
               </div>
             </div>
@@ -408,8 +436,8 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
 
           </div>
 
-          {/* Buttons — sticky bottom, luôn hiển thị */}
-          <div className="flex gap-3 p-4 border-t border-gray-100 bg-gray-50 sticky bottom-0 z-10">
+          {/* Buttons */}
+          <div className="flex gap-3 p-4 border-t border-gray-100 bg-gray-50">
             <button type="submit"
               className="flex-1 bg-[#B8860B] text-white py-3 rounded-xl font-bold hover:bg-[#996B08] transition-colors flex items-center justify-center gap-2 shadow-md">
               <Save size={18}/> Lưu thông tin
