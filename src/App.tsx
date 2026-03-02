@@ -22,6 +22,7 @@ import SettingsTab from './tabs/SettingsTab';
 const SUPER_ADMIN_EMAILS = ['letinhclover@gmail.com'];
 const EDITOR_EMAILS      = ['quanlylegia2026@gmail.com'];
 const ADMIN_EMAILS       = SUPER_ADMIN_EMAILS; // backward compat
+const ALL_AUTH_EMAILS    = [...SUPER_ADMIN_EMAILS, ...EDITOR_EMAILS]; // tất cả có quyền đăng nhập
 const TAB_ORDER: TabId[] = ['tree', 'directory', 'events', 'settings'];
 
 const tabVariants = {
@@ -84,7 +85,7 @@ export default function App() {
   useEffect(() => {
     let prevUser: any = null;
     return onAuthStateChanged(auth, u => {
-      if (u && !prevUser && ADMIN_EMAILS.includes(u.email || ''))
+      if (u && !prevUser && ALL_AUTH_EMAILS.includes(u.email || ''))
         showToast('✅ Đăng nhập thành công!', 'success');
       prevUser = u;
       setUser(u ? { uid: u.uid, email: u.email, displayName: u.displayName } : null);
@@ -298,7 +299,7 @@ export default function App() {
             {activeTab === 'settings' && (
               <SettingsTab
                 user={user} isAdmin={isAdmin} isSuperAdmin={isSuperAdmin} members={members}
-                adminEmails={ADMIN_EMAILS}
+                adminEmails={ALL_AUTH_EMAILS}
                 onShowStats={() => setShowStats(true)}
                 onShowMemorial={() => setShowMemorial(true)}
                 onShowGraveMap={() => setShowGraveMap(true)}
