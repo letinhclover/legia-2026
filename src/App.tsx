@@ -18,8 +18,6 @@ import TreeTab from './tabs/TreeTab';
 import DirectoryTab from './tabs/DirectoryTab';
 import EventsTab from './tabs/EventsTab';
 import SettingsTab from './tabs/SettingsTab';
-import FundTab from './tabs/FundTab';
-import LibraryTab from './tabs/LibraryTab';
 
 // ── Phân quyền 2 cấp ─────────────────────────────────────────────────────
 // superAdmin: toàn quyền (sửa thành viên + xuất nhập dữ liệu)
@@ -28,7 +26,7 @@ const SUPER_ADMIN_EMAILS = ['letinhclover@gmail.com'];
 const EDITOR_EMAILS      = ['legia2026@gmail.com'];
 // giữ để backward-compat
 const ADMIN_EMAILS       = SUPER_ADMIN_EMAILS;
-const TAB_ORDER: TabId[] = ['tree', 'directory', 'events', 'fund', 'library', 'settings'];
+const TAB_ORDER: TabId[] = ['tree', 'directory', 'events', 'settings'];
 
 const tabVariants = {
   enter:  (d: number) => ({ x: d > 0 ? '30%' : '-30%', opacity: 0 }),
@@ -224,8 +222,6 @@ export default function App() {
             {activeTab === 'events' && (
               <EventsTab members={members} onSelectMember={setViewingMember} />
             )}
-            {activeTab === 'fund' && <FundTab />}
-            {activeTab === 'library' && <LibraryTab />}
             {activeTab === 'settings' && (
               <SettingsTab user={user} isAdmin={isAdmin} isSuperAdmin={isSuperAdmin} members={members}
                 adminEmails={ADMIN_EMAILS}
