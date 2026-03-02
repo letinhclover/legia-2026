@@ -68,4 +68,26 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: { exclude: ['lucide-react'] },
+  build: {
+    // Chia nhỏ chunks để giảm JS không dùng đến (unused JS 180KiB)
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react':    ['react', 'react-dom'],
+          'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/storage'],
+          'vendor-motion':   ['framer-motion'],
+          'vendor-flow':     ['reactflow', 'dagre'],
+        },
+      },
+    },
+    // Minify tốt hơn
+    minify: 'terser',
+    terserOptions: {
+      compress: { drop_console: true, drop_debugger: true },
+    },
+    // Source maps cho dev (tránh cảnh báo "Missing source maps")
+    sourcemap: false,
+    // Chunk size warning threshold
+    chunkSizeWarningLimit: 600,
+  },
 });
