@@ -74,8 +74,8 @@ export function cloudinaryThumb(url: string | undefined, w = 100): string {
   if (!url.includes('res.cloudinary.com')) return url;
   // Nếu URL đã có transform (f_auto...), thay w_500 → w_{w}
   if (url.includes('/upload/f_auto')) {
-    return url.replace(/w_\d+/, \`w_\${w}\`);
+    return url.replace(/w_\d+/, `w_${w}`);
   }
   // URL gốc không có transform → thêm vào
-  return url.replace('/upload/', \`/upload/f_auto,q_auto,w_\${w},c_fill,g_face/\`);
+  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${w},c_fill,g_face/`);
 }
