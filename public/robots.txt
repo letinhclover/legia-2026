@@ -1,0 +1,10 @@
+# Robots.txt — Gia Phả Dòng Họ Lê
+# https://legia-2026.pages.dev
+
+User-agent: *
+Allow: /
+
+# Không index các route nội bộ (SPA — các path này do React router xử lý)
+Disallow: /api/
+
+Sitemap: https://legia-2026.pages.dev/sitemap.xml
