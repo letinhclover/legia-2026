@@ -1,156 +1,250 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, UserPlus } from 'lucide-react';
-import { Member } from '../types';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Member, MemberType, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
 
 interface Props {
   members: Member[];
   onSelectMember: (m: Member) => void;
+  darkMode?: boolean;
 }
 
-// Tạo màu avatar từ tên (như Stitch design)
-function avatarColor(name: string) {
-  const colors = ['#6366F1','#8B5CF6','#EC4899','#14B8A6','#F59E0B','#10B981','#3B82F6','#EF4444'];
-  let hash = 0;
-  for (let c of name) hash = (hash * 31 + c.charCodeAt(0)) % colors.length;
-  return colors[hash];
+function avatarGradient(name: string): string {
+  const p = [
+    'from-blue-500 to-indigo-600', 'from-purple-500 to-pink-600',
+    'from-teal-500 to-emerald-600', 'from-orange-500 to-red-600',
+    'from-cyan-500 to-blue-600',   'from-rose-500 to-pink-600',
+    'from-amber-500 to-orange-600','from-green-500 to-teal-600',
+  ];
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) % p.length;
+  return p[h];
 }
 
 function initials(name: string) {
-  const parts = name.trim().split(' ');
-  return (parts[0][0] + (parts[parts.length - 1][0] || '')).toUpperCase();
+  const p = name.trim().split(' ').filter(Boolean);
+  return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length-1][0]).toUpperCase();
 }
 
-export default function DirectoryTab({ members, onSelectMember }: Props) {
-  const [query, setQuery]     = useState('');
-  const [genFilter, setGenFilter] = useState<number | 'all'>('all');
+export default function DirectoryTab({ members, onSelectMember, darkMode }: Props) {
+  const [query, setQuery]       = useState('');
+  const [genFilter, setGenFilter] = useState<number|'all'>('all');
+  const [showFilter, setShowFilter] = useState(false);
+  const [genderF, setGenderF]   = useState<'all'|'Nam'|'Nữ'>('all');
+  const [statusF, setStatusF]   = useState<'all'|'alive'|'deceased'>('all');
+  const [typeF, setTypeF]       = useState<'all'|MemberType>('all');
 
-  const generations = [...new Set(members.map(m => m.generation))].sort((a, b) => a - b);
-  const alive    = members.filter(m => !m.deathDate).length;
-  const deceased = members.filter(m => !!m.deathDate).length;
-  const male     = members.filter(m => m.gender === 'Nam').length;
-  const female   = members.filter(m => m.gender === 'Nữ').length;
+  // Theme tokens
+  const bg       = darkMode ? '#0f1724' : '#F9FAFB';
+  const cardBg   = darkMode ? '#1e2a3a' : 'white';
+  const headerBg = darkMode ? '#1a2030' : 'white';
+  const textMain = darkMode ? '#f1f5f9' : '#111827';
+  const textSub  = darkMode ? '#64748b' : '#6B7280';
+  const border   = darkMode ? '#2d3d52' : '#F3F4F6';
+  const inputBg  = darkMode ? '#253040' : '#F3F4F6';
 
-  const filtered = members.filter(m => {
+  const generations = useMemo(() =>
+    [...new Set(members.map(m => m.generation))].sort((a,b) => a-b),
+    [members]
+  );
+  const totalM = members.filter(m => m.gender === 'Nam').length;
+  const totalF = members.filter(m => m.gender === 'Nữ').length;
+  const hasFilter = genderF !== 'all' || statusF !== 'all' || genFilter !== 'all' || typeF !== 'all';
+
+  const filtered = useMemo(() => members.filter(m => {
     const q = query.toLowerCase();
-    const matchQ   = !q || m.name.toLowerCase().includes(q) || (m.tenHuy || '').toLowerCase().includes(q);
+    const matchQ   = !q || m.name.toLowerCase().includes(q) || (m.tenHuy||'').toLowerCase().includes(q);
     const matchGen = genFilter === 'all' || m.generation === genFilter;
-    return matchQ && matchGen;
-  }).sort((a, b) => a.generation - b.generation || a.name.localeCompare(b.name));
+    const matchG   = genderF === 'all' || m.gender === genderF;
+    const matchT   = typeF === 'all' || (m.memberType || 'chinh') === typeF;
+    const matchS   = statusF === 'all'
+      || (statusF==='alive' && !m.deathDate)
+      || (statusF==='deceased' && !!m.deathDate);
+    return matchQ && matchGen && matchG && matchS && matchT;
+  }).sort((a,b) => a.generation-b.generation || a.name.localeCompare(b.name)),
+  [members, query, genFilter, genderF, statusF, typeF]);
 
   return (
-    <div className="flex flex-col h-full hide-scrollbar" style={{ background: '#101922' }}>
+    <div className="flex flex-col h-full" style={{ background: bg }}>
 
       {/* Header */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-3" style={{ background: '#192633', borderBottom: '1px solid #233648' }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-white text-lg">Quản Lý Dòng Họ Lê</h2>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#D4AF37' }}>
-            <UserPlus size={18} color="#101922" />
+      <div className="flex-shrink-0 border-b shadow-sm" style={{ background: headerBg, borderColor: border }}>
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold" style={{ color: textMain }}>Danh Sách Dòng Họ Lê</h2>
+            <motion.button whileTap={{ scale: 0.9 }}
+              onClick={() => setShowFilter(v=>!v)}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1"
+              style={{ background: hasFilter ? '#800000' : inputBg, color: hasFilter ? 'white' : textSub }}
+            >
+              <SlidersHorizontal size={13}/> {hasFilter ? 'Đang lọc' : 'Lọc'}
+            </motion.button>
+          </div>
+
+          {/* Search */}
+          <div className="relative flex items-center rounded-xl mb-3" style={{ background: inputBg }}>
+            <Search size={15} className="absolute left-3 pointer-events-none" style={{ color: textSub }}/>
+            <input value={query} onChange={e=>setQuery(e.target.value)}
+              placeholder="Tìm tên, tên húy..."
+              className="w-full pl-9 pr-9 py-2.5 bg-transparent text-sm focus:outline-none"
+              style={{ color: textMain }}/>
+            {query && <button onClick={()=>setQuery('')} className="absolute right-3 p-1"><X size={14} style={{ color: textSub }}/></button>}
+          </div>
+
+          {/* Gen chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {(['all', ...generations] as const).map(g=>(
+              <button key={g} onClick={()=>setGenFilter(g as any)}
+                className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all"
+                style={{ background: genFilter===g ? '#800000' : inputBg, color: genFilter===g ? 'white' : textSub }}>
+                {g==='all' ? 'Tất cả' : `Đời ${g}`}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative flex items-center rounded-xl overflow-hidden mb-3" style={{ background: '#233648' }}>
-          <Search size={16} className="absolute left-3" color="#92adc9" />
-          <input
-            value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="Tìm kiếm thành viên..."
-            className="w-full pl-10 pr-9 py-3 bg-transparent focus:outline-none text-sm text-white placeholder-[#92adc9]"
-          />
-          {query && (
-            <button onClick={() => setQuery('')} className="absolute right-3">
-              <X size={14} color="#92adc9" />
-            </button>
+        <AnimatePresence>
+          {showFilter && (
+            <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}}
+              className="overflow-hidden border-t" style={{ borderColor: border }}>
+              <div className="px-4 py-3 space-y-2">
+                <div className="flex gap-2">
+                  {(['all','Nam','Nữ'] as const).map(gv=>(
+                    <button key={gv} onClick={()=>setGenderF(gv)}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: genderF===gv ? '#800000' : inputBg, color: genderF===gv ? 'white' : textSub }}>
+                      {gv==='all'?'Tất cả':gv==='Nam'?'👨 Nam':'👩 Nữ'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  {(['all','alive','deceased'] as const).map(sv=>(
+                    <button key={sv} onClick={()=>setStatusF(sv)}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: statusF===sv ? '#800000' : inputBg, color: statusF===sv ? 'white' : textSub }}>
+                      {sv==='all'?'Tất cả':sv==='alive'?'💚 Sống':'🕯️ Đã mất'}
+                    </button>
+                  ))}
+                </div>
+                {/* Lọc vai vế */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase mb-1" style={{ color: textSub }}>Vai vế trong họ</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {(['all','chinh','dau','re','chau_ngoai','ngoai_toc'] as const).map(tv=>(
+                      <button key={tv} onClick={()=>setTypeF(tv)}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                        style={{
+                          background: typeF===tv ? '#800000' : inputBg,
+                          color: typeF===tv ? 'white' : textSub,
+                        }}>
+                        {tv==='all' ? '👥 Tất cả' : MEMBER_TYPE_LABEL[tv]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
-
-        {/* Gen filter chips */}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-          {(['all', ...generations] as const).map(g => (
-            <button key={g} onClick={() => setGenFilter(g as any)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{
-                background: genFilter === g ? '#D4AF37' : '#233648',
-                color:      genFilter === g ? '#101922' : '#92adc9',
-              }}>
-              {g === 'all' ? 'Tất cả' : `Đời ${g}`}
-            </button>
-          ))}
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* Stats */}
-      <div className="flex-shrink-0 grid grid-cols-3 gap-3 p-4">
+      <div className="flex-shrink-0 grid grid-cols-3 gap-3 px-4 py-3">
         {[
-          { label: 'TỔNG SỐ', value: members.length, color: '#fff' },
-          { label: 'NAM',     value: male,            color: '#60A5FA' },
-          { label: 'NỮ',      value: female,          color: '#F472B6' },
-        ].map(s => (
-          <div key={s.label} className="rounded-2xl p-3 text-center" style={{ background: '#192633' }}>
-            <p className="text-xs font-bold mb-1" style={{ color: '#92adc9' }}>{s.label}</p>
-            <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
+          { label:'TỔNG', value:members.length, color:'#111827' },
+          { label:'NAM',  value:totalM, color:'#1D4ED8' },
+          { label:'NỮ',   value:totalF, color:'#BE185D' },
+        ].map(s=>(
+          <div key={s.label} className="rounded-2xl p-3 flex flex-col items-center shadow-sm"
+            style={{ background: cardBg, border: `1px solid ${border}` }}>
+            <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5" style={{ color: textSub }}>{s.label}</span>
+            <span className="text-2xl font-black" style={{ color: darkMode ? (s.color==='#111827' ? '#f1f5f9' : s.color) : s.color }}>{s.value}</span>
           </div>
         ))}
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-6 hide-scrollbar">
-        <p className="text-xs font-bold mb-2" style={{ color: '#92adc9' }}>
-          DANH SÁCH THÀNH VIÊN ({filtered.length})
+      <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ touchAction: 'pan-y' }}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: textSub }}>
+          {filtered.length} thành viên
         </p>
-        <AnimatePresence>
-          {filtered.map((m, idx) => {
-            const bg    = avatarColor(m.name);
-            const year  = m.birthDate ? new Date(m.birthDate).getFullYear() : '?';
-            return (
-              <motion.div key={m.id}
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }} transition={{ delay: idx * 0.02 }}
-                onClick={() => onSelectMember(m)}
-                className="rounded-2xl overflow-hidden cursor-pointer"
-                style={{ background: '#192633', border: '1px solid #233648' }}>
-                <div className="flex items-center gap-3 p-3">
-                  {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-white overflow-hidden"
-                    style={{ background: m.photoUrl ? 'transparent' : bg, fontSize: 15 }}>
-                    {m.photoUrl
-                      ? <img src={cloudinaryThumb(m.photoUrl, 100)} alt={m.name} className="w-full h-full object-cover" loading="lazy" />
-                      : initials(m.name)
-                    }
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-bold text-white truncate">{m.name}</p>
-                      <span className="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-lg"
-                        style={{ background: '#233648', color: '#D4AF37' }}>
-                        Đời {m.generation}
-                      </span>
+        {filtered.length===0 ? (
+          <div className="text-center py-16" style={{ color: textSub }}>
+            <div className="text-5xl mb-3">🔍</div>
+            <p className="font-medium">Không tìm thấy kết quả</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {filtered.map((m,i)=>{
+              const birthY = m.birthDate ? new Date(m.birthDate).getFullYear() : null;
+              const deathY = m.deathDate ? new Date(m.deathDate).getFullYear() : null;
+              const isDeceased = !!m.deathDate;
+              const grad = avatarGradient(m.name);
+              return (
+                <motion.div key={m.id}
+                  initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
+                  transition={{ delay: Math.min(i*0.02, 0.25), duration:0.2 }}
+                  className="rounded-2xl shadow-sm cursor-pointer"
+                  style={{ background: cardBg, border: `1px solid ${border}` }}
+                  onClick={()=>onSelectMember(m)}
+                >
+                  <div className="flex items-start gap-3 p-3">
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br ${grad} overflow-hidden`}
+                        style={{ filter: isDeceased ? 'grayscale(50%) brightness(0.8)' : 'none' }}>
+                        {m.photoUrl
+                          ? <img src={cloudinaryThumb(m.photoUrl, 100)} alt={m.name} className="w-full h-full object-cover" loading="lazy"/>
+                          : initials(m.name)}
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white font-black border-2"
+                        style={{ fontSize:8, background:'#800000', borderColor: cardBg }}>
+                        {m.generation}
+                      </div>
                     </div>
-                    <p className="text-xs mt-0.5" style={{ color: '#92adc9' }}>
-                      Sinh năm: {year} · {m.gender}
-                    </p>
-                    {m.chucTuoc && (
-                      <p className="text-xs mt-0.5 font-semibold" style={{ color: '#D4AF37' }}>{m.chucTuoc}</p>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-bold text-sm leading-snug" style={{ color: textMain }}>{m.name}</p>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {(m.memberType && m.memberType !== 'chinh') && (() => {
+                            const col = MEMBER_TYPE_COLOR[m.memberType!];
+                            return (
+                              <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+                                style={{ background: col.bg, color: col.text }}>
+                                {MEMBER_TYPE_LABEL[m.memberType!].split(' ')[0]}
+                              </span>
+                            );
+                          })()}
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ background: isDeceased ? (darkMode?'#1e1e1e':'#F3F4F6') : (darkMode?'#0f2010':'#F0FDF4'),
+                                     color:      isDeceased ? textSub : '#16a34a' }}>
+                            {isDeceased?'🕯️':'💚'}
+                          </span>
+                        </div>
+                      </div>
+                      {m.tenHuy && <p className="text-xs italic" style={{ color: textSub }}>Húy: {m.tenHuy}</p>}
+                      {m.chucTuoc && <p className="text-xs font-semibold" style={{ color:'#B8860B' }}>{m.chucTuoc}</p>}
+                      <div className="flex items-center gap-2 mt-0.5 text-xs" style={{ color: textSub }}>
+                        {birthY && <span>🎂 {birthY}</span>}
+                        {deathY  && <span>🕯️ {deathY}</span>}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                {/* Actions row */}
-                <div className="flex border-t" style={{ borderColor: '#233648' }}>
-                  {[{ icon: '✏️', label: 'Sửa' }, { icon: '🌳', label: 'Cây' }, { icon: '👤+', label: 'Thêm' }].map(a => (
-                    <button key={a.label}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors"
-                      style={{ color: '#92adc9' }}
-                      onClick={e => { e.stopPropagation(); if (a.label === 'Sửa') onSelectMember(m); }}>
-                      <span>{a.icon}</span>{a.label}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+                  <div className="flex border-t divide-x" style={{ borderColor: border }}>
+                    {[{icon:'✏️',label:'Sửa'},{icon:'🌳',label:'Phả hệ'},{icon:'👁️',label:'Chi tiết'}].map(a=>(
+                      <button key={a.label}
+                        onClick={e=>{ e.stopPropagation(); if(a.label!=='Sửa') onSelectMember(m); }}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-semibold"
+                        style={{ color: textSub, borderColor: border }}>
+                        <span>{a.icon}</span>{a.label}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
