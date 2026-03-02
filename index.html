@@ -2,26 +2,36 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Gia Phả Dòng Họ Lê</title>
-    <meta name="description" content="Cây gia phả dòng họ Lê - Truyền thống, Đoàn kết, Phát triển" />
-
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json" />
+    <meta name="description" content="Gia Phả Dòng Họ Lê - Truyền thống · Đoàn kết · Phát triển" />
     <meta name="theme-color" content="#800000" />
-
-    <!-- iOS PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Gia Phả Lê" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192.svg" />
-
-    <!-- Open Graph (chia sẻ Zalo/Facebook) -->
-    <meta property="og:title" content="Gia Phả Dòng Họ Lê" />
-    <meta property="og:description" content="Cây gia phả dòng họ Lê - Truyền thống, Đoàn kết, Phát triển" />
-    <meta property="og:type" content="website" />
-
     <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
+    <!-- Preconnect cho CDNs quan trọng (giảm FCP) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <!-- Open Graph -->
+    <meta property="og:title" content="Gia Phả Dòng Họ Lê" />
+    <meta property="og:description" content="Gia phả số – Truyền thống · Đoàn kết · Phát triển" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://legia-2026.pages.dev" />
+    <!-- Canonical -->
+    <link rel="canonical" href="https://legia-2026.pages.dev/" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * { font-family: 'Inter', sans-serif; }
+      body { margin: 0; background: #F8F9FA; overscroll-behavior: none; }
+      /* Safe area cho iPhone */
+      .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+      .safe-top { padding-top: env(safe-area-inset-top); }
+    </style>
   </head>
   <body>
     <div id="root"></div>
