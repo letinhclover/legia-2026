@@ -284,8 +284,8 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
               {/* Hàng 4: Vai vế | Giới tính */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={lbl}>Vai vế</label>
-                  <select className={inp} value={form.memberType} onChange={e=>set('memberType',e.target.value)}>
+                  <label className={lbl} htmlFor="sel-vaiVe">Vai vế</label>
+                  <select id="sel-vaiVe" className={inp} value={form.memberType} onChange={e=>set('memberType',e.target.value)}>
                     <option value="chinh">🔴 Chính tộc</option>
                     <option value="dau">💍 Con dâu</option>
                     <option value="re">🤝 Con rể</option>
@@ -294,8 +294,8 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                   </select>
                 </div>
                 <div>
-                  <label className={lbl}>Giới tính <span className="text-red-500">*</span></label>
-                  <select className={inp} value={form.gender} onChange={e=>set('gender',e.target.value)}>
+                  <label className={lbl} htmlFor="sel-gender">Giới tính <span className="text-red-500">*</span></label>
+                  <select id="sel-gender" className={inp} value={form.gender} onChange={e=>set('gender',e.target.value)}>
                     <option value="Nam">👨 Nam</option>
                     <option value="Nữ">👩 Nữ</option>
                   </select>
@@ -388,8 +388,8 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                 {label:`Người mẹ (Đời ${parseInt(form.generation)-1})`,key:'motherId',pool:prevGen.filter(m=>m.gender==='Nữ'),ph:'-- Không rõ --'},
               ].map(f=>(
                 <div key={f.key}>
-                  <label className={lbl}>{f.label}</label>
-                  <select className={inp} value={(form as any)[f.key]} onChange={e=>set(f.key,e.target.value)}>
+                  <label className={lbl} htmlFor={"sel-"+f.key}>{f.label}</label>
+                  <select id={"sel-"+f.key} className={inp} value={(form as any)[f.key]} onChange={e=>set(f.key,e.target.value)}>
                     <option value="">{f.ph}</option>
                     {f.pool.map(m=>(
                       <option key={m.id} value={m.id}>{m.name}{m.tenHuy?` (Húy: ${m.tenHuy})`:''}</option>
@@ -405,7 +405,7 @@ export default function MemberForm({isOpen,onClose,onSave,onDelete,members,editi
                     (Đời {currentGen} · {oppositeGender} · {spousePool.length} người)
                   </span>
                 </label>
-                <select className={inp} value={form.spouseId} onChange={e=>set('spouseId',e.target.value)}>
+                <select id="sel-spouseId" className={inp} value={form.spouseId} onChange={e=>set('spouseId',e.target.value)}>
                   <option value="">-- Chưa có --</option>
                   {spousePool.map(m=>(
                     <option key={m.id} value={m.id}>
