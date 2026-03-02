@@ -217,12 +217,19 @@ export default function SettingsTab({ user, isAdmin, isSuperAdmin = false, membe
             {isAdmin ? (
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-50">
-                  <div className="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center">
-                    <Shield size={18} className="text-green-600" />
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: isSuperAdmin ? '#dcfce7' : '#dbeafe' }}>
+                    <Shield size={18} style={{ color: isSuperAdmin ? '#16a34a' : '#2563eb' }} />
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-bold text-green-700">✅ Đang là Quản trị viên</div>
+                    <div className="text-sm font-bold" style={{ color: isSuperAdmin ? '#15803d' : '#1d4ed8' }}>
+                      {isSuperAdmin ? '⭐ Super Admin' : '✏️ Biên tập viên'}
+                    </div>
                     <div className="text-xs text-gray-400">{user?.email}</div>
+                    {!isSuperAdmin && (
+                      <div className="text-xs mt-0.5" style={{ color: '#f59e0b' }}>
+                        Có thể sửa thành viên · Không xuất dữ liệu
+                      </div>
+                    )}
                   </div>
                 </div>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={() => signOut(auth)}
