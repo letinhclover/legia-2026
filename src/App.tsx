@@ -224,14 +224,15 @@ export default function App() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-white font-bold text-sm leading-tight">Gia Phả Dòng Họ Lê</h1>
-            <p className="text-xs opacity-80" style={{ color: subText ?? '#fbbf24' }}>
+            <p className="text-xs font-medium" style={{ color: subText ?? 'rgba(255,255,255,0.85)' }}>
               {members.length} thành viên · {maxGen} đời
             </p>
           </div>
 
           {/* Filter đời — chỉ hiện khi đang ở tab cây */}
           {activeTab === 'tree' && (
-            <select value={filterGen}
+            <label htmlFor="filter-gen" className="sr-only">Lọc theo đời</label>
+            <select id="filter-gen" aria-label="Lọc theo đời" value={filterGen}
               onChange={e => setFilterGen(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
               className="text-xs rounded-lg px-2 py-1.5 focus:outline-none flex-shrink-0"
               style={{
