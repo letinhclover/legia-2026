@@ -2,262 +2,246 @@ import dagre from 'dagre';
 import { Node, Edge } from 'reactflow';
 import { Member } from '../types';
 
-// ── Kích thước node gần vuông ──────────────────────────────────────────
-export const NODE_W = 145;
-export const NODE_H = 148;
+// ── CẤU HÌNH KÍCH THƯỚC ──────────────────────────────────────────────
+export const NODE_W = 200; // Tăng chiều rộng để hiển thị đẹp hơn
+export const NODE_H = 110; // Chiều cao node
+const SPOUSE_GAP = 50;     // Khoảng cách giữa Vợ - Chồng
+const RANK_SEP = 180;      // Khoảng cách giữa các Đời (Cha - Con)
+const NODE_SEP = 80;       // Khoảng cách giữa các anh em/cặp đôi
+const STAIR_OFFSET = 60;   // ĐỘ LỆCH BẬC THANG (Em thấp hơn Anh 60px)
 
-const SPOUSE_GAP      = 32;   // khoảng cách ngang vợ ↔ chồng
-const RANK_SEP        = 200;  // khoảng dọc giữa các đời (cho thoáng)
-const NODE_SEP        = 55;   // khoảng ngang tối thiểu giữa các cặp/node
-const SIBLING_STAGGER = 15;   // px lệch Y nhỏ giữa anh em (12-20px per yêu cầu)
-
-// ─── Lấy năm sinh ─────────────────────────────────────────────────────
+// ── Helper: Lấy năm sinh an toàn ─────────────────────────────────────
 function getBirthYear(m: Member): number {
-  if (!m.birthDate) return Infinity;
+  if (!m.birthDate) return 9999; // Không có năm sinh thì đẩy xuống cuối
   const y = parseInt(m.birthDate.slice(0, 4));
-  return isNaN(y) ? Infinity : y;
+  return isNaN(y) ? 9999 : y;
 }
 
-// ─── Sort anh em theo năm sinh (BFS từ gốc) ───────────────────────────
-function sortSiblings(members: Member[]): Member[] {
-  // Group con cái: ưu tiên fatherId, fallback motherId
-  // Đồng thời track theo cặp parents để giữ anh em cùng cha mẹ gần nhau
-  const groups = new Map<string, Member[]>();
-  members.forEach(m => {
-    // Khóa group = fatherId|motherId để nhóm chính xác hơn
-    const key = [m.fatherId ?? '', m.motherId ?? ''].filter(Boolean).join('|') || '__root__';
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(m);
-    // Cũng index theo từng parent riêng lẻ để BFS có thể tìm được
-    if (m.fatherId) {
-      const kf = m.fatherId;
-      if (!groups.has(kf)) groups.set(kf, []);
-      if (!groups.get(kf)!.find(x => x.id === m.id)) groups.get(kf)!.push(m);
+// ── Helper: Sắp xếp thành viên (Quan trọng) ──────────────────────────
+// Sắp xếp theo: Đời -> Cha Mẹ -> Năm sinh
+function sortMembersSecure(members: Member[]): Member[] {
+  return [...members].sort((a, b) => {
+    // 1. Ưu tiên theo Đời (Generation)
+    if (a.generation !== b.generation) {
+      return a.generation - b.generation;
     }
+    
+    // 2. Gom nhóm theo Cha/Mẹ (để anh em đứng cạnh nhau)
+    const parentA = a.fatherId || a.motherId || '';
+    const parentB = b.fatherId || b.motherId || '';
+    if (parentA !== parentB) {
+      return parentA.localeCompare(parentB);
+    }
+
+    // 3. Cùng cha mẹ -> Xếp theo Năm sinh (Anh trước, Em sau)
+    return getBirthYear(a) - getBirthYear(b);
   });
-
-  groups.forEach(g =>
-    g.sort((a, b) => {
-      const d = getBirthYear(a) - getBirthYear(b);
-      return d !== 0 ? d : a.id.localeCompare(b.id);
-    })
-  );
-
-  const visited = new Set<string>();
-  const sorted: Member[] = [];
-
-  const roots = members
-    .filter(m => !m.fatherId && !m.motherId)
-    .sort((a, b) => {
-      const d = getBirthYear(a) - getBirthYear(b);
-      return d !== 0 ? d : a.id.localeCompare(b.id);
-    });
-
-  const queue = [...roots];
-  while (queue.length) {
-    const cur = queue.shift()!;
-    if (visited.has(cur.id)) continue;
-    visited.add(cur.id);
-    sorted.push(cur);
-    queue.push(...(groups.get(cur.id) ?? []).filter(c => !visited.has(c.id)));
-  }
-  members.forEach(m => { if (!visited.has(m.id)) sorted.push(m); });
-  return sorted;
 }
 
-// ─── Main layout ───────────────────────────────────────────────────────
+// ─── MAIN LAYOUT FUNCTION ─────────────────────────────────────────────
 export function buildFamilyLayout(
-  members: Member[],
+  rawMembers: Member[],
   onNodeClick: (m: Member) => void
 ): { nodes: Node[]; edges: Edge[] } {
-  if (members.length === 0) return { nodes: [], edges: [] };
+  if (rawMembers.length === 0) return { nodes: [], edges: [] };
 
+  // 1. Sắp xếp danh sách đầu vào chuẩn chỉ
+  const members = sortMembersSecure(rawMembers);
   const memberMap = new Map(members.map(m => [m.id, m]));
-  const sortedMembers = sortSiblings(members);
 
-  // ── Bước 1: Tạo couple groups (chồng trái, vợ phải) ──────────────
-  const processedSpouse = new Set<string>();
-  const coupleGroups: Array<{ id: string; members: string[] }> = [];
-  const memberToGroup = new Map<string, string>();
+  // 2. Gom nhóm Vợ/Chồng (Couple Grouping)
+  // Ý tưởng: Coi (Chồng + Vợ) là 1 NODE TO trong mắt Dagre để không bị tách rời
+  const couples: Map<string, string[]> = new Map(); // Key: ID đại diện, Value: [ID1, ID2]
+  const memberToCoupleId = new Map<string, string>();
+  const processed = new Set<string>();
 
-  sortedMembers.forEach(m => {
-    if (processedSpouse.has(m.id)) return;
+  members.forEach(m => {
+    if (processed.has(m.id)) return;
+
     const spouse = m.spouseId ? memberMap.get(m.spouseId) : null;
-
-    if (spouse && !processedSpouse.has(spouse.id)) {
-      const husband = m.gender === 'Nam' ? m : spouse;
-      const wife    = m.gender === 'Nam' ? spouse : m;
-      const gid = `couple_${husband.id}`;
-      coupleGroups.push({ id: gid, members: [husband.id, wife.id] });
-      memberToGroup.set(husband.id, gid);
-      memberToGroup.set(wife.id, gid);
-      processedSpouse.add(m.id);
-      processedSpouse.add(spouse.id);
+    if (spouse) {
+      // Có vợ/chồng -> Tạo nhóm
+      // Logic: Ưu tiên Nam làm Key, hoặc người có quan hệ huyết thống
+      const isMale = m.gender === 'Nam';
+      const main = isMale ? m : spouse;
+      const partner = isMale ? spouse : m;
+      
+      const coupleId = `couple_${main.id}`;
+      couples.set(coupleId, [main.id, partner.id]);
+      memberToCoupleId.set(main.id, coupleId);
+      memberToCoupleId.set(partner.id, coupleId);
+      
+      processed.add(main.id);
+      processed.add(partner.id);
     } else {
-      const gid = `single_${m.id}`;
-      coupleGroups.push({ id: gid, members: [m.id] });
-      memberToGroup.set(m.id, gid);
-      processedSpouse.add(m.id);
+      // Độc thân -> Nhóm 1 mình
+      const coupleId = `single_${m.id}`;
+      couples.set(coupleId, [m.id]);
+      memberToCoupleId.set(m.id, coupleId);
+      processed.add(m.id);
     }
   });
 
-  // ── Bước 2: Dagre layout ──────────────────────────────────────────
+  // 3. Cấu hình Dagre (Thư viện vẽ cây)
   const g = new dagre.graphlib.Graph();
+  g.setGraph({ 
+    rankdir: 'TB', // Top-to-Bottom
+    nodesep: NODE_SEP, 
+    ranksep: RANK_SEP 
+  });
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: 'TB', nodesep: NODE_SEP, ranksep: RANK_SEP });
 
-  coupleGroups.forEach(group => {
-    const w = group.members.length === 2 ? NODE_W * 2 + SPOUSE_GAP : NODE_W;
-    g.setNode(group.id, { width: w, height: NODE_H });
+  // 4. Thêm Node vào Dagre (Node ở đây là Cặp đôi)
+  couples.forEach((ids, coupleId) => {
+    // Chiều rộng = Tổng chiều rộng các thành viên + khoảng cách
+    const width = ids.length * NODE_W + (ids.length - 1) * SPOUSE_GAP;
+    g.setNode(coupleId, { width: width, height: NODE_H });
   });
 
-  const addedGroupEdges = new Set<string>();
-  members.forEach(child => {
-    const cg = memberToGroup.get(child.id)!;
-    for (const pid of [child.fatherId, child.motherId].filter(Boolean) as string[]) {
-      const pg = memberToGroup.get(pid);
-      if (!pg || pg === cg) continue;
-      const key = `${pg}→${cg}`;
-      if (!addedGroupEdges.has(key)) { addedGroupEdges.add(key); g.setEdge(pg, cg); }
+  // 5. Thêm Edge (Quan hệ Cha Mẹ -> Con) vào Dagre
+  // Lưu ý: Nối từ "Nhóm Cha Mẹ" -> "Nhóm Con"
+  members.forEach(m => {
+    if (!m.fatherId && !m.motherId) return;
+    
+    const childCoupleId = memberToCoupleId.get(m.id);
+    const parentId = m.fatherId || m.motherId; // Ưu tiên cha
+    const parentCoupleId = parentId ? memberToCoupleId.get(parentId) : null;
+
+    if (childCoupleId && parentCoupleId && childCoupleId !== parentCoupleId) {
+      // Chỉ thêm edge nếu chưa có để tránh duplicate
+      const edgeName = `${parentCoupleId}-${childCoupleId}`;
+      if (!g.hasEdge(parentCoupleId, childCoupleId)) {
+         g.setEdge(parentCoupleId, childCoupleId);
+      }
     }
   });
 
+  // 6. Chạy thuật toán Dagre để tính toạ độ cơ bản
   dagre.layout(g);
 
-  // ── Bước 3: Tính vị trí pixel ────────────────────────────────────
-  const positions = new Map<string, { x: number; y: number }>();
-
-  coupleGroups.forEach(group => {
-    const gPos = g.node(group.id);
-    if (!gPos) return;
-    const baseY = gPos.y - NODE_H / 2;
-    const left  = gPos.x - gPos.width / 2;
-
-    if (group.members.length === 2) {
-      const [husbandId, wifeId] = group.members;
-      // Vợ chồng CÙNG Y tuyệt đối (không offset)
-      positions.set(husbandId, { x: left,                        y: baseY });
-      positions.set(wifeId,    { x: left + NODE_W + SPOUSE_GAP,  y: baseY });
-    } else {
-      positions.set(group.members[0], { x: gPos.x - NODE_W / 2,  y: baseY });
-    }
+  // 7. HẬU XỬ LÝ: BẬC THANG (STAIRCASE EFFECT) & GIẢI NÉN TOẠ ĐỘ
+  const finalPositions = new Map<string, { x: number, y: number }>();
+  
+  // Duyệt qua từng nhóm anh em để tạo hiệu ứng bậc thang
+  // Gom nhóm anh em theo Cha Mẹ
+  const siblingsGroups = new Map<string, string[]>(); // Key: ParentCoupleId, Value: List ChildCoupleId
+  
+  couples.forEach((_, childCoupleId) => {
+     const node = g.node(childCoupleId);
+     // Hack: Dagre không lưu parent info, ta phải dò lại
+     // Tìm xem couple này là con của ai
+     // (Logic đơn giản hóa: Lấy ID người đầu tiên trong couple, check father)
+     const firstMemberId = couples.get(childCoupleId)?.[0];
+     const mem = memberMap.get(firstMemberId!);
+     const parentId = mem?.fatherId || mem?.motherId;
+     
+     if (parentId) {
+       const pCid = memberToCoupleId.get(parentId) || 'root';
+       if (!siblingsGroups.has(pCid)) siblingsGroups.set(pCid, []);
+       if (!siblingsGroups.get(pCid)?.includes(childCoupleId)) {
+          siblingsGroups.get(pCid)?.push(childCoupleId);
+       }
+     } else {
+       // Root nodes (Cụ tổ)
+       if (!siblingsGroups.has('root')) siblingsGroups.set('root', []);
+       siblingsGroups.get('root')?.push(childCoupleId);
+     }
   });
 
-  // ── Bước 4: Sibling stagger nhẹ (12-20px per index) ──────────────
-  // Anh cả Y = baseY (cao nhất), mỗi em +SIBLING_STAGGER px
-  // Giữ vợ/chồng cùng Y với nhau
-  const siblingGroupsMap = new Map<string, string[]>();
-  sortedMembers.forEach(m => {
-    const parentId = m.fatherId ?? m.motherId;
-    if (!parentId) return;
-    if (!siblingGroupsMap.has(parentId)) siblingGroupsMap.set(parentId, []);
-    siblingGroupsMap.get(parentId)!.push(m.id);
-  });
+  // Áp dụng offset bậc thang
+  siblingsGroups.forEach((childCoupleIds) => {
+    // Sắp xếp lại anh em theo X (để đảm bảo thứ tự Dagre đã tính: Trái -> Phải)
+    childCoupleIds.sort((a, b) => g.node(a).x - g.node(b).x);
 
-  siblingGroupsMap.forEach(siblingIds => {
-    if (siblingIds.length < 2) return;
-    const basePos = positions.get(siblingIds[0]);
-    if (!basePos) return;
-
-    // Anchor: anh cả không đổi, em thứ N lệch xuống N * SIBLING_STAGGER
-    siblingIds.forEach((id, idx) => {
-      if (idx === 0) return; // anh cả giữ nguyên
-      const pos = positions.get(id);
-      if (!pos) return;
-      const newY = basePos.y + idx * SIBLING_STAGGER;
-      positions.set(id, { x: pos.x, y: newY });
-
-      // Sync vợ/chồng cùng Y mới
-      const m = memberMap.get(id);
-      if (m?.spouseId) {
-        const sp = positions.get(m.spouseId);
-        if (sp) positions.set(m.spouseId, { x: sp.x, y: newY });
-      }
+    childCoupleIds.forEach((cid, index) => {
+      const nodeInfo = g.node(cid);
+      // Hiệu ứng bậc thang: Người em (index cao) sẽ thấp hơn người anh
+      // offsetY = index * STAIR_OFFSET
+      nodeInfo.y += (index * STAIR_OFFSET); 
     });
   });
 
-  // ── Bước 5: Detect & fix overlap đơn giản ────────────────────────
-  // Nhóm theo generation, sort theo X, push ra xa nếu quá gần
-  const byGen = new Map<number, string[]>();
-  members.forEach(m => {
-    if (!byGen.has(m.generation)) byGen.set(m.generation, []);
-    byGen.get(m.generation)!.push(m.id);
-  });
-  byGen.forEach(ids => {
-    ids.sort((a, b) => (positions.get(a)?.x ?? 0) - (positions.get(b)?.x ?? 0));
-    for (let i = 1; i < ids.length; i++) {
-      const prev = positions.get(ids[i - 1]);
-      const cur  = positions.get(ids[i]);
-      if (!prev || !cur) continue;
-      const minDist = NODE_W + 20;
-      if (cur.x - prev.x < minDist) {
-        positions.set(ids[i], { x: prev.x + minDist, y: cur.y });
-      }
-    }
+  // 8. Tính toạ độ cuối cùng cho từng thành viên
+  couples.forEach((ids, coupleId) => {
+    const nodeInfo = g.node(coupleId);
+    // nodeInfo.x là tâm của cả nhóm. Cần tính toán lại góc trái trên.
+    const totalWidth = ids.length * NODE_W + (ids.length - 1) * SPOUSE_GAP;
+    const startX = nodeInfo.x - totalWidth / 2;
+
+    ids.forEach((memId, idx) => {
+      // Vợ chồng nằm ngang hàng nhau (cùng Y)
+      // Người thứ 2 (Vợ) sẽ nằm bên phải người thứ 1
+      const posX = startX + idx * (NODE_W + SPOUSE_GAP);
+      const posY = nodeInfo.y;
+      
+      finalPositions.set(memId, { x: posX, y: posY });
+    });
   });
 
-  // ── Bước 6: React Flow nodes ─────────────────────────────────────
-  const flowNodes: Node[] = members.map(m => ({
-    id: m.id,
-    type: 'familyNode',
-    position: positions.get(m.id) ?? { x: 0, y: 0 },
-    data: {
-      ...m,
-      spouseName: m.spouseId ? memberMap.get(m.spouseId)?.name : undefined,
-      onEdit: onNodeClick,
-    },
-  }));
+  // 9. Tạo React Flow Nodes
+  const flowNodes: Node[] = members.map(m => {
+    const pos = finalPositions.get(m.id) || { x: 0, y: 0 };
+    // Lấy tên vợ/chồng để hiển thị phụ (nếu cần)
+    const spouse = m.spouseId ? memberMap.get(m.spouseId) : null;
+    
+    return {
+      id: m.id,
+      type: 'familyNode', // Custom Node Component
+      position: pos,
+      data: { 
+        ...m, 
+        spouseName: spouse?.name, // Truyền tên vợ vào để hiển thị (tuỳ chọn)
+        onEdit: onNodeClick 
+      },
+    };
+  });
 
-  // ── Bước 7: Edges ─────────────────────────────────────────────────
+  // 10. Tạo React Flow Edges (Đường nối)
   const flowEdges: Edge[] = [];
-  const memberIds   = new Set(members.map(m => m.id));
-  const addedFlow   = new Set<string>();
-  const addedSpouse = new Set<string>();
+  const addedLinks = new Set<string>();
 
   members.forEach(m => {
-    // Cha → Con (đỏ đậm)
-    if (m.fatherId && memberIds.has(m.fatherId)) {
-      const key = `f-${m.fatherId}-${m.id}`;
-      if (!addedFlow.has(key)) {
-        addedFlow.add(key);
+    // A. Nối Cha -> Con
+    // Logic mới: Nối từ "Nhóm Cha Mẹ" xuống "Con"
+    if (m.fatherId && memberMap.has(m.fatherId)) {
+      const linkId = `${m.fatherId}-${m.id}`;
+      if (!addedLinks.has(linkId)) {
         flowEdges.push({
-          id: key, source: m.fatherId, target: m.id,
-          type: 'smoothstep',
-          style: { stroke: '#800000', strokeWidth: 2.5 },
-          markerEnd: { type: 'arrowclosed' as any, color: '#800000' },
+          id: linkId,
+          source: m.fatherId,
+          target: m.id,
+          type: 'smoothstep', // Đường vuông góc đẹp
+          style: { stroke: '#800000', strokeWidth: 2 },
+          // Marker mũi tên
+          markerEnd: { type: 'arrowclosed' as any, color: '#800000' }, 
         });
+        addedLinks.add(linkId);
       }
     }
-    // Mẹ → Con (hồng đứt — chỉ khi không có cha)
-    if (m.motherId && memberIds.has(m.motherId) && !m.fatherId) {
-      const key = `m-${m.motherId}-${m.id}`;
-      if (!addedFlow.has(key)) {
-        addedFlow.add(key);
-        flowEdges.push({
-          id: key, source: m.motherId, target: m.id,
-          type: 'smoothstep',
-          style: { stroke: '#BE185D', strokeWidth: 1.8, strokeDasharray: '6,3' },
-        });
-      }
-    }
-    // Vợ ↔ Chồng (vàng đứt ngang, không mũi tên)
-    if (m.spouseId && memberIds.has(m.spouseId)) {
-      const pairKey = [m.id, m.spouseId].sort().join('|');
-      if (!addedSpouse.has(pairKey)) {
-        addedSpouse.add(pairKey);
-        const husband = m.gender === 'Nam' ? m : memberMap.get(m.spouseId)!;
-        const wife    = m.gender === 'Nam' ? memberMap.get(m.spouseId)! : m;
-        flowEdges.push({
-          id: `spouse-${pairKey}`,
-          source: husband?.id ?? m.id,
-          target: wife?.id   ?? m.spouseId,
-          type: 'straight',
-          style: { stroke: '#B8860B', strokeWidth: 2, strokeDasharray: '8,4' },
-          markerEnd: undefined,
-          label: '💑',
-          labelStyle: { fontSize: 11 },
-          labelBgStyle: { fill: 'transparent' },
-        });
+
+    // B. Nối Vợ - Chồng (Đường nét đứt màu hồng)
+    if (m.spouseId && memberMap.has(m.spouseId)) {
+      // Chỉ vẽ 1 lần cho mỗi cặp
+      const [id1, id2] = [m.id, m.spouseId].sort();
+      const linkId = `spouse-${id1}-${id2}`;
+      
+      if (!addedLinks.has(linkId)) {
+        const p1 = finalPositions.get(id1);
+        const p2 = finalPositions.get(id2);
+        
+        // Chỉ vẽ nếu 2 người nằm cạnh nhau (Logic gom nhóm đã đảm bảo việc này)
+        if (p1 && p2 && Math.abs(p1.y - p2.y) < 10) {
+            flowEdges.push({
+            id: linkId,
+            source: id1,
+            target: id2,
+            type: 'straight', // Đường thẳng
+            style: { stroke: '#BE185D', strokeWidth: 2, strokeDasharray: '5,5' },
+            animated: false,
+            zIndex: -1, // Nằm dưới node
+          });
+          addedLinks.add(linkId);
+        }
       }
     }
   });
