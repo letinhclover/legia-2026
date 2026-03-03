@@ -4,54 +4,57 @@ import { db } from '../firebase';
 
 interface Props {
   darkMode?: boolean;
+  /** compact=true: hiển thị 1 dòng nhỏ trên BottomNav */
+  compact?: boolean;
 }
 
-export default function VisitorCounter({ darkMode }: Props) {
+export default function VisitorCounter({ darkMode, compact = false }: Props) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
-    // 1. Định nghĩa vị trí lưu: collection "meta", document "stats"
     const statsRef = doc(db, 'meta', 'stats');
-
-    // 2. Logic tăng view (Chỉ chạy 1 lần mỗi phiên)
     const SESSION_KEY = 'gia_pha_visited';
-    const hasCounted = sessionStorage.getItem(SESSION_KEY);
 
-    if (!hasCounted) {
-      // Tăng view nhưng không chờ (fire and forget) để tránh chặn giao diện
+    if (!sessionStorage.getItem(SESSION_KEY)) {
       setDoc(statsRef, { visits: increment(1) }, { merge: true })
         .then(() => sessionStorage.setItem(SESSION_KEY, '1'))
-        .catch((err) => console.error("Lỗi tăng view:", err));
+        .catch(err => console.error('Lỗi tăng view:', err));
     }
 
-    // 3. Lắng nghe Realtime (Số nhảy tanh tách khi có người vào)
-    const unsubscribe = onSnapshot(statsRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setCount(data.visits || 0);
-      } else {
-        // Nếu chưa có document, set là 0
-        setCount(0);
-      }
-    }, (error) => {
-      console.error("Lỗi đọc view:", error);
-    });
+    const unsub = onSnapshot(statsRef, snap => {
+      setCount(snap.exists() ? (snap.data().visits ?? 0) : 0);
+    }, err => console.error('Lỗi đọc view:', err));
 
-    // Dọn dẹp khi component unmount
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
-  const textColor = darkMode ? '#94a3b8' : '#64748b';
+  if (count === null) return null; // Không render khi chưa load — tránh layout shift
 
-  // Nếu chưa load xong (count === null) thì hiện dấu ...
+  /* ── Compact mode: 1 dòng nhỏ nằm trên BottomNav ── */
+  if (compact) {
+    const color = darkMode ? 'rgba(138,155,176,0.7)' : 'rgba(107,94,82,0.65)';
+    return (
+      <div
+        className="flex items-center justify-center gap-1 pt-1"
+        style={{ fontSize: 9.5, color, fontFamily: "'Be Vietnam Pro', sans-serif" }}
+      >
+        <span>👁️</span>
+        <span>
+          <span style={{ fontWeight: 700 }}>{count.toLocaleString('vi-VN')}</span>
+          {' '}lượt xem
+        </span>
+      </div>
+    );
+  }
+
+  /* ── Full mode: block độc lập ── */
+  const textColor = darkMode ? '#94a3b8' : '#64748b';
   return (
-    <div className="text-center font-medium mt-2" 
-         style={{ fontSize: 11, color: textColor, opacity: 0.8 }}>
-      {count !== null ? (
-        <span>👁️ <span className="font-bold">{count.toLocaleString('vi-VN')}</span> lượt truy cập</span>
-      ) : (
-        <span>...</span>
-      )}
+    <div
+      className="text-center font-medium mt-2"
+      style={{ fontSize: 11, color: textColor, opacity: 0.8, fontFamily: "'Be Vietnam Pro', sans-serif" }}
+    >
+      👁️ <span style={{ fontWeight: 700 }}>{count.toLocaleString('vi-VN')}</span> lượt truy cập
     </div>
   );
 }
