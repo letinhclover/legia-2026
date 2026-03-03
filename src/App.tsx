@@ -21,8 +21,8 @@ import SettingsTab from './tabs/SettingsTab';
 
 const SUPER_ADMIN_EMAILS = ['letinhclover@gmail.com'];
 const EDITOR_EMAILS      = ['quanlylegia2026@gmail.com'];
-const ADMIN_EMAILS       = SUPER_ADMIN_EMAILS; // backward compat
-const ALL_AUTH_EMAILS    = [...SUPER_ADMIN_EMAILS, ...EDITOR_EMAILS]; // tất cả có quyền đăng nhập
+const ADMIN_EMAILS       = SUPER_ADMIN_EMAILS; 
+const ALL_AUTH_EMAILS    = [...SUPER_ADMIN_EMAILS, ...EDITOR_EMAILS]; 
 const TAB_ORDER: TabId[] = ['tree', 'directory', 'events', 'settings'];
 
 const tabVariants = {
@@ -31,7 +31,6 @@ const tabVariants = {
   exit:  (d: number) => ({ x: d < 0 ? '35%' : '-35%', opacity: 0 }),
 };
 
-// ── Toast types ───────────────────────────────────────────────────────────
 type ToastType = 'success' | 'error' | 'info';
 interface Toast { msg: string; type: ToastType }
 
@@ -56,14 +55,12 @@ export default function App() {
   const [showMemorial, setShowMemorial]   = useState(false);
   const [showGraveMap, setShowGraveMap]   = useState(false);
 
-  // ── Toast ───────────────────────────────────────────────────────────────
   const [toast, setToast] = useState<Toast | null>(null);
   const showToast = useCallback((msg: string, type: ToastType = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
 
-  // ── Dark mode — lưu localStorage ────────────────────────────────────────
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     try { return localStorage.getItem('darkMode') === 'true'; } catch { return false; }
   });
@@ -81,7 +78,6 @@ export default function App() {
   const isAdmin      = isSuperAdmin;
   const direction = TAB_ORDER.indexOf(activeTab) - TAB_ORDER.indexOf(prevTab);
 
-  // ── Auth ────────────────────────────────────────────────────────────────
   useEffect(() => {
     let prevUser: any = null;
     return onAuthStateChanged(auth, u => {
@@ -93,7 +89,6 @@ export default function App() {
     });
   }, []);
 
-  // ── Load members ─────────────────────────────────────────────────────────
   const loadMembers = useCallback(async () => {
     const snap = await getDocs(collection(db, 'members'));
     setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Member[]);
@@ -102,26 +97,35 @@ export default function App() {
 
   const handleTabChange = (tab: TabId) => { setPrevTab(activeTab); setActiveTab(tab); };
 
-  // ── CRUD ──────────────────────────────────────────────────────────────────
+  // ── CRUD (ĐÃ SỬA LỖI ÉP KIỂU SỐ TẠI ĐÂY) ──────────────────────────────────
   const handleSave = async (memberData: Partial<Member>) => {
     try {
-      const payload = { ...memberData };
+      // 1. ÉP KIỂU SỐ CHO NĂM SINH VÀ ĐỜI
+      const payload: any = { ...memberData };
+      
+      if (payload.birthYear) payload.birthYear = Number(payload.birthYear);
+      if (payload.deathYear) payload.deathYear = Number(payload.deathYear);
+      if (payload.generation) payload.generation = Number(payload.generation);
+
       const id = payload.id;
-      delete (payload as any).id;
+      delete payload.id; 
       let savedId = id;
 
       if (id) {
+        // UPDATE
         await updateDoc(doc(db, 'members', id), payload);
         setMembers(prev => prev.map(m => m.id === id ? { ...m, ...payload, id } as Member : m));
         showToast('✅ Đã cập nhật thông tin thành viên!', 'success');
       } else {
-        const ref = await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() });
+        // CREATE
+        const newDoc = { ...payload, createdAt: new Date().toISOString() };
+        const ref = await addDoc(collection(db, 'members'), newDoc);
         savedId = ref.id;
-        setMembers(prev => [...prev, { ...payload, id: savedId } as Member]);
+        setMembers(prev => [...prev, { ...newDoc, id: savedId } as Member]);
         showToast('✅ Đã thêm thành viên mới!', 'success');
       }
 
-      // Đồng bộ vợ/chồng 2 chiều
+      // ĐỒNG BỘ VỢ/CHỒNG
       if (payload.spouseId && savedId) {
         try {
           await updateDoc(doc(db, 'members', payload.spouseId), { spouseId: savedId });
@@ -135,10 +139,11 @@ export default function App() {
           setMembers(prev2 => prev2.map(m => m.id === prev.spouseId ? { ...m, spouseId: null } : m));
         } catch {}
       }
-      loadMembers();
+      
       setIsFormOpen(false);
       setEditingMember(null);
-    } catch {
+    } catch (e) {
+      console.error(e);
       showToast('❌ Lỗi khi lưu thông tin!', 'error');
     }
   };
@@ -152,7 +157,8 @@ export default function App() {
       }
       await deleteDoc(doc(db, 'members', id));
       setViewingMember(null);
-      await loadMembers();
+      // Cập nhật UI ngay lập tức
+      setMembers(prev => prev.filter(m => m.id !== id));
       showToast('🗑️ Đã xóa thành viên', 'info');
     } catch {
       showToast('❌ Lỗi khi xóa!', 'error');
@@ -168,12 +174,16 @@ export default function App() {
   const handleImportMembers = async (data: Partial<Member>[]) => {
     try {
       for (const m of data) {
-        if (m.id) {
-          const { id, ...payload } = m as any;
-          try { await updateDoc(doc(db, 'members', id), payload); }
-          catch { await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() }); }
+        // Đảm bảo ép kiểu khi import Excel luôn
+        const payload: any = { ...m };
+        if (payload.birthYear) payload.birthYear = Number(payload.birthYear);
+        if (payload.generation) payload.generation = Number(payload.generation);
+
+        if (payload.id) {
+          const { id, ...rest } = payload;
+          try { await updateDoc(doc(db, 'members', id), rest); }
+          catch { await addDoc(collection(db, 'members'), { ...rest, createdAt: new Date().toISOString() }); }
         } else {
-          const { id: _id, ...payload } = m as any;
           await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() });
         }
       }
@@ -184,12 +194,11 @@ export default function App() {
     }
   };
 
-  // ── Theme colors ──────────────────────────────────────────────────────────
-  const appBg     = darkMode ? '#0f1724' : '#F8F9FA';
-  const headerBg  = darkMode
+  const appBg = darkMode ? '#0f1724' : '#F8F9FA';
+  const headerBg = darkMode
     ? 'linear-gradient(135deg, #1a0a0a 0%, #2d1010 100%)'
     : 'linear-gradient(135deg, #800000 0%, #5C0000 100%)';
-  const subText   = darkMode ? '#fbbf24cc' : undefined;
+  const subText = darkMode ? '#fbbf24cc' : undefined;
 
   if (loading) return (
     <div className="fixed inset-0 flex items-center justify-center"
@@ -199,23 +208,14 @@ export default function App() {
           className="text-7xl mb-6">🏛️</motion.div>
         <h1 className="text-2xl font-black tracking-tight">Gia Phả Dòng Họ Lê</h1>
         <p className="text-sm mt-2 opacity-60">Truyền thống · Đoàn kết · Phát triển</p>
-        <div className="mt-8 flex justify-center gap-1.5">
-          {[0,1,2].map(i => (
-            <motion.div key={i} className="w-2 h-2 bg-yellow-400 rounded-full"
-              animate={{ opacity: [0.3,1,0.3] }}
-              transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.3 }} />
-          ))}
-        </div>
       </div>
     </div>
   );
 
-  const maxGen = Math.max(...members.map(m => m.generation), 1);
+  const maxGen = members.length > 0 ? Math.max(...members.map(m => m.generation || 1)) : 1;
 
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: appBg, fontFamily: "'Inter', sans-serif" }}>
-
-      {/* ── Header ── */}
       <div className="flex-shrink-0 safe-top" style={{ background: headerBg }}>
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white flex-shrink-0"
@@ -229,7 +229,6 @@ export default function App() {
             </p>
           </div>
 
-          {/* Filter đời — chỉ hiện khi đang ở tab cây */}
           {activeTab === 'tree' && (
             <>
             <label htmlFor="filter-gen" className="sr-only">Lọc theo đời</label>
@@ -257,7 +256,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Toast ── */}
       <AnimatePresence>
         {toast && (
           <motion.div
@@ -274,7 +272,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* ── Tabs ── */}
       <div className="flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div key={activeTab} custom={direction} variants={tabVariants}
@@ -314,10 +311,8 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* ── Bottom Nav ── */}
       <BottomNav active={activeTab} onChange={handleTabChange} darkMode={darkMode} />
 
-      {/* ── Sheet: Chi tiết thành viên ── */}
       <BottomSheet isOpen={!!viewingMember} onClose={() => setViewingMember(null)} height="90vh">
         {viewingMember && (
           <MemberBottomSheet
@@ -329,7 +324,6 @@ export default function App() {
         )}
       </BottomSheet>
 
-      {/* ── Sheet: Form thêm/sửa ── */}
       <BottomSheet isOpen={canEdit && isFormOpen}
         onClose={() => { setIsFormOpen(false); setEditingMember(null); }} height="95vh">
         {canEdit && (
@@ -340,7 +334,6 @@ export default function App() {
         )}
       </BottomSheet>
 
-      {/* ── Sheet: Bản đồ mộ phần ── */}
       <BottomSheet isOpen={showGraveMap} onClose={() => setShowGraveMap(false)} height="90vh">
         <GraveMap members={members} onClose={() => setShowGraveMap(false)}
           onViewMember={m => { setViewingMember(m); setShowGraveMap(false); }} />
