@@ -2,9 +2,9 @@ import { Member } from '../types';
 
 async function loadScript(src: string): Promise<void> {
   if (document.querySelector(`script[src="${src}"]`)) return;
-  return new Promise((resolve, reject) => {
+  return new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = src; s.onload = () => resolve(); s.onerror = reject;
+    s.src = src; s.onload = () => res(); s.onerror = rej;
     document.head.appendChild(s);
   });
 }
@@ -16,150 +16,297 @@ async function loadLibs() {
   ]);
 }
 
-// ─── Render từng node thành viên ─────────────────────────────────────────
-function memberCard(m: Member): string {
-  const isDeceased = !!m.deathDate;
-  const bg = isDeceased ? '#F0F0F0' : m.gender === 'Nam' ? '#EBF5FB' : '#FDF2F8';
-  const border = m.gender === 'Nam' ? '#1A5276' : '#922B21';
-  const birthY = m.birthDate ? new Date(m.birthDate).getFullYear() : '';
-  const deathY = m.deathDate ? new Date(m.deathDate).getFullYear() : '';
+// ── Màu sắc phân loại ──────────────────────────────────────────────────────
+const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  chinh:      { bg: '#FFF5F5', color: '#9B1C1C', label: 'Chính tộc' },
+  dau:        { bg: '#FAF5FF', color: '#6B21A8', label: 'Con dâu'   },
+  re:         { bg: '#EFF6FF', color: '#1E40AF', label: 'Con rể'    },
+  chau_ngoai: { bg: '#F0FDF4', color: '#166534', label: 'Cháu ngoại'},
+  ngoai_toc:  { bg: '#FFFBEB', color: '#92400E', label: 'Ngoại tộc' },
+};
 
-  return `<div style="
-    display:inline-flex;flex-direction:column;align-items:center;
-    width:150px;margin:5px;padding:10px 8px;
-    background:${bg};border:2.5px solid ${border};border-radius:14px;
-    font-family:'Segoe UI',sans-serif;box-shadow:0 3px 10px rgba(0,0,0,0.12);
-    vertical-align:top;position:relative;
-    filter:${isDeceased?'grayscale(30%)':'none'};
+// ── Render card 1 thành viên ───────────────────────────────────────────────
+function memberCard(m: Member): string {
+  const deceased  = !!m.deathDate;
+  const isMale    = m.gender === 'Nam';
+  const typeStyle = TYPE_STYLE[m.memberType ?? 'chinh'] ?? TYPE_STYLE.chinh;
+
+  const accentColor = isMale ? '#1D3A6B' : '#8B2252';
+  const cardBg      = deceased ? '#F8F8F6' : typeStyle.bg;
+  const birthY      = m.birthDate ? new Date(m.birthDate).getFullYear() : (m as any).birthYear ?? '';
+  const deathY      = m.deathDate ? new Date(m.deathDate).getFullYear() : (m as any).deathYear ?? '';
+
+  const yearStr = birthY
+    ? `${birthY}${deathY ? ` – ${deathY}` : ''}`
+    : '';
+
+  const age = (() => {
+    if (!birthY) return '';
+    const endY = deathY || new Date().getFullYear();
+    const a = Number(endY) - Number(birthY);
+    return a > 0 ? `${a} tuổi` : '';
+  })();
+
+  return `
+  <div style="
+    display:inline-flex; flex-direction:column; align-items:center;
+    width:148px; margin:6px;
+    background:${cardBg};
+    border:1.5px solid ${accentColor}28;
+    border-radius:18px;
+    box-shadow:0 3px 14px rgba(28,20,16,0.09), 0 1px 3px rgba(28,20,16,0.06);
+    font-family:'Segoe UI','Be Vietnam Pro',sans-serif;
+    vertical-align:top; position:relative;
+    overflow:hidden;
+    filter:${deceased ? 'grayscale(45%)' : 'none'};
+    opacity:${deceased ? '0.88' : '1'};
   ">
-    <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2.5px solid ${border};margin-bottom:6px;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:22px;">
-      ${m.photoUrl ? `<img src="${m.photoUrl}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>` : (m.gender==='Nam'?'👨':'👩')}
+    <!-- Accent bar trên đầu -->
+    <div style="height:4px; width:100%; background:${accentColor}; border-radius:18px 18px 0 0;"></div>
+
+    <!-- Avatar -->
+    <div style="
+      width:58px; height:58px; border-radius:50%; overflow:hidden;
+      border:2.5px solid ${accentColor};
+      background:${isMale ? '#EEF2FF' : '#FFF0F6'};
+      display:flex; align-items:center; justify-content:center;
+      font-size:26px; margin:14px 0 8px;
+      box-shadow:0 2px 8px rgba(28,20,16,0.14);
+    ">
+      ${m.photoUrl
+        ? `<img src="${m.photoUrl}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous"/>`
+        : (isMale ? '👨' : '👩')
+      }
     </div>
-    <div style="font-weight:800;font-size:11px;color:#111;text-align:center;line-height:1.3;margin-bottom:2px;">${m.name}</div>
-    ${m.tenHuy ? `<div style="font-size:9px;color:#666;font-style:italic;">Húy: ${m.tenHuy}</div>` : ''}
-    ${m.chucTuoc ? `<div style="font-size:9px;color:#B8860B;font-weight:700;">${m.chucTuoc}</div>` : ''}
-    ${(m.memberType && m.memberType !== 'chinh') ? '<div style="font-size:8px;padding:1px 5px;border-radius:8px;margin-top:2px;font-weight:700;background:' + (m.memberType==='dau'?'#FDF4FF':m.memberType==='re'?'#EFF6FF':m.memberType==='chau_ngoai'?'#F0FDF4':'#FFFBEB') + ';color:' + (m.memberType==='dau'?'#7E22CE':m.memberType==='re'?'#1D4ED8':m.memberType==='chau_ngoai'?'#15803D':'#92400E') + ';">' + (m.memberType==='dau'?'💍 Con dâu':m.memberType==='re'?'🤝 Con rể':m.memberType==='chau_ngoai'?'👶 Cháu ngoại':'🔗 Ngoại tộc') + '</div>' : ''}
-    <div style="font-size:9px;color:#888;margin-top:3px;">
-      ${birthY}${deathY ? ` — ${deathY}` : ''}
-    </div>
-    <div style="position:absolute;top:4px;right:4px;background:#800000;color:#FFD700;font-size:8px;font-weight:900;padding:1px 5px;border-radius:10px;">${m.generation}</div>
+
+    <!-- Tên -->
+    <div style="
+      font-weight:800; font-size:11.5px; color:#1C1410;
+      text-align:center; line-height:1.3;
+      padding:0 10px; margin-bottom:3px;
+      word-break:break-word;
+    ">${m.name}</div>
+
+    <!-- Tên húy -->
+    ${m.tenHuy ? `
+    <div style="font-size:9.5px;color:#6B5E52;font-style:italic;margin-bottom:2px;">
+      Húy: ${m.tenHuy}
+    </div>` : ''}
+
+    <!-- Chức tước -->
+    ${m.chucTuoc ? `
+    <div style="
+      font-size:9px; font-weight:700; color:#B8860B;
+      background:#FFFBEB; border-radius:8px; padding:1px 8px; margin-bottom:4px;
+    ">${m.chucTuoc}</div>` : ''}
+
+    <!-- Vai vế (nếu không phải chính tộc) -->
+    ${(m.memberType && m.memberType !== 'chinh') ? `
+    <div style="
+      font-size:8.5px; font-weight:700;
+      color:${typeStyle.color}; background:${typeStyle.bg};
+      border:1px solid ${typeStyle.color}30;
+      border-radius:10px; padding:1px 8px; margin-bottom:4px;
+    ">${typeStyle.label}</div>` : ''}
+
+    <!-- Năm sinh – năm mất -->
+    ${yearStr ? `
+    <div style="font-size:10px; color:#6B5E52; margin-bottom:2px; font-weight:500;">
+      ${yearStr}
+    </div>` : ''}
+
+    <!-- Tuổi -->
+    ${age ? `
+    <div style="font-size:9px; color:${accentColor}; font-weight:700; margin-bottom:6px;">
+      ${deceased ? '🕯️ ' : ''}${age}
+    </div>` : '<div style="margin-bottom:6px;"></div>'}
+
+    <!-- Nơi sinh -->
+    ${m.birthPlace ? `
+    <div style="
+      font-size:8.5px; color:#9C8E82; text-align:center;
+      padding:0 8px 6px; line-height:1.3;
+    ">📍 ${m.birthPlace}</div>` : ''}
+
+    <!-- Badge đời — góc trên phải -->
+    <div style="
+      position:absolute; top:10px; right:8px;
+      background:${accentColor}; color:#fff;
+      font-size:8px; font-weight:900; font-family:serif;
+      padding:2px 6px; border-radius:20px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.2);
+    ">Đ${m.generation}</div>
   </div>`;
 }
 
-// ─── Build full HTML tree ─────────────────────────────────────────────────
-function buildTreeHTML(members: Member[]): string {
+// ── Build full HTML ────────────────────────────────────────────────────────
+function buildHTML(members: Member[]): string {
   const maxGen = Math.max(...members.map(m => m.generation), 1);
-  const byGen: Member[][] = Array.from({ length: maxGen }, (_, i) =>
+  const byGen  = Array.from({ length: maxGen }, (_, i) =>
     members
       .filter(m => m.generation === i + 1)
       .sort((a, b) => {
-        const ya = a.birthDate ? parseInt(a.birthDate) : 9999;
-        const yb = b.birthDate ? parseInt(b.birthDate) : 9999;
+        const ya = (a as any).birthYear || (a.birthDate ? parseInt(a.birthDate) : 9999);
+        const yb = (b as any).birthYear || (b.birthDate ? parseInt(b.birthDate) : 9999);
         return ya - yb;
       })
   );
 
+  const maxPerRow = Math.max(...byGen.map(g => g.length), 1);
+  const pageW     = Math.max(maxPerRow * 168 + 96, 900);
+
   const rows = byGen.map((gen, i) => `
-    <div style="margin-bottom:6px;">
-      <div style="text-align:center;margin-bottom:8px;">
-        <span style="background:#800000;color:#FFD700;padding:4px 18px;border-radius:20px;font-size:12px;font-weight:800;font-family:sans-serif;">
-          Đời thứ ${i+1} &nbsp;·&nbsp; ${gen.length} người
-        </span>
+    <div style="margin-bottom:12px;">
+      <!-- Đầu đời -->
+      <div style="
+        display:flex; align-items:center; gap:14px;
+        margin:0 48px 10px;
+      ">
+        <div style="flex:1; height:1px; background:linear-gradient(90deg,transparent,#E2D8CA);"></div>
+        <div style="
+          background:linear-gradient(135deg,#800000,#5C0000);
+          color:#D4AF37; padding:5px 22px; border-radius:30px;
+          font-size:12px; font-weight:800;
+          font-family:'Segoe UI',sans-serif;
+          box-shadow:0 3px 10px rgba(128,0,0,0.25);
+          white-space:nowrap;
+        ">
+          Đời thứ ${i + 1} &nbsp;·&nbsp; ${gen.length} người
+        </div>
+        <div style="flex:1; height:1px; background:linear-gradient(90deg,#E2D8CA,transparent);"></div>
       </div>
-      <div style="text-align:center;line-height:0;">
-        ${gen.map(memberCard).join('')}
-      </div>
+      <!-- Cards -->
+      <div style="text-align:center;">${gen.map(memberCard).join('')}</div>
     </div>
-    <div style="border-top:1px dashed #CCC;margin:6px 60px;"></div>
+    ${i < byGen.length - 1 ? `<div style="height:1px;background:linear-gradient(90deg,transparent,#E2D8CA 30%,#E2D8CA 70%,transparent);margin:4px 64px 16px;"></div>` : ''}
   `).join('');
 
-  return `<div id="pdf-root" style="
-    background:white;padding:32px 24px;
-    min-width:${Math.max(byGen.reduce((m,g) => Math.max(m, g.length),0) * 166, 800)}px;
-    font-family:'Segoe UI',sans-serif;
+  return `
+  <div id="pdf-root" style="
+    background:#FFFDF7;
+    padding:40px 48px 48px;
+    width:${pageW}px;
+    font-family:'Segoe UI','Be Vietnam Pro',sans-serif;
   ">
-    <div style="text-align:center;margin-bottom:28px;border-bottom:3px solid #800000;padding-bottom:16px;">
-      <div style="font-size:28px;font-weight:900;color:#800000;letter-spacing:1px;">GIA PHẢ DÒNG HỌ LÊ</div>
-      <div style="font-size:13px;color:#B8860B;font-weight:600;margin-top:4px;">Truyền thống · Đoàn kết · Phát triển</div>
-      <div style="font-size:11px;color:#999;margin-top:4px;">
-        Xuất ngày ${new Date().toLocaleDateString('vi-VN')} &nbsp;·&nbsp;
-        Tổng cộng ${members.length} thành viên &nbsp;·&nbsp; ${maxGen} đời
+    <!-- TIÊU ĐỀ -->
+    <div style="text-align:center; margin-bottom:36px;">
+      <!-- Logo -->
+      <div style="
+        width:72px; height:72px; border-radius:20px; margin:0 auto 16px;
+        background:linear-gradient(135deg,#800000 0%,#4a0000 60%,#B8860B 100%);
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 6px 24px rgba(128,0,0,0.3);
+      ">
+        <span style="color:white;font-size:32px;font-weight:900;font-family:serif;">Lê</span>
+      </div>
+
+      <div style="
+        font-size:32px; font-weight:900; color:#800000;
+        font-family:'Georgia',serif; letter-spacing:-0.5px;
+        margin-bottom:6px;
+      ">GIA PHẢ DÒNG HỌ LÊ</div>
+
+      <div style="
+        font-size:13px; color:#B8860B; font-weight:600;
+        letter-spacing:3px; margin-bottom:12px;
+        text-transform:uppercase;
+      ">Truyền Thống · Đoàn Kết · Phát Triển</div>
+
+      <!-- Đường kẻ vàng -->
+      <div style="
+        width:120px; height:3px; margin:0 auto 14px;
+        background:linear-gradient(90deg,transparent,#D4AF37,transparent);
+        border-radius:2px;
+      "></div>
+
+      <!-- Meta info -->
+      <div style="
+        display:inline-flex; gap:24px;
+        background:#FFF5E6; border:1px solid #E2D8CA;
+        border-radius:16px; padding:10px 28px;
+        font-size:12px; color:#6B5E52;
+      ">
+        <span>📅 Xuất ngày ${new Date().toLocaleDateString('vi-VN')}</span>
+        <span>👥 ${members.length} thành viên</span>
+        <span>🏛️ ${maxGen} đời</span>
       </div>
     </div>
+
+    <!-- CÂY GIA PHẢ -->
     ${rows}
-    <div style="text-align:center;margin-top:20px;padding-top:12px;border-top:2px solid #800000;font-size:10px;color:#888;">
-      legia-2026.pages.dev &nbsp;·&nbsp; Dữ liệu lưu trữ bảo mật trên Firebase
+
+    <!-- FOOTER -->
+    <div style="
+      margin-top:32px; padding-top:20px;
+      border-top:2px solid #E2D8CA;
+      text-align:center;
+      color:#9C8E82; font-size:10px;
+    ">
+      <div style="font-weight:700; color:#6B5E52; margin-bottom:4px;">
+        legia-2026.pages.dev
+      </div>
+      Dữ liệu được lưu trữ bảo mật trên Firebase &nbsp;·&nbsp; 
+      © ${new Date().getFullYear()} Dòng Họ Lê
     </div>
   </div>`;
 }
 
-// ─── Export ───────────────────────────────────────────────────────────────
+// ── Export chính ───────────────────────────────────────────────────────────
 export async function exportToPDF(
   members: Member[],
   onProgress?: (msg: string) => void
 ): Promise<void> {
-  onProgress?.('Đang tải thư viện...');
+  onProgress?.('Đang tải thư viện…');
   await loadLibs();
 
-  // YC6: Render off-screen với kích thước thật — KHÔNG bị cắt viewport
-  onProgress?.('Đang tạo bản vẽ (toàn bộ cây)...');
+  onProgress?.('Đang tạo bản vẽ…');
   const wrap = document.createElement('div');
-  wrap.style.cssText = `
-    position:fixed;left:-99999px;top:0;z-index:-999;
-    background:white;overflow:visible;
-  `;
-  wrap.innerHTML = buildTreeHTML(members);
+  wrap.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-999;background:#FFFDF7;overflow:visible;';
+  wrap.innerHTML = buildHTML(members);
   document.body.appendChild(wrap);
 
   const el = wrap.querySelector('#pdf-root') as HTMLElement;
 
-  // Chờ tất cả ảnh load xong
+  // Đợi ảnh load
   await Promise.all(
     Array.from(el.querySelectorAll('img')).map(img =>
       new Promise<void>(r => { img.onload = img.onerror = () => r(); if (img.complete) r(); })
     )
   );
-  // Nhỏ delay để browser paint xong
-  await new Promise(r => setTimeout(r, 300));
+  await new Promise(r => setTimeout(r, 400));
 
   const elW = el.scrollWidth;
   const elH = el.scrollHeight;
 
-  onProgress?.(`Đang chụp (${elW}×${elH}px)...`);
+  onProgress?.(`Đang chụp (${elW}×${elH}px)…`);
 
-  // YC6: Chụp đúng kích thước thật scrollWidth×scrollHeight
   const canvas = await (window as any).html2canvas(el, {
-    scale: 2,
+    scale: 2.2,
     useCORS: true,
     allowTaint: true,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFDF7',
     logging: false,
-    width: elW,
-    height: elH,
-    windowWidth: elW,
-    windowHeight: elH,
+    width: elW, height: elH,
+    windowWidth: elW, windowHeight: elH,
   });
 
   document.body.removeChild(wrap);
 
-  onProgress?.('Đang tạo PDF...');
+  onProgress?.('Đang tạo file PDF…');
   const { jsPDF } = (window as any).jspdf;
 
-  // Tính khổ giấy: fit vào A1 landscape (841×594mm) hoặc lớn hơn
   const ratio = canvas.height / canvas.width;
-  const pgW = Math.max(841, Math.ceil(canvas.width / 3));   // ~300dpi
-  const pgH = Math.max(594, Math.ceil(pgW * ratio));
+  const pgW   = Math.max(900, Math.ceil(canvas.width / 2.8));
+  const pgH   = Math.ceil(pgW * ratio);
 
   const pdf = new jsPDF({
     orientation: pgH > pgW ? 'portrait' : 'landscape',
-    unit: 'mm',
-    format: [pgW, pgH],
-    compress: true,
+    unit: 'mm', format: [pgW, pgH], compress: true,
   });
 
-  pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pgW, pgH);
+  pdf.addImage(canvas.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, pgW, pgH);
 
   const today = new Date().toISOString().slice(0, 10);
-  pdf.save(`GiaPha_HoLe_${today}.pdf`);
+  pdf.save(`GiaPha_HoLe_v18_${today}.pdf`);
   onProgress?.('✅ Xuất PDF thành công!');
 }
