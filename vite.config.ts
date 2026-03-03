@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // autoUpdate: SW tự cập nhật mà KHÔNG hỏi user → mỗi khi GitHub push, app tự load mã mới
-      registerType: 'autoUpdate',
+      // TỰ ĐỘNG CẬP NHẬT MÀ KHÔNG CẦN HỎI
+      registerType: 'autoUpdate', 
       injectRegister: 'auto',
       includeAssets: ['icon-192.svg', 'icon-512.svg'],
       manifest: {
@@ -27,39 +27,37 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // navigateFallback null → HTML không bị cache → luôn tải index.html mới
+        // QUAN TRỌNG: Không cache index.html để luôn thấy code mới
         navigateFallback: null,
-        // skipWaiting + clientsClaim → SW mới kích hoạt NGAY, không chờ tab cũ đóng
         skipWaiting: true,
         clientsClaim: true,
-        // Xóa cache cũ khi có SW mới
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            // Firebase Firestore → NetworkFirst (data luôn mới)
+            // Firestore: Ưu tiên mạng (NetworkFirst) để dữ liệu luôn tươi mới
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'firestore-v2',
-              networkTimeoutSeconds: 4,
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 },
+              cacheName: 'firestore-data-v1',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 50, maxAgeSeconds: 300 }, // Cache 5 phút
             },
           },
           {
-            // Cloudinary → StaleWhileRevalidate (ảnh ít thay đổi)
+            // Cloudinary: Cache lâu dài (StaleWhileRevalidate)
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'cloudinary-imgs-v2',
-              expiration: { maxEntries: 300, maxAgeSeconds: 2592000 },
+              cacheName: 'cloudinary-images',
+              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 ngày
             },
           },
           {
-            // Google Fonts → CacheFirst
+            // Google Fonts
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'gfonts-v2',
+              cacheName: 'google-fonts',
               expiration: { maxEntries: 20, maxAgeSeconds: 31536000 },
             },
           },
@@ -69,25 +67,16 @@ export default defineConfig({
   ],
   optimizeDeps: { exclude: ['lucide-react'] },
   build: {
-    // Chia nhỏ chunks để giảm JS không dùng đến (unused JS 180KiB)
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react':    ['react', 'react-dom'],
+          'vendor-react': ['react', 'react-dom'],
           'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/storage'],
-          'vendor-motion':   ['framer-motion'],
-          'vendor-flow':     ['reactflow', 'dagre'],
+          'vendor-flow': ['reactflow', 'dagre'],
         },
       },
     },
-    // Minify tốt hơn
     minify: 'terser',
-    terserOptions: {
-      compress: { drop_console: true, drop_debugger: true },
-    },
-    // Source maps cho dev (tránh cảnh báo "Missing source maps")
-    sourcemap: false,
-    // Chunk size warning threshold
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
   },
 });
