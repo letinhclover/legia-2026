@@ -1,53 +1,204 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
+/* ═══════════════════════════════════════════════════
+   GIA PHẢ DÒNG HỌ LÊ — index.css
+   Phong cách: Neo-Traditional
+   Font: Merriweather (tiêu đề) + Be Vietnam Pro (nội dung)
+   v17 — Redesign hoàn toàn
+════════════════════════════════════════════════════ */
+
+/* 1. GOOGLE FONTS — Tải 2 font */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,700;0,900;1,700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── 2. DESIGN TOKENS ── */
 :root {
-  /* Bảng màu Hoàng Gia */
-  --color-primary: #800000;  /* Đỏ mận */
-  --color-gold: #B8860B;     /* Vàng đồng */
-  --color-bg: #F9F8F4;       /* Màu kem giấy cũ (Rice Paper) */
-  --glass-border: rgba(255, 255, 255, 0.4);
+  /* Màu chủ đạo */
+  --color-primary:     #800000;   /* Đỏ mận — chỉ dùng làm accent */
+  --color-primary-dk:  #5C0000;
+  --color-gold:        #B8860B;   /* Vàng antique */
+  --color-gold-lt:     #D4AF37;
+
+  /* Nền — KHÔNG trắng toát */
+  --color-bg:          #F5F0E8;   /* Kem giấy dó nhẹ */
+  --color-bg-card:     #FFFDF7;   /* Trắng kem cho card */
+  --color-bg-dark:     #0f1724;
+  --color-bg-card-dk:  #1a2535;
+
+  /* Chữ */
+  --color-text:        #1C1410;   /* Nâu đen, ấm hơn đen thuần */
+  --color-text-sub:    #6B5E52;
+  --color-text-dk:     #E8DDD0;
+  --color-text-sub-dk: #8A9BB0;
+
+  /* Border */
+  --color-border:      #E2D8CA;
+  --color-border-dk:   #2d3d52;
+
+  /* Font */
+  --font-serif:  'Merriweather', 'Georgia', serif;
+  --font-sans:   'Be Vietnam Pro', 'Inter', -apple-system, sans-serif;
+
+  /* Shadow */
+  --shadow-sm:  0 2px 8px rgba(28,20,16,0.07);
+  --shadow-md:  0 4px 20px rgba(28,20,16,0.10);
+  --shadow-lg:  0 8px 32px rgba(28,20,16,0.13);
 }
 
-body {
-  margin: 0;
-  font-family: 'Be Vietnam Pro', sans-serif;
-  background-color: var(--color-bg);
-  color: #1f2937;
-  /* Họa tiết vân giấy mờ tinh tế */
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+/* ── 3. BASE RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  overflow: hidden; /* Chặn cuộn trang chính để App giống Native */
 }
 
-/* Font tiêu đề sang trọng */
-h1, h2, h3, .font-serif {
-  font-family: 'Merriweather', serif;
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--color-bg);
+
+  /* Font CHÍNH là Be Vietnam Pro */
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hiệu ứng Kính mờ (Glassmorphism) */
+/* ── 4. TYPOGRAPHY HIERARCHY ── */
+/* Tiêu đề lớn dùng Merriweather (Serif) */
+h1, h2, .font-serif,
+.app-title,
+.clan-title {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+/* Nội dung dùng Be Vietnam Pro */
+h3, h4, h5, h6, p, span, div, button, input, select, textarea {
+  font-family: var(--font-sans);
+}
+
+/* ── 5. BACKGROUND TEXTURE (giấy dó mờ nhạt) ── */
+/* Áp dụng lên TreeTab background qua class */
+.bg-paper {
+  background-color: #F5F0E8;
+  background-image:
+    /* Vân giấy dó: noise SVG nhúng thẳng */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23paper)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 400px 400px;
+}
+
+/* ── 6. GLASSMORPHISM UTILITY ── */
 .glass {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid var(--glass-border);
+  background: rgba(255, 253, 247, 0.72);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 253, 247, 0.4);
 }
 
 .glass-dark {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 36, 0.78);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Tùy chỉnh thanh cuộn cho danh sách */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
+/* ── 7. BOTTOM NAV GLASS ── */
+.bottom-nav-glass {
+  background: rgba(255, 253, 247, 0.85);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border-top: 1px solid rgba(226, 216, 202, 0.6);
+  box-shadow: 0 -4px 24px rgba(28, 20, 16, 0.07);
+}
 
-/* Vùng an toàn cho iPhone tai thỏ */
-.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-.pt-safe { padding-top: env(safe-area-inset-top); }
+.bottom-nav-glass-dark {
+  background: rgba(15, 23, 36, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(45, 61, 82, 0.8);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ── 8. FAMILY NODE — Card nổi ── */
+.family-node-card {
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.family-node-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ── 9. SCROLLABLE AREAS ── */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── 10. SAFE AREA ── */
+.safe-top    { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ── 11. REACT FLOW OVERRIDES ── */
+.react-flow__renderer { touch-action: auto !important; }
+.react-flow__node     { cursor: pointer; }
+
+/* Controls ReactFlow — bo tròn đẹp */
+.react-flow__controls {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.react-flow__controls-button {
+  border: none !important;
+  background: var(--color-bg-card) !important;
+  color: var(--color-text) !important;
+  transition: background 0.15s !important;
+}
+.react-flow__controls-button:hover {
+  background: var(--color-bg) !important;
+}
+
+/* ── 12. SCROLLBAR HIDDEN ── */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* ── 13. BUTTON TAP FEEL ── */
+button, [role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+}
+
+/* ── 14. CARD BASE ── */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-dark {
+  background: var(--color-bg-card-dk);
+  border: 1px solid var(--color-border-dk);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* ── 15. ACCENT HIGHLIGHT ── */
+.accent-red   { color: var(--color-primary); }
+.accent-gold  { color: var(--color-gold); }
+.bg-accent-red  { background: var(--color-primary); }
+.bg-accent-gold { background: var(--color-gold); }
+
+/* ── 16. INPUT STYLE ── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  font-family: var(--font-sans);
+}
