@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Edit2, QrCode, X, MapPin, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Member, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
+import { Member, MEMBER_TYPE_LABEL, getMemberTypeColor } from '../types';
 
 interface Props {
   member:          Member | null;
@@ -93,7 +93,7 @@ export default function MemberBottomSheet({
 
   const isDeceased   = !!member.deathDate;
   const resolvedType = resolveMemberType(member, members);
-  const typeColor    = MEMBER_TYPE_COLOR[resolvedType] ?? MEMBER_TYPE_COLOR['chinh'];
+  const typeColor    = getMemberTypeColor(resolvedType, darkMode);
 
   const handleQR = () => {
     const url = encodeURIComponent(`${window.location.origin}?member=${member.id}`);
@@ -194,7 +194,7 @@ export default function MemberBottomSheet({
                 { label: member.gender === 'Nam' ? '👨 Nam' : '👩 Nữ', bg: member.gender === 'Nam' ? (darkMode ? '#0d1f3c' : '#DBEAFE') : (darkMode ? '#2a0d1a' : '#FCE7F3'), color: member.gender === 'Nam' ? (darkMode ? '#93C5FD' : '#1D4ED8') : (darkMode ? '#F9A8D4' : '#9D174D') },
                 { label: `Đời ${member.generation}`, bg: darkMode ? '#2a1010' : '#FEF2F2', color: darkMode ? '#FCA5A5' : '#991B1B' },
                 { label: isDeceased ? '🕯️ Đã mất' : '💚 Còn sống', bg: isDeceased ? (darkMode ? '#1a1a1a' : '#F3F4F6') : (darkMode ? '#0f2a1a' : '#DCFCE7'), color: isDeceased ? textSub : '#16A34A' },
-                { label: MEMBER_TYPE_LABEL[resolvedType], bg: darkMode ? 'rgba(255,255,255,0.08)' : typeColor.bg, color: darkMode ? '#D4AF37' : typeColor.text },
+                { label: MEMBER_TYPE_LABEL[resolvedType], bg: typeColor.bg, color: typeColor.text },
               ].map(b => (
                 <span key={b.label} style={{ fontSize: 13, fontWeight: 700, padding: '4px 12px', borderRadius: 999, background: b.bg, color: b.color, fontFamily: "'Be Vietnam Pro', sans-serif" }}>{b.label}</span>
               ))}
