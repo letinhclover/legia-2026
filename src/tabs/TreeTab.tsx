@@ -1,147 +1,154 @@
-import { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import { motion } from 'framer-motion';
+import { useMemo, useState, useEffect } from 'react';
+import ReactFlow, {
+  Controls, Background, BackgroundVariant, MiniMap,
+  useNodesState, useEdgesState,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
-import { cloudinaryThumb } from '../utils/imageCompress';
+import FamilyNode from '../components/FamilyNode';
+import { buildFamilyLayout } from '../utils/layout';
 
-interface FamilyNodeProps {
-  data: Member & {
-    onEdit: (m: Member) => void;
-    spouseName?: string;
-    darkMode?: boolean;
-    highlighted?: boolean;
-    dimmed?: boolean;
-  };
+const nodeTypes = { familyNode: FamilyNode };
+
+interface Props {
+  members: Member[];
+  filterGen: number | 'all';
+  isAdmin: boolean;
+  onNodeClick: (m: Member) => void;
+  onAddMember: () => void;
+  darkMode: boolean;
+  onToggleDark: () => void;
 }
 
-function calcAge(birthDate: string): number | null {
-  const by = parseInt(birthDate.slice(0, 4));
-  if (isNaN(by)) return null;
-  return new Date().getFullYear() - by;
+// Skeleton Loading
+function TreeSkeleton() {
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-[#F9F8F4]">
+      <div className="space-y-4 animate-pulse text-center">
+        <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto" />
+        <div className="w-32 h-4 bg-gray-200 rounded mx-auto" />
+        <p className="text-xs text-gray-400 mt-2">Đang vẽ cây phả hệ...</p>
+      </div>
+    </div>
+  );
 }
 
-const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
-  const isAlive = !data.deathDate && !data.deathYear;
-  const isMale = data.gender === 'Nam';
-  const isDark = data.darkMode;
-  
-  // Xử lý năm sinh
-  let birthY = data.birthYear;
-  if (!birthY && data.birthDate) birthY = parseInt(data.birthDate.slice(0, 4));
-  
-  let deathY = data.deathYear;
-  if (!deathY && data.deathDate) deathY = parseInt(data.deathDate.slice(0, 4));
+export default function TreeTab({ members, filterGen, isAdmin, onNodeClick, onAddMember, darkMode }: Props) {
+  const [isReady, setIsReady] = useState(false);
 
-  const age = isAlive && data.birthDate ? calcAge(data.birthDate) : null;
+  useEffect(() => {
+    const t = setTimeout(() => setIsReady(true), 120);
+    return () => clearTimeout(t);
+  }, []);
 
-  // Màu sắc chủ đạo
-  const accentColor = isMale ? '#2563EB' : '#BE185D'; // Nam: Xanh / Nữ: Hồng
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const textColor = isDark ? '#f1f5f9' : '#1f2937';
-  const subTextColor = isDark ? '#94a3b8' : '#6b7280';
+  const filtered = filterGen === 'all'
+    ? members
+    : members.filter(m => m.generation === filterGen);
 
-  // Hiệu ứng Highlight
-  const ringStyle = data.highlighted
-    ? { boxShadow: '0 0 0 4px #F59E0B', zIndex: 50 }
-    : { boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 10px rgba(0,0,0,0.08)' };
+  const { nodes: initNodes, edges: initEdges } = useMemo(
+    () => buildFamilyLayout(filtered, onNodeClick),
+    [filtered, onNodeClick]
+  );
 
-  // Filter cho người đã mất
-  const filterStyle = !isAlive || data.dimmed
-    ? 'grayscale(100%) opacity(0.8)'
-    : 'none';
+  const [nodes, , onNodesChange] = useNodesState(initNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initEdges);
+
+  // Update nodes khi layout thay đổi
+  useEffect(() => {
+    // Logic force update nếu cần thiết
+  }, [initNodes, initEdges]);
+
+  if (!isReady || members.length === 0) return <TreeSkeleton />;
 
   return (
-    <motion.div
-      onClick={() => data.onEdit(data)}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-      className="relative flex flex-col items-center justify-start select-none group"
-      style={{
-        width: 100, // KÍCH THƯỚC CHUẨN ĐỒNG BỘ VỚI LAYOUT
-        filter: filterStyle,
-      }}
-    >
-      {/* Handle Đỉnh (Nhận từ Cha) */}
-      <Handle 
-        type="target" position={Position.Top} 
-        style={{ background: '#800000', width: 6, height: 6, border: 'none', top: 5 }} 
-      />
-
-      {/* 1. AVATAR TRÒN NỔI (Đè lên khung tên) */}
-      <div
-        className="relative z-10 flex items-center justify-center rounded-full overflow-hidden bg-gray-100"
-        style={{
-          width: 64, 
-          height: 64,
-          border: `3px solid ${accentColor}`,
-          marginBottom: -12, // Đè lên khung dưới
-          ...ringStyle,
-        }}
+    <div className="relative w-full h-full bg-[#F9F8F4]">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.2, includeHiddenNodes: false }}
+        minZoom={0.1}
+        maxZoom={2.0}
+        proOptions={{ hideAttribution: true }}
+        
+        // Mobile UX
+        panOnScroll={false}
+        zoomOnPinch={true}
+        preventScrolling={true}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={true}
       >
-        {data.photoUrl ? (
-          <img 
-            src={cloudinaryThumb(data.photoUrl, 150)} 
-            alt={data.name} 
-            className="w-full h-full object-cover" 
-            loading="lazy" 
-          />
-        ) : (
-          <span style={{ fontSize: 30 }}>{isMale ? '👨' : '👩'}</span>
-        )}
-      </div>
+        <Controls 
+          className="!bg-white !rounded-xl !shadow-lg !border-0 !overflow-hidden !mb-20 !ml-2" 
+          showInteractive={false} 
+        />
+        
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={24}
+          size={1.5}
+          color="#C9A96E"
+          style={{ opacity: 0.2 }}
+        />
 
-      {/* 2. KHUNG THÔNG TIN (Ở Dưới) */}
-      <div
-        className="w-full pt-4 pb-2 px-1 rounded-xl flex flex-col items-center justify-center text-center z-0 transition-shadow"
-        style={{
-          background: cardBg,
-          border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
-          minHeight: 56,
-        }}
+        {/* MiniMap - Bản đồ thu nhỏ (Góc dưới trái) */}
+        <MiniMap 
+          nodeStrokeColor="transparent"
+          nodeColor={darkMode ? '#475569' : '#cbd5e1'}
+          nodeBorderRadius={6}
+          maskColor={darkMode ? 'rgba(15, 23, 42, 0.6)' : 'rgba(249, 248, 244, 0.6)'}
+          style={{ 
+            height: 100, width: 140, 
+            bottom: 80, left: 10, // Tránh BottomNav
+            borderRadius: 12, 
+            border: '1px solid rgba(0,0,0,0.05)',
+            background: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(255, 255, 255, 0.5)' 
+          }}
+        />
+
+      </ReactFlow>
+
+      {/* Chú thích màu đường nối */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm px-2 py-1.5 text-[10px] border border-white/50"
       >
-        {/* Tên + Đời */}
-        <div 
-          className="font-bold leading-tight px-0.5 line-clamp-2"
-          style={{ fontSize: 10.5, color: textColor }}
-        >
-          {data.name}
-          <span className="ml-1 font-normal" style={{ color: subTextColor, fontSize: 9 }}>
-            ({data.generation})
-          </span>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-0.5 bg-[#800000]" />
+          <span className="text-gray-600">Cha Con</span>
         </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 border-t-2 border-dashed border-[#BE185D]" />
+          <span className="text-gray-600">Mẹ Con</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 border-t-2 border-dashed border-[#B8860B]" />
+          <span className="text-gray-600">Vợ Chồng</span>
+        </div>
+      </motion.div>
 
-        {/* Chức tước */}
-        {data.chucTuoc && (
-          <div 
-            className="truncate w-full px-1 font-bold mt-0.5"
-            style={{ fontSize: 8.5, color: '#B8860B' }}
+      {/* FAB thêm thành viên */}
+      <AnimatePresence>
+        {isAdmin && (
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onAddMember}
+            className="absolute bottom-24 right-4 text-white rounded-full shadow-xl w-12 h-12 flex items-center justify-center z-50"
+            style={{ background: 'linear-gradient(135deg, #B8860B, #8B6914)' }}
           >
-            {data.chucTuoc}
-          </div>
+            <Plus size={24} />
+          </motion.button>
         )}
-
-        {/* Năm sinh + Tuổi */}
-        <div className="flex items-center justify-center gap-1 mt-0.5" style={{ fontSize: 9.5, color: subTextColor }}>
-           <span>{birthY || '????'}</span>
-           
-           {isAlive && age !== null && (
-             <span className="font-bold" style={{ color: accentColor }}>
-               ({age}t)
-             </span>
-           )}
-           
-           {!isAlive && <span>🕯️</span>}
-        </div>
-      </div>
-
-      {/* Handle Đáy (Nối xuống Con) */}
-      <Handle 
-        type="source" position={Position.Bottom} 
-        style={{ background: '#800000', width: 6, height: 6, border: 'none', bottom: -3 }} 
-      />
-    </motion.div>
+      </AnimatePresence>
+    </div>
   );
-});
-
-export default FamilyNode;
+}
