@@ -82,7 +82,13 @@ export default function App() {
   }, []);
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    try { return localStorage.getItem('darkMode') === 'true'; } catch { return false; }
+    try {
+      const saved = localStorage.getItem('darkMode');
+      // Nếu người dùng đã chọn thủ công → dùng lựa chọn đó
+      if (saved !== null) return saved === 'true';
+      // Chưa chọn → đọc từ hệ thống
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    } catch { return false; }
   });
   const toggleDark = useCallback(() => {
     setDarkMode(d => {
@@ -324,32 +330,6 @@ export default function App() {
 
           {/* Phần phải: filter + darkMode toggle + badge */}
           <div className="flex items-center gap-2 flex-shrink-0">
-
-            {/* Filter đời — chỉ ở tab Tree */}
-            {activeTab === 'tree' && (
-              <select
-                aria-label="Lọc theo đời"
-                value={filterGen}
-                onChange={e => setFilterGen(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-                style={{
-                  background: 'rgba(0,0,0,0.28)',
-                  color: 'white',
-                  border: '1px solid rgba(255,255,255,0.22)',
-                  borderRadius: 10,
-                  padding: '4px 8px',
-                  fontSize: 11,
-                  fontFamily: "'Be Vietnam Pro', sans-serif",
-                  fontWeight: 600,
-                  outline: 'none',
-                  maxWidth: 92,
-                }}
-              >
-                <option value="all">Tất cả đời</option>
-                {Array.from({ length: maxGen }, (_, i) => i + 1).map(g => (
-                  <option key={g} value={g}>Đời {g}</option>
-                ))}
-              </select>
-            )}
 
             {/* ── NÚT BẬT/TẮT CHẾ ĐỘ TỐI — Mặt trăng / Mặt trời ── */}
             <motion.button
