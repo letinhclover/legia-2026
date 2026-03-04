@@ -89,10 +89,11 @@ function getBloodlineIds(memberId: string, members: Member[]): Set<string> {
   return ids;
 }
 
-function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, darkMode, onRefresh, initialHighlightId }: Props) {
-  const [ready, setReady]             = useState(false);
-  const [highlightId, setHighlightId] = useState<string | null>(initialHighlightId ?? null);
-  const [refreshing, setRefreshing]   = useState(false);
+function TreeInner({ members, filterGen: filterGenProp, isAdmin, onNodeClick, onAddMember, darkMode, onRefresh, initialHighlightId }: Props) {
+  const [ready, setReady]               = useState(false);
+  const [highlightId, setHighlightId]   = useState<string | null>(initialHighlightId ?? null);
+  const [refreshing, setRefreshing]     = useState(false);
+  const [localFilter, setLocalFilter]   = useState<number | 'all'>(filterGenProp);
   const lastTapRef = useRef<{ id: string; time: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -109,9 +110,11 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
   }, []);
 
   const filtered = useMemo(
-    () => filterGen === 'all' ? members : members.filter(m => m.generation === filterGen),
-    [members, filterGen]
+    () => localFilter === 'all' ? members : members.filter(m => m.generation === localFilter),
+    [members, localFilter]
   );
+
+  const maxGen = useMemo(() => Math.max(...members.map(m => m.generation), 1), [members]);
 
   const bloodlineIds = useMemo(
     () => highlightId ? getBloodlineIds(highlightId, filtered) : null,
@@ -259,6 +262,118 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Floating chip bar lọc đời ── */}
+      <div style={{
+        position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+        zIndex: 20, display: 'flex', alignItems: 'center', gap: 6,
+        padding: '4px 6px',
+        background: darkMode ? 'rgba(15,23,36,0.88)' : 'rgba(255,253,247,0.90)',
+        backdropFilter: 'blur(12px)',
+        borderRadius: 999,
+        border: `1px solid ${darkMode ? 'rgba(212,175,55,0.2)' : 'rgba(212,175,55,0.3)'}`,
+        boxShadow: '0 4px 16px rgba(28,20,16,0.14)',
+        maxWidth: 'calc(100vw - 100px)',
+        overflowX: 'auto',
+      }}>
+        {(['all', ...Array.from({ length: maxGen }, (_, i) => i + 1)] as (number | 'all')[]).map(g => {
+          const isActive = localFilter === g;
+          return (
+            <motion.button
+              key={g}
+              whileTap={{ scale: 0.88 }}
+              onClick={() => setLocalFilter(g)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 999,
+                border: 'none',
+                background: isActive
+                  ? 'linear-gradient(135deg, #800000, #B8860B)'
+                  : 'transparent',
+                color: isActive
+                  ? 'white'
+                  : darkMode ? '#8A9BB0' : '#6B5E52',
+                fontSize: 12,
+                fontWeight: isActive ? 800 : 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontFamily: "'Be Vietnam Pro', sans-serif",
+                transition: 'background 0.18s, color 0.18s',
+                flexShrink: 0,
+              }}
+            >
+              {g === 'all' ? 'Tất cả' : `Đời ${g}`}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* ── Empty State ── */}
+      {members.length === 0 && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 15,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: 20, padding: '0 40px',
+        }}>
+          {/* SVG minh hoạ cây gia phả đơn giản */}
+          <svg width="140" height="120" viewBox="0 0 140 120" fill="none">
+            {/* Gốc cây */}
+            <rect x="62" y="90" width="16" height="24" rx="4" fill={darkMode ? '#2d3d52' : '#E2D8CA'}/>
+            {/* Thân cây */}
+            <rect x="65" y="50" width="10" height="44" rx="5" fill={darkMode ? '#3d5a70' : '#D4AF37'} opacity="0.6"/>
+            {/* Tán lá */}
+            <ellipse cx="70" cy="40" rx="38" ry="32" fill={darkMode ? '#1D4ED8' : '#800000'} opacity="0.12"/>
+            <ellipse cx="70" cy="38" rx="28" ry="24" fill={darkMode ? '#1D4ED8' : '#800000'} opacity="0.18"/>
+            <ellipse cx="70" cy="35" rx="18" ry="18" fill={darkMode ? '#1D4ED8' : '#800000'} opacity="0.25"/>
+            {/* Node người */}
+            <circle cx="70" cy="32" r="12" fill={darkMode ? '#1a2535' : '#FFF5F5'} stroke={darkMode ? '#D4AF37' : '#800000'} strokeWidth="2"/>
+            <text x="70" y="37" textAnchor="middle" fontSize="12" fill={darkMode ? '#D4AF37' : '#800000'}>👤</text>
+            {/* Nhánh trái */}
+            <line x1="70" y1="54" x2="36" y2="74" stroke={darkMode ? '#3d5a70' : '#D4AF37'} strokeWidth="2" strokeDasharray="4 3" opacity="0.5"/>
+            <circle cx="30" cy="78" r="10" fill={darkMode ? '#1a2535' : '#FFF5F5'} stroke={darkMode ? '#3d5a70' : '#E2D8CA'} strokeWidth="1.5" opacity="0.6"/>
+            {/* Nhánh phải */}
+            <line x1="70" y1="54" x2="104" y2="74" stroke={darkMode ? '#3d5a70' : '#D4AF37'} strokeWidth="2" strokeDasharray="4 3" opacity="0.5"/>
+            <circle cx="110" cy="78" r="10" fill={darkMode ? '#1a2535' : '#FFF5F5'} stroke={darkMode ? '#3d5a70' : '#E2D8CA'} strokeWidth="1.5" opacity="0.6"/>
+          </svg>
+
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{
+              fontSize: 20, fontWeight: 900, color: darkMode ? '#E8DDD0' : '#1C1410',
+              fontFamily: "'Merriweather', serif", marginBottom: 8,
+            }}>
+              Chưa có thành viên
+            </h3>
+            <p style={{
+              fontSize: 14, color: darkMode ? '#8A9BB0' : '#6B5E52',
+              fontFamily: "'Be Vietnam Pro', sans-serif", lineHeight: 1.6,
+            }}>
+              Bắt đầu xây dựng gia phả bằng cách thêm người đầu tiên trong dòng họ.
+            </p>
+          </div>
+
+          {isAdmin && onAddMember && (
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              whileHover={{ scale: 1.04, y: -2 }}
+              onClick={onAddMember}
+              style={{
+                background: 'linear-gradient(135deg, #800000, #B8860B)',
+                color: 'white',
+                border: 'none', borderRadius: 16,
+                padding: '14px 32px',
+                fontSize: 15, fontWeight: 800,
+                display: 'flex', alignItems: 'center', gap: 10,
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(128,0,0,0.3)',
+                fontFamily: "'Be Vietnam Pro', sans-serif",
+              }}
+            >
+              <Plus size={20} strokeWidth={2.5} />
+              Thêm thành viên đầu tiên
+            </motion.button>
+          )}
+        </div>
+      )}
 
       {/* Texture giấy dó */}
       <div style={PAPER_TEXTURE} />
