@@ -29,7 +29,6 @@ export function getRelationship(viewer: Member, target: Member, members: Member[
   if (viewer.id === target.id) return { label: 'Chính bạn', desc: '' };
 
   const genDiff = target.generation - viewer.generation;
-  const viewerGender = viewer.gender;
   const targetGender = target.gender;
 
   // Vợ/chồng
