@@ -21,6 +21,8 @@ interface Props {
   onAddMember?: () => void;
   darkMode:     boolean;
   onToggleDark?: () => void;
+  onRefresh?:   () => Promise<void>;
+  initialHighlightId?: string;
 }
 
 const PAPER_TEXTURE: React.CSSProperties = {
@@ -87,9 +89,9 @@ function getBloodlineIds(memberId: string, members: Member[]): Set<string> {
   return ids;
 }
 
-function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, darkMode }: Props) {
+function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, darkMode, onRefresh, initialHighlightId }: Props) {
   const [ready, setReady]             = useState(false);
-  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(initialHighlightId ?? null);
   const [refreshing, setRefreshing]   = useState(false);
   const lastTapRef = useRef<{ id: string; time: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -198,19 +200,22 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
     }
   }, []);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback(async () => {
     if (!pulling.current) return;
     pulling.current = false;
     if (pullDelta > 60) {
       setRefreshing(true);
       setPullDelta(0);
-      // Animate fitView as "refresh"
-      fitView({ padding: 0.18, duration: 700 });
-      setTimeout(() => setRefreshing(false), 900);
+      try {
+        if (onRefresh) await onRefresh();
+      } finally {
+        fitView({ padding: 0.18, duration: 700 });
+        setTimeout(() => setRefreshing(false), 600);
+      }
     } else {
       setPullDelta(0);
     }
-  }, [pullDelta, fitView]);
+  }, [pullDelta, fitView, onRefresh]);
 
   // ── Màu sắc ─────────────────────────────────────────────────────────────
   const bgColor    = darkMode ? '#0f1724' : '#F5F0E8';
@@ -409,7 +414,10 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
               </span>
               <motion.button
                 whileTap={{ scale: 0.85 }}
-                onClick={() => setHighlightId(null)}
+                onClick={() => {
+                  setHighlightId(null);
+                  lastTapRef.current = null; // Reset double-tap khi tắt highlight thủ công
+                }}
                 className="ml-auto flex-shrink-0 rounded-lg p-0.5"
                 title="Tắt highlight"
               >
