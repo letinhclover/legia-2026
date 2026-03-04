@@ -402,7 +402,21 @@ export default function App() {
               />
             )}
             {activeTab === 'directory' && (
-              <DirectoryTab members={members} onSelectMember={setViewingMember} darkMode={darkMode} />
+              <DirectoryTab
+                members={members}
+                onSelectMember={setViewingMember}
+                onEditMember={canEdit ? (m) => {
+                  setEditingMember(m);
+                  setIsFormOpen(true);
+                } : undefined}
+                onShowTree={(m) => {
+                  // Chuyển sang tab Tree và highlight thành viên đó
+                  handleTabChange('tree');
+                  // Delay nhỏ để tab animation xong rồi mới mở detail
+                  setTimeout(() => setViewingMember(m), 350);
+                }}
+                darkMode={darkMode}
+              />
             )}
             {activeTab === 'events' && (
               <EventsTab members={members} onSelectMember={setViewingMember} darkMode={darkMode} />
