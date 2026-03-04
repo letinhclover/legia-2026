@@ -31,7 +31,7 @@ export default function MemberForm({
   isAdmin, isSuperAdmin = false, darkMode = false,
 }: MemberFormProps) {
   const [form, setForm] = useState(emptyForm);
-
+  const [tab, setTab]   = useState<'basic'|'dates'|'places'|'relations'|'bio'>('basic');
   const [uploading, setUploading]         = useState(false);
   const [uploadError, setUploadError]     = useState('');
   const [uploadProgress, setUploadProgress] = useState('');
@@ -48,6 +48,10 @@ export default function MemberForm({
   const inputFocus = '#800000';
   const sectionBg  = darkMode ? '#141e2e'   : '#F0EBE1';
   const labelColor = darkMode ? '#8A9BB0'   : '#7A6A5E';
+  const tabActive  = darkMode ? '#1a2535'   : '#FFFFFF';
+  const tabInactive = darkMode ? '#0f1724'  : '#F0EBE1';
+  const tabActiveTxt = '#800000';
+  const tabInactiveTxt = darkMode ? '#6B7E96' : '#9C8E82';
   const dangerBg   = darkMode ? '#2a1010'   : '#FEF2F2';
   const warningBg  = darkMode ? '#2a1f08'   : '#FFFBEB';
   const successBg  = darkMode ? '#0f2a1a'   : '#F0FDF4';
@@ -81,6 +85,7 @@ export default function MemberForm({
     } else {
       setForm(emptyForm);
     }
+    setTab('basic');
     setUploadError('');
     setUploadProgress('');
   }, [editingMember, isOpen]);
@@ -210,6 +215,14 @@ export default function MemberForm({
     letterSpacing: '0.04em',
   };
 
+  const tabsList = [
+    { id: 'basic',     label: '👤 Cơ bản'   },
+    { id: 'dates',     label: '📅 Ngày'     },
+    { id: 'places',    label: '📍 Địa'      },
+    { id: 'relations', label: '👨‍👩‍👧 Quan hệ' },
+    { id: 'bio',       label: '📝 Tiểu sử'  },
+  ] as const;
+
   const SectionBox = ({ children, color = sectionBg }: { children: React.ReactNode; color?: string }) => (
     <div style={{ background: color, borderRadius: 16, padding: 16 }}>{children}</div>
   );
@@ -247,16 +260,39 @@ export default function MemberForm({
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 28 }}>
+      {/* Tabs — lớn hơn để dễ bấm */}
+      <div
+        className="flex border-b overflow-x-auto flex-shrink-0"
+        style={{ background: tabInactive, borderColor: border }}
+      >
+        {tabsList.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            style={{
+              padding: '12px 14px',
+              fontSize: 13,
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              background: tab === t.id ? tabActive : 'transparent',
+              color: tab === t.id ? tabActiveTxt : tabInactiveTxt,
+              borderBottom: tab === t.id ? '3px solid #800000' : '3px solid transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: "'Be Vietnam Pro', sans-serif",
+              transition: 'all 0.15s',
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-          {/* ── SECTION: THÔNG TIN CƠ BẢN ── */}
-          <div id="section-basic" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Section header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: darkMode ? "#141e2e" : "#F8F5F0", borderRadius: 14, border: `1px solid ${border}` }}>
-              <span style={{ fontSize: 20 }}>👤</span>
-              <h4 style={{ fontSize: 15, fontWeight: 900, color: darkMode ? "#D4AF37" : "#800000", fontFamily: "'Be Vietnam Pro', sans-serif", margin: 0 }}>Thông tin cơ bản</h4>
-            </div>
+      <form onSubmit={handleSubmit} style={{ flex: 1 }}>
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* ── TAB: CƠ BẢN ── */}
+          {tab === 'basic' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               {/* Upload ảnh */}
@@ -285,8 +321,8 @@ export default function MemberForm({
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           border: 'none', cursor: 'pointer',
                         }}
-                      >X</button>
-                    </div>
+                      >×</button>
+                    )}
                   </div>
                   <div style={{ flex: 1 }}>
                     <input ref={fileRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
@@ -378,13 +414,8 @@ export default function MemberForm({
             </div>
           )}
 
-          {/* ── SECTION: NGÀY SINH & NGÀY MẤT ── */}
-          <div id="section-dates" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Section header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: darkMode ? "#141e2e" : "#F8F5F0", borderRadius: 14, border: `1px solid ${border}` }}>
-              <span style={{ fontSize: 20 }}>📅</span>
-              <h4 style={{ fontSize: 15, fontWeight: 900, color: darkMode ? "#D4AF37" : "#1D4ED8", fontFamily: "'Be Vietnam Pro', sans-serif", margin: 0 }}>Ngày sinh & Ngày mất</h4>
-            </div>
+          {/* ── TAB: NGÀY THÁNG ── */}
+          {tab === 'dates' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <SectionBox color={infoBg}>
                 <h4 style={{ fontWeight: 800, color: darkMode ? '#60A5FA' : '#1D4ED8', marginBottom: 12, fontSize: 15 }}>
@@ -441,15 +472,10 @@ export default function MemberForm({
                 </p>
               </SectionBox>
             </div>
-          </div>
+          )}
 
-          {/* ── SECTION: ĐỊA DANH ── */}
-          <div id="section-places" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Section header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: darkMode ? "#141e2e" : "#F8F5F0", borderRadius: 14, border: `1px solid ${border}` }}>
-              <span style={{ fontSize: 20 }}>📍</span>
-              <h4 style={{ fontSize: 15, fontWeight: 900, color: darkMode ? "#D4AF37" : "#166534", fontFamily: "'Be Vietnam Pro', sans-serif", margin: 0 }}>Địa danh</h4>
-            </div>
+          {/* ── TAB: ĐỊA DANH ── */}
+          {tab === 'places' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
                 { label: 'Nơi sinh', key: 'birthPlace', ph: 'Làng Đông Ngạc, Từ Liêm, Hà Nội' },
@@ -481,18 +507,13 @@ export default function MemberForm({
                     style={{ fontSize: 13, color: '#2563EB', marginTop: 4, display: 'block', textDecoration: 'underline' }}>
                     ✅ Xem trước link Maps →
                   </a>
-                </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* ── SECTION: QUAN HỆ GIA ĐÌNH ── */}
-          <div id="section-relations" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Section header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: darkMode ? "#141e2e" : "#F8F5F0", borderRadius: 14, border: `1px solid ${border}` }}>
-              <span style={{ fontSize: 20 }}>👨‍👩‍👧</span>
-              <h4 style={{ fontSize: 15, fontWeight: 900, color: darkMode ? "#D4AF37" : "#9D174D", fontFamily: "'Be Vietnam Pro', sans-serif", margin: 0 }}>Quan hệ gia đình</h4>
-            </div>
+          {/* ── TAB: QUAN HỆ ── */}
+          {tab === 'relations' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{
                 background: darkMode ? '#2a1f08' : '#FFFBEB',
@@ -532,15 +553,10 @@ export default function MemberForm({
                 </select>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* ── SECTION: TIỂU SỬ & CÔNG TRẠNG ── */}
-          <div id="section-bio" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Section header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: darkMode ? "#141e2e" : "#F8F5F0", borderRadius: 14, border: `1px solid ${border}` }}>
-              <span style={{ fontSize: 20 }}>📝</span>
-              <h4 style={{ fontSize: 15, fontWeight: 900, color: darkMode ? "#D4AF37" : "#6B5E52", fontFamily: "'Be Vietnam Pro', sans-serif", margin: 0 }}>Tiểu sử & Công trạng</h4>
-            </div>
+          {/* ── TAB: TIỂU SỬ ── */}
+          {tab === 'bio' && (
             <div>
               <label style={lblStyle}>Tiểu sử / Công trạng / Ghi chú</label>
               <textarea
@@ -556,7 +572,7 @@ export default function MemberForm({
               />
               <p style={{ color: textSub, fontSize: 12, marginTop: 4 }}>{form.biography.length} ký tự</p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ── Nút hành động — luôn hiển thị cuối form ── */}
