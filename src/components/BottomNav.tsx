@@ -1,71 +1,101 @@
-import { memo } from 'react';
+import { motion } from 'framer-motion';
 import { Network, Users, Calendar, Settings } from 'lucide-react';
+import VisitorCounter from './VisitorCounter';
 
 export type TabId = 'tree' | 'directory' | 'events' | 'settings';
 
 interface Props {
   active: TabId;
-  onChange: (t: TabId) => void;
-  darkMode: boolean;
+  onChange: (tab: TabId) => void;
+  darkMode?: boolean;
 }
 
-const BottomNav = memo(function BottomNav({ active, onChange, darkMode }: Props) {
-  // Class kính mờ
-  const glassClass = darkMode 
-    ? 'glass-dark border-t border-gray-800' 
-    : 'glass border-t border-white/50 shadow-lg';
-  
-  const navItems = [
-    { id: 'tree', label: 'Gia Phả', icon: Network },
-    { id: 'directory', label: 'Danh Sách', icon: Users },
-    { id: 'events', label: 'Sự Kiện', icon: Calendar },
-    { id: 'settings', label: 'Quản Trị', icon: Settings },
-  ];
+const tabs = [
+  { id: 'tree'      as TabId, label: 'Gia phả',   icon: Network  },
+  { id: 'directory' as TabId, label: 'Danh sách', icon: Users    },
+  { id: 'events'    as TabId, label: 'Sự kiện',   icon: Calendar },
+  { id: 'settings'  as TabId, label: 'Cài đặt',   icon: Settings },
+];
+
+export default function BottomNav({ active, onChange, darkMode = false }: Props) {
+  /* ── Màu sắc theo darkMode ── */
+  const activeColor  = '#D4AF37';           // Vàng antique — nhất quán 2 theme
+  const inactiveColor = darkMode ? '#6B7E96' : '#9C8E82';
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-[100] pb-safe ${glassClass}`}>
-      <div className="flex justify-around items-center h-16 px-2 max-w-lg mx-auto">
-        {navItems.map((item) => {
-          const isActive = active === item.id;
-          const Icon = item.icon;
-          
+    <div
+      className={darkMode ? 'bottom-nav-glass-dark' : 'bottom-nav-glass'}
+      style={{
+        flexShrink: 0,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      {/* Visitor counter — hiển thị trên thanh nav */}
+      <VisitorCounter darkMode={darkMode} compact />
+
+      {/* Tab buttons */}
+      <div className="flex items-center h-14 px-1">
+        {tabs.map(tab => {
+          const Icon = tab.icon;
+          const on   = active === tab.id;
+
           return (
-            <button
-              key={item.id}
-              onClick={() => onChange(item.id as TabId)}
-              className="relative flex flex-col items-center justify-center w-1/4 h-full active:scale-95 transition-transform"
+            <motion.button
+              key={tab.id}
+              onClick={() => onChange(tab.id)}
+              whileTap={{ scale: 0.80 }}
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 relative"
             >
-              {/* Đèn nền khi Active */}
-              {isActive && (
-                <div 
-                  className="absolute top-1 w-12 h-8 rounded-2xl opacity-20 transition-all duration-300"
-                  style={{ background: '#800000' }}
+              {/* Active indicator — pill trên cùng */}
+              {on && (
+                <motion.div
+                  layoutId="navActivePill"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full"
+                  style={{ width: 28, background: activeColor }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 36 }}
                 />
               )}
-              
-              <Icon 
-                size={24} 
-                strokeWidth={isActive ? 2.5 : 2}
-                className={`transition-all duration-300 mb-1 z-10 ${
-                  isActive 
-                    ? 'text-[#800000] -translate-y-0.5' 
-                    : (darkMode ? 'text-gray-400' : 'text-gray-500')
-                }`} 
-              />
-              
-              <span className={`text-[10px] font-semibold transition-colors z-10 ${
-                isActive 
-                  ? 'text-[#800000]' 
-                  : (darkMode ? 'text-gray-500' : 'text-gray-400')
-              }`}>
-                {item.label}
+
+              {/* Active background glow */}
+              {on && (
+                <motion.div
+                  layoutId="navActiveGlow"
+                  className="absolute inset-x-2 inset-y-1 rounded-xl"
+                  style={{
+                    background: darkMode
+                      ? 'rgba(212,175,55,0.10)'
+                      : 'rgba(128,0,0,0.06)',
+                  }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 36 }}
+                />
+              )}
+
+              <motion.div
+                animate={{ scale: on ? 1.12 : 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+              >
+                <Icon
+                  size={20}
+                  strokeWidth={on ? 2.5 : 1.6}
+                  color={on ? activeColor : inactiveColor}
+                />
+              </motion.div>
+
+              <span
+                className="font-semibold tracking-wide relative"
+                style={{
+                  fontSize: 9,
+                  color: on ? activeColor : inactiveColor,
+                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                  fontWeight: on ? 700 : 500,
+                }}
+              >
+                {tab.label}
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
     </div>
   );
-});
-
-export default BottomNav;
+}
