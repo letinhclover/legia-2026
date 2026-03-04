@@ -8,131 +8,278 @@ interface Props {
   onClose: () => void;
   onEdit: (m: Member) => void;
   isAdmin?: boolean;
-  viewer?: Member | null; // người đang xem — để tính xưng hô
+  viewer?: Member | null;
+  darkMode?: boolean;
 }
 
-export default function MemberDetail({ member, members, onClose, onEdit, isAdmin, viewer }: Props) {
+export default function MemberDetail({ member, members, onClose, onEdit, isAdmin, viewer, darkMode = false }: Props) {
   if (!member) return null;
 
+  // ── Màu theme ─────────────────────────────────────────────────────────────
+  const bg       = darkMode ? '#0f1724'   : '#F5F0E8';
+  const cardBg   = darkMode ? '#1a2535'   : '#FFFDF7';
+  const textMain = darkMode ? '#E8DDD0'   : '#1C1410';
+  const textSub  = darkMode ? '#8A9BB0'   : '#6B5E52';
+  const border   = darkMode ? '#2d3d52'   : '#E2D8CA';
+  const divider  = darkMode ? '#1e2d42'   : '#F0E8DC';
+
+  // Section colors
+  const sectionDate   = darkMode ? '#0d1f3c' : '#EFF6FF';
+  const sectionDateTxt = darkMode ? '#93C5FD' : '#1D4ED8';
+  const sectionPlace  = darkMode ? '#0f2a1a' : '#F0FDF4';
+  const sectionPlaceTxt = darkMode ? '#6EE7B7' : '#166534';
+  const sectionFamily = darkMode ? '#2a0d1a' : '#FDF2F8';
+  const sectionFamilyTxt = darkMode ? '#F9A8D4' : '#9D174D';
+  const sectionBio    = darkMode ? '#141e2e' : '#F8F5F0';
+  const sectionBioTxt = darkMode ? '#8A9BB0' : '#6B5E52';
+  const sectionName   = darkMode ? '#1a1500' : '#FFFBEB';
+  const sectionNameTxt = darkMode ? '#FCD34D' : '#92400E';
+
   const find = (id: string | null) => id ? members.find(m => m.id === id) : null;
-  const father = find(member.fatherId);
-  const mother = find(member.motherId);
-  const spouse = find(member.spouseId);
+  const father   = find(member.fatherId ?? null);
+  const mother   = find(member.motherId ?? null);
+  const spouse   = find(member.spouseId ?? null);
   const children = members.filter(m => m.fatherId === member.id || m.motherId === member.id);
 
   const relation = viewer && viewer.id !== member.id
     ? getRelationship(viewer, member, members)
     : null;
 
-  const Row = ({ label, value }: { label: string; value?: string }) =>
-    value ? (
-      <div className="flex gap-2 py-2 border-b border-gray-50 last:border-0">
-        <span className="text-xs font-bold text-gray-400 w-32 flex-shrink-0 uppercase">{label}</span>
-        <span className="text-sm text-gray-700">{value}</span>
-      </div>
-    ) : null;
-
-  const shareUrl = `${window.location.origin}?member=${member.id}`;
-
   const handleQR = () => {
+    const shareUrl = `${window.location.origin}?member=${member.id}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareUrl)}`;
     window.open(qrUrl, '_blank');
   };
 
   const isDeceased = !!member.deathDate;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className={`${isDeceased ? 'bg-gray-50' : 'bg-white'} rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto`}>
+  // ── Row helper ─────────────────────────────────────────────────────────────
+  const Row = ({ label, value }: { label: string; value?: string }) =>
+    value ? (
+      <div style={{
+        display: 'flex', gap: 10, paddingTop: 10, paddingBottom: 10,
+        borderBottom: `1px solid ${divider}',
+      }}>
+        <span style={{
+          fontSize: 12, fontWeight: 700, color: textSub,
+          width: 130, flexShrink: 0, textTransform: 'uppercase',
+          fontFamily: "'Be Vietnam Pro', sans-serif", letterSpacing: '0.03em',
+        }}>
+          {label}
+        </span>
+        <span style={{ fontSize: 15, color: textMain, fontFamily: "'Be Vietnam Pro', sans-serif", lineHeight: 1.5 }}>
+          {value}
+        </span>
+      </div>
+    ) : null;
 
+  return (
+    <div
+      className="fixed inset-0 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+      style={{ background: 'rgba(0,0,0,0.65)' }}
+    >
+      <div
+        className="rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg overflow-hidden"
+        style={{
+          background: bg,
+          maxHeight: '92vh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+        }}
+      >
         {/* Header */}
-        <div className={`${isDeceased ? 'bg-gradient-to-r from-gray-700 to-gray-600' : 'bg-gradient-to-r from-[#800000] to-[#A00000]'} text-white p-4 rounded-t-3xl sm:rounded-t-2xl flex justify-between items-center sticky top-0 z-10`}>
-          <h3 className="font-bold">
+        <div
+          className="flex justify-between items-center px-4 py-3 flex-shrink-0 sticky top-0 z-10"
+          style={{
+            background: isDeceased
+              ? 'linear-gradient(135deg, #374151, #4B5563)'
+              : 'linear-gradient(135deg, #800000, #A00000)',
+            borderRadius: '24px 24px 0 0',
+          }}
+        >
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'white', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
             {isDeceased ? '🕯️ Hồ sơ thành viên' : '👤 Hồ sơ thành viên'}
           </h3>
-          <div className="flex gap-2">
-            <button onClick={handleQR} className="hover:bg-white hover:bg-opacity-20 rounded-lg px-2 py-1 flex items-center gap-1 text-xs">
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={handleQR}
+              style={{
+                background: 'rgba(255,255,255,0.18)', border: 'none',
+                borderRadius: 8, padding: '6px 10px',
+                display: 'flex', alignItems: 'center', gap: 5,
+                color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              }}
+            >
               <QrCode size={15} /> QR
             </button>
             {isAdmin && (
-              <button onClick={() => onEdit(member)} className="hover:bg-white hover:bg-opacity-20 rounded-lg px-2 py-1 flex items-center gap-1 text-xs">
+              <button
+                onClick={() => onEdit(member)}
+                style={{
+                  background: 'rgba(255,255,255,0.18)', border: 'none',
+                  borderRadius: 8, padding: '6px 10px',
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
                 <Edit2 size={15} /> Sửa
               </button>
             )}
-            <button onClick={onClose} className="hover:bg-white hover:bg-opacity-20 rounded-full p-1"><X size={20}/></button>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255,255,255,0.18)', border: 'none',
+                borderRadius: '50%', width: 36, height: 36,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={20} color="white" />
+            </button>
           </div>
         </div>
 
-        <div className="p-5">
-          {/* Ảnh & tên */}
-          <div className="flex items-center gap-4 mb-5">
-            <div className={`w-20 h-20 rounded-2xl border-4 ${isDeceased ? 'border-gray-400' : 'border-[#B8860B]'} overflow-hidden flex-shrink-0 bg-gray-100 shadow-lg`}>
+        {/* Nội dung */}
+        <div className="overflow-y-auto" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+          {/* Ảnh & tên chính */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 84, height: 84, borderRadius: 18,
+              border: `3px solid ${isDeceased ? '#6B7280' : '#B8860B'}`,
+              overflow: 'hidden', flexShrink: 0,
+              background: darkMode ? '#1e2d42' : '#E8DFCF',
+              boxShadow: darkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(28,20,16,0.15)',
+            }}>
               {member.photoUrl
-                ? <img src={member.photoUrl} alt={member.name} className={`w-full h-full object-cover ${isDeceased ? 'grayscale' : ''}`}/>
-                : <div className="w-full h-full flex items-center justify-center text-4xl">{isDeceased ? '👴' : '👤'}</div>}
+                ? <img src={member.photoUrl} alt={member.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', filter: isDeceased ? 'grayscale(80%)' : 'none' }} />
+                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
+                    {isDeceased ? '👴' : '👤'}
+                  </div>
+              }
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-[#800000]">{member.name}</h2>
-              {member.tenHuy && <p className="text-sm text-gray-500">Húy: <strong className="text-gray-700">{member.tenHuy}</strong></p>}
-              {member.chucTuoc && <p className="text-sm font-semibold text-[#B8860B]">{member.chucTuoc}</p>}
-              <p className="text-xs text-gray-400 mt-0.5">{member.gender} · Đời thứ {member.generation}</p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 style={{
+                fontSize: 22, fontWeight: 900, color: '#800000',
+                fontFamily: "'Merriweather', serif", lineHeight: 1.2, marginBottom: 3,
+              }}>
+                {member.name}
+              </h2>
+              {member.tenHuy && (
+                <p style={{ fontSize: 14, color: textSub, marginBottom: 2 }}>
+                  Húy: <strong style={{ color: textMain }}>{member.tenHuy}</strong>
+                </p>
+              )}
+              {member.chucTuoc && (
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#B8860B', marginBottom: 2 }}>{member.chucTuoc}</p>
+              )}
+              <p style={{ fontSize: 13, color: textSub }}>
+                {member.gender} · Đời thứ {member.generation}
+              </p>
               {relation && (
-                <div className="mt-1 bg-[#800000] bg-opacity-10 text-[#800000] text-xs font-bold px-2 py-0.5 rounded-full inline-block">
+                <div style={{
+                  display: 'inline-block', marginTop: 5,
+                  background: 'rgba(128,0,0,0.12)', color: '#800000',
+                  fontSize: 13, fontWeight: 800,
+                  padding: '3px 10px', borderRadius: 999,
+                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                }}>
                   👥 {relation.label}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Tên chữ */}
+          {/* Tên chữ / Tên Thụy */}
           {(member.tenTu || member.tenThuy) && (
-            <div className="bg-yellow-50 rounded-xl p-3 mb-3">
+            <div style={{ background: sectionName, borderRadius: 14, padding: 14 }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionNameTxt, textTransform: 'uppercase', marginBottom: 8, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                📜 Tên chữ
+              </h4>
               <Row label="Tự (Tên chữ)" value={member.tenTu} />
               <Row label="Thụy" value={member.tenThuy} />
             </div>
           )}
 
-          {/* Ngày tháng */}
-          <div className="bg-blue-50 rounded-xl p-3 mb-3">
-            <h4 className="text-xs font-bold text-blue-700 uppercase mb-2">📅 Ngày sinh & Ngày mất</h4>
-            <Row label="Sinh (DL)" value={member.birthDate ? new Date(member.birthDate).toLocaleDateString('vi-VN') : ''} />
-            <Row label="Sinh (ÂL)" value={member.birthDateLunar} />
-            <Row label="Mất (DL)" value={member.deathDate ? new Date(member.deathDate).toLocaleDateString('vi-VN') : ''} />
+          {/* Ngày sinh / Mất */}
+          <div style={{ background: sectionDate, borderRadius: 14, padding: 14 }}>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionDateTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              📅 Ngày sinh & Ngày mất
+            </h4>
+            <Row label="Sinh (DL)"     value={member.birthDate ? new Date(member.birthDate).toLocaleDateString('vi-VN') : undefined} />
+            <Row label="Sinh (ÂL)"     value={member.birthDateLunar} />
+            <Row label="Mất (DL)"      value={member.deathDate ? new Date(member.deathDate).toLocaleDateString('vi-VN') : undefined} />
             <Row label="Ngày giỗ (ÂL)" value={member.deathDateLunar} />
           </div>
 
           {/* Địa danh */}
-          {(member.birthPlace || member.residence || member.burialPlace || member.deathPlace) && (
-            <div className="bg-green-50 rounded-xl p-3 mb-3">
-              <h4 className="text-xs font-bold text-green-700 uppercase mb-2">📍 Địa danh</h4>
-              <Row label="Nơi sinh" value={member.birthPlace} />
-              <Row label="Cư trú" value={member.residence} />
-              <Row label="Nơi mất" value={member.deathPlace} />
-              <Row label="Chôn cất" value={member.burialPlace} />
+          {(member.birthPlace || member.residence || (member.burialAddress || member.burialPlace) || member.deathPlace) && (
+            <div style={{ background: sectionPlace, borderRadius: 14, padding: 14 }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionPlaceTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                📍 Địa danh
+              </h4>
+              <Row label="Nơi sinh"  value={member.birthPlace} />
+              <Row label="Cư trú"    value={member.residence} />
+              <Row label="Nơi mất"   value={member.deathPlace} />
+              <Row label="Chôn cất"  value={member.burialAddress || member.burialPlace} />
+              {member.burialMapLink && (
+                <div style={{ marginTop: 8 }}>
+                  <a
+                    href={member.burialMapLink} target="_blank" rel="noreferrer"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      background: 'linear-gradient(135deg, #800000, #6B0000)',
+                      color: 'white', textDecoration: 'none',
+                      padding: '8px 14px', borderRadius: 10,
+                      fontSize: 13, fontWeight: 700, fontFamily: "'Be Vietnam Pro', sans-serif",
+                    }}
+                  >
+                    🗺️ Xem trên Google Maps
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Quan hệ */}
-          <div className="bg-pink-50 rounded-xl p-3 mb-3">
-            <h4 className="text-xs font-bold text-pink-700 uppercase mb-2">👨‍👩‍👧 Gia đình</h4>
+          {/* Gia đình */}
+          <div style={{ background: sectionFamily, borderRadius: 14, padding: 14 }}>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionFamilyTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              👨‍👩‍👧 Gia đình
+            </h4>
             <Row label="Cha" value={father?.name} />
             <Row label="Mẹ" value={mother?.name} />
             <Row label={member.gender === 'Nam' ? 'Vợ' : 'Chồng'} value={spouse?.name} />
             {children.length > 0 && (
-              <div className="flex gap-2 py-2">
-                <span className="text-xs font-bold text-gray-400 w-32 flex-shrink-0 uppercase">Con ({children.length})</span>
-                <span className="text-sm text-gray-700">{children.map(c => c.name).join(' · ')}</span>
+              <div style={{ display: 'flex', gap: 10, paddingTop: 10, paddingBottom: 10 }}>
+                <span style={{
+                  fontSize: 12, fontWeight: 700, color: textSub,
+                  width: 130, flexShrink: 0, textTransform: 'uppercase',
+                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                }}>
+                  Con ({children.length})
+                </span>
+                <span style={{ fontSize: 15, color: textMain, lineHeight: 1.6, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  {children.map(c => c.name).join(' · ')}
+                </span>
               </div>
             )}
           </div>
 
           {/* Tiểu sử */}
           {member.biography && (
-            <div className="bg-gray-50 rounded-xl p-3">
-              <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">📝 Tiểu sử & Công trạng</h4>
-              <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{member.biography}</p>
+            <div style={{ background: sectionBio, borderRadius: 14, padding: 14, border: `1px solid ${border}` }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionBioTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                📝 Tiểu sử & Công trạng
+              </h4>
+              <p style={{ fontSize: 15, color: textMain, whiteSpace: 'pre-line', lineHeight: 1.7, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                {member.biography}
+              </p>
             </div>
           )}
+
+          <div style={{ height: 16 }} />
         </div>
       </div>
     </div>

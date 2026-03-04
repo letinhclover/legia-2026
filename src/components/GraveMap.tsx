@@ -1,81 +1,133 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, MapPin, Navigation, Map } from 'lucide-react';
+import { X, MapPin, Navigation, Map, Search } from 'lucide-react';
 import { Member } from '../types';
 
 interface Props {
   members: Member[];
   onClose: () => void;
   onViewMember: (m: Member) => void;
+  darkMode?: boolean;
 }
 
-export default function GraveMap({ members, onClose, onViewMember }: Props) {
+export default function GraveMap({ members, onClose, onViewMember, darkMode = false }: Props) {
   const [search, setSearch] = useState('');
 
-  // Lấy những người có thông tin mộ phần
+  // ── Màu theme ─────────────────────────────────────────────────────────────
+  const bg       = darkMode ? '#0f1724'   : '#F5F0E8';
+  const cardBg   = darkMode ? '#1a2535'   : '#FFFDF7';
+  const headerBg = darkMode ? '#141e2e'   : '#FFFDF7';
+  const textMain = darkMode ? '#E8DDD0'   : '#1C1410';
+  const textSub  = darkMode ? '#8A9BB0'   : '#6B5E52';
+  const border   = darkMode ? '#2d3d52'   : '#E2D8CA';
+  const inputBg  = darkMode ? '#0f1a28'   : '#F0EBE1';
+
+  // Lấy thành viên có thông tin mộ
   const withGrave = members.filter(m =>
-    m.deathDate && (m.burialPlace || m.burialLat || m.burialLng)
+    m.deathDate && (m.burialAddress || m.burialPlace || m.burialLat || m.burialLng)
   );
 
   const filtered = withGrave.filter(m =>
     !search ||
     m.name.toLowerCase().includes(search.toLowerCase()) ||
-    (m.burialPlace || '').toLowerCase().includes(search.toLowerCase())
+    (m.burialAddress || m.burialPlace || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const openGoogleMaps = (m: Member) => {
-    if (m.burialLat && m.burialLng) {
-      // Nếu có tọa độ → chỉ đường chính xác
+    // Ưu tiên link Maps trực tiếp nếu có
+    if (m.burialMapLink) {
+      window.open(m.burialMapLink, '_blank');
+    } else if (m.burialLat && m.burialLng) {
       window.open(
         `https://www.google.com/maps/dir/?api=1&destination=${m.burialLat},${m.burialLng}&travelmode=driving`,
         '_blank'
       );
-    } else if (m.burialPlace) {
-      // Không có tọa độ → tìm kiếm theo địa chỉ
-      const q = encodeURIComponent(m.burialPlace);
-      window.open(`https://www.google.com/maps/search/${q}`, '_blank');
+    } else {
+      const addr = m.burialAddress || m.burialPlace || '';
+      if (addr) {
+        const q = encodeURIComponent(addr);
+        window.open(`https://www.google.com/maps/search/${q}`, '_blank');
+      }
     }
   };
 
   const birthYear = (m: Member) => m.birthDate ? new Date(m.birthDate).getFullYear() : '';
   const deathYear = (m: Member) => m.deathDate ? new Date(m.deathDate).getFullYear() : '';
+  const burialAddr = (m: Member) => m.burialAddress || m.burialPlace || '';
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ background: bg }}>
+
       {/* Header */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-3 bg-white border-b border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between mb-1">
+      <div
+        className="flex-shrink-0 px-4 pt-4 pb-3"
+        style={{ background: headerBg, borderBottom: `1px solid ${border}` }}
+      >
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Map size={20} style={{ color: '#800000' }} />
-            <h2 className="text-lg font-bold text-gray-900">Bản Đồ Mộ Phần</h2>
+            <Map size={22} color="#800000" />
+            <h2 style={{
+              fontSize: 20, fontWeight: 900, color: textMain,
+              fontFamily: "'Merriweather', serif",
+            }}>
+              Bản Đồ Mộ Phần
+            </h2>
           </div>
-          <button onClick={onClose} className="bg-gray-100 rounded-full p-1.5">
-            <X size={18} className="text-gray-500" />
+          <button
+            onClick={onClose}
+            style={{
+              background: darkMode ? '#1e2d42' : '#F0EBE1',
+              border: `1px solid ${border}`,
+              borderRadius: '50%', width: 36, height: 36,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <X size={18} color={textSub} />
           </button>
         </div>
-        <p className="text-xs text-gray-400">{withGrave.length} mộ có thông tin · Bấm 🧭 để chỉ đường</p>
 
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Tìm tên hoặc địa chỉ mộ..."
-          className="mt-3 w-full px-3 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none"
-        />
+        <p style={{ fontSize: 13, color: textSub, fontFamily: "'Be Vietnam Pro', sans-serif", marginBottom: 10 }}>
+          {withGrave.length} mộ có thông tin · Bấm 🧭 để chỉ đường
+        </p>
+
+        {/* Search */}
+        <div style={{ position: 'relative' }}>
+          <Search
+            size={16} color={textSub}
+            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
+          />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Tìm tên hoặc địa chỉ mộ..."
+            style={{
+              width: '100%',
+              padding: '12px 14px 12px 36px',
+              borderRadius: 12,
+              border: `1.5px solid ${border}`,
+              background: inputBg,
+              color: textMain,
+              fontSize: 15,
+              fontFamily: "'Be Vietnam Pro', sans-serif",
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
       </div>
 
-      {/* Danh sách */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50">
+      {/* Danh sách mộ */}
+      <div className="flex-1 overflow-y-auto" style={{ padding: '12px 16px', gap: 10, display: 'flex', flexDirection: 'column' }}>
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <div className="text-5xl mb-3">🗺️</div>
-            <p className="font-semibold text-gray-500">
-              {withGrave.length === 0
-                ? 'Chưa có thông tin mộ phần'
-                : 'Không tìm thấy'}
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: 52, marginBottom: 12 }}>🗺️</div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: textMain, marginBottom: 6, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              {withGrave.length === 0 ? 'Chưa có thông tin mộ phần' : 'Không tìm thấy'}
             </p>
             {withGrave.length === 0 && (
-              <p className="text-xs text-gray-400 mt-2 max-w-xs mx-auto">
-                Thêm địa chỉ "Nơi chôn cất" khi chỉnh sửa thông tin thành viên đã mất
+              <p style={{ fontSize: 14, color: textSub, maxWidth: 280, margin: '0 auto', lineHeight: 1.6, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                Thêm địa chỉ mộ phần khi chỉnh sửa thông tin thành viên đã mất
               </p>
             )}
           </div>
@@ -86,61 +138,106 @@ export default function GraveMap({ members, onClose, onViewMember }: Props) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="bg-white rounded-2xl p-3 shadow-sm border border-gray-50"
+              style={{
+                background: cardBg,
+                borderRadius: 18,
+                padding: 14,
+                border: `1px solid ${border}`,
+                boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 10px rgba(28,20,16,0.08)',
+              }}
             >
-              <div className="flex items-start gap-3">
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+
                 {/* Avatar grayscale */}
-                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                <div style={{
+                  width: 56, height: 56,
+                  borderRadius: 14,
+                  overflow: 'hidden', flexShrink: 0,
+                  background: darkMode ? '#1e2d42' : '#E8DFCF',
+                  border: `2px solid ${border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
                   {m.photoUrl
-                    ? <img src={m.photoUrl} alt={m.name} className="w-full h-full object-cover grayscale" />
-                    : <span className="text-xl grayscale">👴</span>}
+                    ? <img src={m.photoUrl} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%)' }} />
+                    : <span style={{ fontSize: 24, filter: 'grayscale(100%)' }}>👴</span>
+                  }
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0" onClick={() => onViewMember(m)}>
-                  <div className="font-bold text-gray-800 text-sm">{m.name}</div>
-                  {m.tenHuy && <div className="text-xs text-gray-400 italic">Húy: {m.tenHuy}</div>}
-                  <div className="text-xs text-gray-500 mt-0.5">
+                {/* Thông tin */}
+                <div style={{ flex: 1, minWidth: 0 }} onClick={() => onViewMember(m)}>
+                  <div style={{
+                    fontWeight: 800, color: textMain, fontSize: 16,
+                    fontFamily: "'Be Vietnam Pro', sans-serif",
+                  }}>
+                    {m.name}
+                  </div>
+                  {m.tenHuy && (
+                    <div style={{ fontSize: 13, color: textSub, fontStyle: 'italic', marginTop: 1 }}>
+                      Húy: {m.tenHuy}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 13, color: textSub, marginTop: 3, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
                     {birthYear(m)} — {deathYear(m)} · Đời {m.generation}
                   </div>
-                  {m.burialPlace && (
-                    <div className="flex items-start gap-1 mt-1">
-                      <MapPin size={11} className="text-red-400 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs text-gray-600 leading-relaxed">{m.burialPlace}</span>
+                  {burialAddr(m) && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginTop: 6 }}>
+                      <MapPin size={13} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span style={{ fontSize: 14, color: textMain, lineHeight: 1.5, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                        {burialAddr(m)}
+                      </span>
                     </div>
                   )}
-                  {m.burialLat && m.burialLng && (
-                    <div className="text-xs text-green-600 mt-0.5">
-                      📍 Có tọa độ GPS · Chỉ đường chính xác
+                  {(m.burialMapLink || (m.burialLat && m.burialLng)) && (
+                    <div style={{ fontSize: 13, color: '#16A34A', marginTop: 4, fontWeight: 600 }}>
+                      📍 Có vị trí · Chỉ đường chính xác
                     </div>
                   )}
                 </div>
 
-                {/* Nút chỉ đường */}
+                {/* Nút chỉ đường — lớn hơn cho người già */}
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   onClick={() => openGoogleMaps(m)}
-                  className="flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-xl text-white font-bold"
-                  style={{ background: 'linear-gradient(135deg, #800000, #6B0000)' }}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: 4,
+                    padding: '12px 14px',
+                    borderRadius: 14,
+                    background: 'linear-gradient(135deg, #800000, #6B0000)',
+                    border: 'none', cursor: 'pointer',
+                    color: 'white',
+                    boxShadow: '0 4px 12px rgba(128,0,0,0.35)',
+                  }}
                 >
-                  <Navigation size={18} />
-                  <span className="text-[9px]">Chỉ đường</span>
+                  <Navigation size={20} color="white" />
+                  <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                    Chỉ đường
+                  </span>
                 </motion.button>
               </div>
             </motion.div>
           ))
         )}
 
-        {/* Hướng dẫn thêm tọa độ */}
+        {/* Hướng dẫn */}
         {withGrave.length > 0 && (
-          <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100 mt-2">
-            <p className="text-xs font-bold text-blue-800 mb-1">💡 Thêm tọa độ GPS cho độ chính xác cao hơn</p>
-            <p className="text-xs text-blue-600">
-              Mở Google Maps → bấm giữ vào vị trí mộ → copy 2 số (vĩ độ, kinh độ) →
-              dán vào ô "Vĩ độ mộ" và "Kinh độ mộ" khi sửa thông tin thành viên
+          <div style={{
+            background: darkMode ? '#0d1f3c' : '#EFF6FF',
+            borderRadius: 16, padding: 14,
+            border: `1px solid ${darkMode ? '#1e3a5f' : '#BFDBFE'}`,
+            marginTop: 4,
+          }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: darkMode ? '#93C5FD' : '#1D4ED8', marginBottom: 6, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              💡 Thêm vị trí chính xác hơn
+            </p>
+            <p style={{ fontSize: 13, color: darkMode ? '#60A5FA' : '#3B82F6', lineHeight: 1.6, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Mở Google Maps → bấm giữ vào vị trí mộ → copy link → dán vào ô "Link Google Maps" khi sửa thông tin thành viên
             </p>
           </div>
         )}
+
+        <div style={{ height: 16 }} />
       </div>
     </div>
   );
