@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Bell, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bell, X, RefreshCw } from 'lucide-react';
 import { Member } from '../types';
 
 interface Props {
@@ -134,6 +134,29 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
   const today = useMemo(() => new Date(), []);
   const [cal, setCal] = useState({ y: today.getFullYear(), m: today.getMonth() });
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [refreshing, setRefreshing]   = useState(false);
+  const [pullDelta, setPullDelta]     = useState(0);
+  const pullStartY = useRef(0);
+  const pulling    = useRef(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    pullStartY.current = e.touches[0].clientY;
+    pulling.current = true;
+  }, []);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!pulling.current) return;
+    const d = e.touches[0].clientY - pullStartY.current;
+    if (d > 0 && d < 100) setPullDelta(d);
+  }, []);
+  const handleTouchEnd = useCallback(() => {
+    if (!pulling.current) return;
+    pulling.current = false;
+    if (pullDelta > 60) {
+      setRefreshing(true);
+      setPullDelta(0);
+      setTimeout(() => setRefreshing(false), 900);
+    } else setPullDelta(0);
+  }, [pullDelta]);
 
   // Theme
   const bg       = darkMode ? '#0f1724' : '#F9FAFB';
@@ -200,7 +223,32 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
   const nextMonth = () => { setSelectedDay(null); setCal(c => c.m === 11 ? { y: c.y+1, m: 0 } : { y: c.y, m: c.m+1 }); };
 
   return (
-    <div className="flex flex-col h-full" style={{ background: bg }}>
+    <div
+      className="flex flex-col h-full"
+      style={{ background: bg }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh */}
+      <AnimatePresence>
+        {(pullDelta > 10 || refreshing) && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: Math.min(pullDelta * 0.5 + 4, 44), opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="flex items-center justify-center gap-2 overflow-hidden flex-shrink-0"
+            style={{ background: darkMode ? '#1a2030' : 'white' }}
+          >
+            <motion.div animate={refreshing ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 0.7, linear: true }}>
+              <RefreshCw size={14} color="#800000" />
+            </motion.div>
+            <span style={{ fontSize: 12, color: '#800000', fontWeight: 700 }}>
+              {refreshing ? 'Đang tải lại...' : pullDelta > 60 ? 'Thả để tải lại' : 'Kéo xuống để tải lại'}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b shadow-sm" style={{ background: headerBg, borderColor: border }}>
