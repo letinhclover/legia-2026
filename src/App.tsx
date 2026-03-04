@@ -14,6 +14,7 @@ import StatsPanel from './components/StatsPanel';
 import MemorialPage from './components/MemorialPage';
 import GraveMap from './components/GraveMap';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import NotificationBanner from './components/NotificationBanner';
 
 import TreeTab from './tabs/TreeTab';
 import DirectoryTab from './tabs/DirectoryTab';
@@ -98,6 +99,21 @@ export default function App() {
     setMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Member[]);
   }, []);
   useEffect(() => { if (!loading) loadMembers(); }, [loading]);
+
+  // ── Deeplink: ?member=ID → tự động mở chi tiết thành viên ────────────────
+  useEffect(() => {
+    if (members.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const memberId = params.get('member');
+    if (memberId) {
+      const found = members.find(m => m.id === memberId);
+      if (found) {
+        setViewingMember(found);
+        // Xóa param khỏi URL mà không reload trang
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [members]);
 
   const handleTabChange = (tab: TabId) => { setPrevTab(activeTab); setActiveTab(tab); };
 
@@ -383,6 +399,13 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* ── Notification Banner — ngày giỗ / sinh nhật sắp tới ── */}
+      <NotificationBanner
+        members={members}
+        darkMode={darkMode}
+        onSelectMember={setViewingMember}
+      />
+
       {/* ── Tab Content ── */}
       <div className="flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait" custom={direction}>
@@ -399,6 +422,7 @@ export default function App() {
                 onNodeClick={setViewingMember}
                 onAddMember={canEdit ? () => { setEditingMember(null); setIsFormOpen(true); } : undefined}
                 darkMode={darkMode}
+                onRefresh={loadMembers}
               />
             )}
             {activeTab === 'directory' && (
