@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -49,6 +49,28 @@ export default function App() {
   const [isFormOpen, setIsFormOpen]       = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [filterGen, setFilterGen]         = useState<number | 'all'>('all');
+
+  // navList: danh sách để ← → điều hướng trong MemberBottomSheet
+  // Khi mở từ DirectoryTab → nhận filtered list (đã lọc)
+  // Khi mở từ tab khác → dùng toàn bộ members
+  const [navList, setNavList] = useState<Member[]>([]);
+
+  // Danh sách điều hướng mặc định: toàn bộ members sắp xếp đời → năm sinh
+  const defaultNavList = useMemo(() =>
+    [...members].sort((a, b) => {
+      if (a.generation !== b.generation) return a.generation - b.generation;
+      const ya = a.birthDate ? parseInt(a.birthDate) : ((a as any).birthYear ?? 9999);
+      const yb = b.birthDate ? parseInt(b.birthDate) : ((b as any).birthYear ?? 9999);
+      return ya - yb;
+    }),
+    [members]
+  );
+
+  // Helper: mở chi tiết với navList phù hợp
+  const openMember = useCallback((m: Member, list?: Member[]) => {
+    setNavList(list ?? defaultNavList);
+    setViewingMember(m);
+  }, [defaultNavList]);
   const [showStats, setShowStats]         = useState(false);
   const [showMemorial, setShowMemorial]   = useState(false);
   const [showGraveMap, setShowGraveMap]   = useState(false);
@@ -403,7 +425,7 @@ export default function App() {
       <NotificationBanner
         members={members}
         darkMode={darkMode}
-        onSelectMember={setViewingMember}
+        onSelectMember={(m) => openMember(m)}
       />
 
       {/* ── Tab Content ── */}
@@ -419,7 +441,7 @@ export default function App() {
               <TreeTab
                 members={members} filterGen={filterGen}
                 isAdmin={canEdit}
-                onNodeClick={setViewingMember}
+                onNodeClick={(m) => openMember(m)}
                 onAddMember={canEdit ? () => { setEditingMember(null); setIsFormOpen(true); } : undefined}
                 darkMode={darkMode}
                 onRefresh={loadMembers}
@@ -428,7 +450,7 @@ export default function App() {
             {activeTab === 'directory' && (
               <DirectoryTab
                 members={members}
-                onSelectMember={setViewingMember}
+                onSelectMember={(m, list) => openMember(m, list)}
                 onEditMember={canEdit ? (m) => {
                   setEditingMember(m);
                   setIsFormOpen(true);
@@ -437,13 +459,13 @@ export default function App() {
                   // Chuyển sang tab Tree và highlight thành viên đó
                   handleTabChange('tree');
                   // Delay nhỏ để tab animation xong rồi mới mở detail
-                  setTimeout(() => setViewingMember(m), 350);
+                  setTimeout(() => openMember(m), 350);
                 }}
                 darkMode={darkMode}
               />
             )}
             {activeTab === 'events' && (
-              <EventsTab members={members} onSelectMember={setViewingMember} darkMode={darkMode} />
+              <EventsTab members={members} onSelectMember={(m) => openMember(m)} darkMode={darkMode} />
             )}
             {activeTab === 'settings' && (
               <SettingsTab
@@ -469,7 +491,8 @@ export default function App() {
         {viewingMember && (
           <MemberBottomSheet
             member={viewingMember} members={members}
-            onSelectMember={setViewingMember}
+            navList={navList}
+            onSelectMember={(m) => openMember(m)}
             onClose={() => setViewingMember(null)}
             onEdit={handleEdit} isAdmin={canEdit}
             darkMode={darkMode}
