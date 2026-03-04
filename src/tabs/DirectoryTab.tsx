@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, SlidersHorizontal, RefreshCw } from 'lucide-react';
-import { Member, MemberType, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
+import { Member, MemberType, MEMBER_TYPE_LABEL, getMemberTypeColor } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
 
 interface Props {
@@ -269,7 +269,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                         <p className="font-bold text-sm leading-snug" style={{ color: textMain }}>{m.name}</p>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {(m.memberType && m.memberType !== 'chinh') && (() => {
-                            const col = MEMBER_TYPE_COLOR[m.memberType!];
+                            const col = getMemberTypeColor(m.memberType ?? 'chinh', darkMode ?? false);
                             return (
                               <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
                                 style={{ background: col.bg, color: col.text }}>
