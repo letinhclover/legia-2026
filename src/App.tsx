@@ -4,6 +4,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
 import { Member, AuthUser } from './types';
+import { Moon, Sun } from 'lucide-react';
 
 import BottomNav, { TabId } from './components/BottomNav';
 import BottomSheet from './components/BottomSheet';
@@ -73,7 +74,7 @@ export default function App() {
   const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user?.email ?? '');
   const isEditor     = EDITOR_EMAILS.includes(user?.email ?? '');
   const canEdit      = isSuperAdmin || isEditor;
-  const isAdmin      = isSuperAdmin;          // isAdmin = chỉ super admin
+  const isAdmin      = isSuperAdmin;
   const direction    = TAB_ORDER.indexOf(activeTab) - TAB_ORDER.indexOf(prevTab);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -120,7 +121,8 @@ export default function App() {
           ...payload, createdAt: new Date().toISOString(),
         });
         savedId = ref.id;
-        setMembers(prev => [...prev, { ...payload, id: savedId } as Member]);
+        // Thêm thành viên mới vào state ngay lập tức để cây gia phả cập nhật
+        setMembers(prev => [...prev, { ...payload, id: savedId, generation: Number(payload.generation || 1) } as Member]);
         showToast('✅ Đã thêm thành viên mới!', 'success');
       }
 
@@ -236,18 +238,10 @@ export default function App() {
     <div className="fixed inset-0 flex flex-col"
       style={{ background: appBg, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
 
-      {/* ════════════════════════════════
-          HEADER — Thiết kế lại hoàn toàn
-          - Logo vuông vàng bên trái
-          - Title 1 dòng (Merriweather, không wrap)
-          - Sub text: số thành viên · đời
-          - Phần phải: filter + badge (không bị đẩy xuống)
-      ════════════════════════════════ */}
+      {/* ════ HEADER ════ */}
       <div className="flex-shrink-0 safe-top" style={{ background: headerBg }}>
-        <div
-          className="flex items-center gap-3 px-4"
-          style={{ height: 58, paddingTop: 0, paddingBottom: 0 }}
-        >
+        <div className="flex items-center gap-3 px-4" style={{ height: 58 }}>
+
           {/* Logo */}
           <div
             className="flex items-center justify-center rounded-xl font-black text-white flex-shrink-0"
@@ -263,7 +257,7 @@ export default function App() {
             Lê
           </div>
 
-          {/* Title block — flex-1, không wrap */}
+          {/* Title */}
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <h1
               className="font-bold text-white leading-none"
@@ -273,7 +267,6 @@ export default function App() {
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                letterSpacing: '-0.02em',
               }}
             >
               Gia Phả Dòng Họ Lê
@@ -291,8 +284,9 @@ export default function App() {
             </p>
           </div>
 
-          {/* Phần phải: filter + badge — flex-shrink-0, không bao giờ wrap */}
+          {/* Phần phải: filter + darkMode toggle + badge */}
           <div className="flex items-center gap-2 flex-shrink-0">
+
             {/* Filter đời — chỉ ở tab Tree */}
             {activeTab === 'tree' && (
               <select
@@ -319,10 +313,36 @@ export default function App() {
               </select>
             )}
 
-            {/* Badge phân quyền:
-                ⭐ ADMIN  — vàng đặc, chỉ super admin
-                ✏️ EDITOR — ghost trắng mờ, biên tập viên
-                (Không hiện gì nếu chưa đăng nhập) */}
+            {/* ── NÚT BẬT/TẮT CHẾ ĐỘ TỐI — Mặt trăng / Mặt trời ── */}
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              whileHover={{ scale: 1.1 }}
+              onClick={toggleDark}
+              aria-label={darkMode ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+              className="flex items-center justify-center rounded-full flex-shrink-0"
+              style={{
+                width: 34, height: 34,
+                background: darkMode ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.15)',
+                border: `1.5px solid ${darkMode ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.3)'}`,
+              }}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={darkMode ? 'sun' : 'moon'}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {darkMode
+                    ? <Sun size={16} color="#D4AF37" />
+                    : <Moon size={16} color="white" />
+                  }
+                </motion.div>
+              </AnimatePresence>
+            </motion.button>
+
+            {/* Badge phân quyền */}
             {canEdit && (
               <div
                 className="font-black rounded-full flex-shrink-0"
@@ -378,7 +398,7 @@ export default function App() {
                 isAdmin={canEdit}
                 onNodeClick={setViewingMember}
                 onAddMember={canEdit ? () => { setEditingMember(null); setIsFormOpen(true); } : undefined}
-                darkMode={darkMode} onToggleDark={toggleDark}
+                darkMode={darkMode}
               />
             )}
             {activeTab === 'directory' && (
@@ -414,6 +434,7 @@ export default function App() {
             onSelectMember={setViewingMember}
             onClose={() => setViewingMember(null)}
             onEdit={handleEdit} isAdmin={canEdit}
+            darkMode={darkMode}
           />
         )}
       </BottomSheet>
@@ -430,6 +451,7 @@ export default function App() {
             onSave={handleSave} onDelete={handleDelete}
             members={members} editingMember={editingMember}
             isAdmin={canEdit} isSuperAdmin={isSuperAdmin}
+            darkMode={darkMode}
           />
         )}
       </BottomSheet>
@@ -438,14 +460,18 @@ export default function App() {
         <GraveMap
           members={members} onClose={() => setShowGraveMap(false)}
           onViewMember={m => { setViewingMember(m); setShowGraveMap(false); }}
+          darkMode={darkMode}
         />
       </BottomSheet>
 
-      {showStats    && <StatsPanel members={members} onClose={() => setShowStats(false)} />}
+      {showStats && (
+        <StatsPanel members={members} onClose={() => setShowStats(false)} darkMode={darkMode} />
+      )}
       {showMemorial && (
         <MemorialPage
           members={members} onClose={() => setShowMemorial(false)}
           onViewMember={m => { setViewingMember(m); setShowMemorial(false); }}
+          darkMode={darkMode}
         />
       )}
 
