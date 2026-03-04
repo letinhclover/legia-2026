@@ -1,11 +1,11 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import ReactFlow, {
   Controls, Background, BackgroundVariant, MiniMap,
   useNodesState, useEdgesState, useReactFlow,
   ReactFlowProvider, Node, Edge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Plus, Minimize2, GitBranch } from 'lucide-react';
+import { Plus, Minimize2, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
 import FamilyNode from '../components/FamilyNode';
@@ -20,7 +20,7 @@ interface Props {
   onNodeClick:  (m: Member) => void;
   onAddMember?: () => void;
   darkMode:     boolean;
-  onToggleDark?: () => void; // optional — toggle đã chuyển lên header
+  onToggleDark?: () => void;
 }
 
 const PAPER_TEXTURE: React.CSSProperties = {
@@ -90,6 +90,15 @@ function getBloodlineIds(memberId: string, members: Member[]): Set<string> {
 function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, darkMode }: Props) {
   const [ready, setReady]             = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [refreshing, setRefreshing]   = useState(false);
+  const lastTapRef = useRef<{ id: string; time: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Pull-to-refresh state
+  const pullStartY = useRef<number>(0);
+  const pulling = useRef(false);
+  const [pullDelta, setPullDelta] = useState(0);
+
   const { fitView } = useReactFlow();
 
   useEffect(() => {
@@ -97,8 +106,6 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
     return () => clearTimeout(t);
   }, []);
 
-  // ── FIX TỰ ĐỘNG CẬP NHẬT CÂY KHI THÊM/SỬA THÀNH VIÊN ──────────────────
-  // Dùng useMemo cho filtered để React tracking đúng dependency
   const filtered = useMemo(
     () => filterGen === 'all' ? members : members.filter(m => m.generation === filterGen),
     [members, filterGen]
@@ -109,12 +116,22 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
     [highlightId, filtered]
   );
 
+  // Chạm 1 = highlight, chạm 2 liên tiếp = mở chi tiết
   const handleNodeClick = useCallback((m: Member) => {
-    setHighlightId(prev => prev === m.id ? null : m.id);
-    onNodeClick(m);
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last && last.id === m.id && now - last.time < 600) {
+      // Double tap -> mở chi tiết
+      lastTapRef.current = null;
+      setHighlightId(m.id);
+      onNodeClick(m);
+    } else {
+      // Single tap -> chỉ highlight
+      lastTapRef.current = { id: m.id, time: now };
+      setHighlightId(prev => prev === m.id ? null : m.id);
+    }
   }, [onNodeClick]);
 
-  // Key bao gồm đầy đủ thông tin để detect mọi thay đổi
   const layoutKey = filtered
     .map(m => `${m.id}|${m.spouseId ?? ''}|${m.fatherId ?? ''}|${m.motherId ?? ''}|${m.generation}|${m.name}`)
     .join(',');
@@ -164,19 +181,79 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
       requestAnimationFrame(() => fitView({ padding: 0.18, duration: 500 }));
   }, [themedNodes, themedEdges, ready]);
 
+  // ── Pull-to-refresh handlers ──────────────────────────────────────────────
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const el = containerRef.current;
+    if (!el) return;
+    // Only activate when at the very top of scroll (ReactFlow canvas)
+    pullStartY.current = e.touches[0].clientY;
+    pulling.current = true;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!pulling.current) return;
+    const delta = e.touches[0].clientY - pullStartY.current;
+    if (delta > 0 && delta < 120) {
+      setPullDelta(delta);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!pulling.current) return;
+    pulling.current = false;
+    if (pullDelta > 60) {
+      setRefreshing(true);
+      setPullDelta(0);
+      // Animate fitView as "refresh"
+      fitView({ padding: 0.18, duration: 700 });
+      setTimeout(() => setRefreshing(false), 900);
+    } else {
+      setPullDelta(0);
+    }
+  }, [pullDelta, fitView]);
+
   // ── Màu sắc ─────────────────────────────────────────────────────────────
   const bgColor    = darkMode ? '#0f1724' : '#F5F0E8';
   const dotColor   = darkMode ? '#5C3A1E' : '#B8A07A';
   const cardBg     = darkMode ? 'rgba(20,30,46,0.97)' : 'rgba(255,253,247,0.97)';
   const cardBorder = darkMode ? '#2d3d52'              : '#E2D8CA';
   const cardText   = darkMode ? '#8A9BB0'              : '#6B5E52';
-  const mmBg       = darkMode ? '#141e2e'              : '#FFF8EE';
-  const mmFill     = darkMode ? '#3d5a70'              : '#B8860B';
 
   if (!ready || members.length === 0) return <TreeSkeleton dark={darkMode} />;
 
   return (
-    <div className="relative w-full h-full" style={{ background: bgColor }}>
+    <div
+      ref={containerRef}
+      className="relative w-full h-full"
+      style={{ background: bgColor }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      <AnimatePresence>
+        {(pullDelta > 10 || refreshing) && (
+          <motion.div
+            initial={{ opacity: 0, y: -40 }}
+            animate={{ opacity: 1, y: Math.min(pullDelta * 0.5, 40) }}
+            exit={{ opacity: 0, y: -40 }}
+            style={{
+              position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 50, display: 'flex', alignItems: 'center', gap: 6,
+              background: cardBg, borderRadius: 999, padding: '6px 14px',
+              border: `1px solid ${cardBorder}`,
+              boxShadow: '0 4px 16px rgba(28,20,16,0.12)',
+            }}
+          >
+            <motion.div animate={refreshing ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 0.7 }}>
+              <RefreshCw size={14} color="#B8860B" />
+            </motion.div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#B8860B', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              {refreshing ? 'Đang tải lại...' : pullDelta > 60 ? 'Thả để tải lại' : 'Kéo xuống để tải lại'}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Texture giấy dó */}
       <div style={PAPER_TEXTURE} />
@@ -206,10 +283,9 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           nodesDraggable={false}
           nodesConnectable={false}
         >
-          {/* ── Controls Thu phóng — góc TRÊN PHẢI, không đè Legend ── */}
+          {/* Ẩn controls mặc định — dùng custom controls bên dưới */}
           <Controls
-            className="!rounded-2xl !overflow-hidden !shadow-lg !border !bottom-auto !left-auto !top-3 !right-3"
-            style={{ background: cardBg, borderColor: cardBorder }}
+            className="!hidden"
             showInteractive={false}
           />
 
@@ -221,87 +297,113 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             style={{ opacity: 0.22 }}
           />
 
-          {/* ── MiniMap — góc dưới phải ── */}
+          {/* ── MiniMap — góc dưới phải, màu sắc nổi bật ── */}
           <MiniMap
             style={{
-              background: mmBg,
-              border: `1px solid ${cardBorder}`,
+              background: darkMode ? '#0a1220' : '#FFF4E0',
+              border: `2px solid ${darkMode ? '#3d5a70' : '#D4AF37'}`,
               borderRadius: 14,
               overflow: 'hidden',
-              boxShadow: '0 4px 16px rgba(28,20,16,0.10)',
+              boxShadow: '0 4px 20px rgba(28,20,16,0.18)',
             }}
             position="bottom-right"
             nodeColor={n => {
-              if (bloodlineIds && !bloodlineIds.has(n.id))
-                return darkMode ? '#1e2d42' : '#D6CCBC';
-              if (n.data?.gender === 'Nam') return '#1D3A6B';
-              if (n.data?.gender === 'Nữ') return '#8B2252';
-              return mmFill;
+              if (bloodlineIds) {
+                if (!bloodlineIds.has(n.id)) return darkMode ? '#1a2535' : '#DDD6CA';
+                // Highlighted nodes: bright colors
+                if (n.data?.gender === 'Nam') return '#2563EB';
+                if (n.data?.gender === 'Nữ') return '#DB2777';
+                return '#D4AF37';
+              }
+              if (n.data?.gender === 'Nam') return '#1D4ED8';
+              if (n.data?.gender === 'Nữ') return '#BE185D';
+              return '#D4AF37';
             }}
-            maskColor={darkMode ? 'rgba(0,0,0,0.55)' : 'rgba(245,240,232,0.55)'}
+            nodeStrokeColor={n => {
+              if (bloodlineIds && bloodlineIds.has(n.id)) return '#FBBF24';
+              return 'transparent';
+            }}
+            nodeStrokeWidth={3}
+            maskColor={darkMode ? 'rgba(0,0,0,0.6)' : 'rgba(245,240,232,0.6)'}
             zoomable
             pannable
           />
         </ReactFlow>
       </div>
 
-      {/* ── LEGEND — góc dưới TRÁI, nhỏ gọn, không có dark toggle ── */}
+      {/* ── CONTROLS THU PHÓNG — góc dưới TRÁI (cạnh vị trí cũ của chú giải), to hơn ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, type: 'spring', stiffness: 300 }}
-        className="absolute bottom-4 left-3 rounded-2xl px-3 py-2.5 shadow-lg"
+        className="absolute flex flex-col gap-1.5"
         style={{
-          background: cardBg,
-          border: `1px solid ${cardBorder}`,
+          bottom: 16,
+          left: 12,
           zIndex: 10,
-          minWidth: 140,
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
         }}
       >
-        {/* Tiêu đề */}
-        <div
-          className="flex items-center gap-1.5 pb-1.5 mb-1.5 border-b"
-          style={{ borderColor: cardBorder }}
+        {/* Nút + phóng to */}
+        <motion.button
+          whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.88 }}
+          onClick={() => fitView({ padding: 0.08, duration: 400 })}
+          className="flex items-center justify-center rounded-2xl font-black text-white"
+          style={{
+            width: 52, height: 52,
+            background: cardBg,
+            border: `1.5px solid ${cardBorder}`,
+            boxShadow: '0 4px 16px rgba(28,20,16,0.12)',
+            fontSize: 26,
+            color: darkMode ? '#E8DDD0' : '#1C1410',
+          }}
+          title="Phóng to vừa màn hình"
         >
-          <GitBranch size={11} style={{ color: '#B8860B' }} />
-          <span style={{
-            fontSize: 10, fontWeight: 700, color: '#B8860B',
-            fontFamily: "'Be Vietnam Pro', sans-serif", letterSpacing: '0.05em'
-          }}>
-            CHÚ GIẢI
-          </span>
-        </div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </motion.button>
 
-        {/* Các loại đường — text lớn hơn để dễ đọc */}
-        {[
-          { el: <div className="w-6 h-0.5 rounded-full" style={{ background: '#800000' }} />,        label: 'Cha → Con' },
-          { el: <div className="w-6 border-t-2 border-dashed border-pink-500 opacity-80" />,          label: 'Mẹ → Con'  },
-          { el: <div className="w-6 border-t-2 border-dashed" style={{ borderColor: '#B8860B' }} />, label: 'Vợ — Chồng' },
-        ].map(({ el, label }) => (
-          <div key={label} className="flex items-center gap-2 py-0.5">
-            {el}
-            <span style={{ fontSize: 11, color: cardText, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
-              {label}
-            </span>
-          </div>
-        ))}
+        {/* Nút − thu nhỏ */}
+        <motion.button
+          whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.88 }}
+          onClick={() => fitView({ padding: 0.5, duration: 400 })}
+          className="flex items-center justify-center rounded-2xl"
+          style={{
+            width: 52, height: 52,
+            background: cardBg,
+            border: `1.5px solid ${cardBorder}`,
+            boxShadow: '0 4px 16px rgba(28,20,16,0.12)',
+            color: darkMode ? '#E8DDD0' : '#1C1410',
+          }}
+          title="Thu nhỏ toàn cảnh"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </motion.button>
 
         {/* Bloodline indicator */}
         <AnimatePresence>
           {highlightId && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="flex items-center gap-2 pt-1.5 mt-1 border-t overflow-hidden"
-              style={{ borderColor: cardBorder }}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              className="flex items-center gap-2 rounded-2xl px-3 py-2 mt-1"
+              style={{
+                background: cardBg,
+                border: `1.5px solid #D4AF37`,
+                boxShadow: '0 4px 16px rgba(212,175,55,0.2)',
+                minWidth: 52,
+              }}
             >
               <div className="w-3 h-3 rounded-full border-2 border-yellow-500 flex-shrink-0" />
               <span style={{
-                fontSize: 11, color: '#D4AF37',
-                fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 600
+                fontSize: 10, color: '#D4AF37',
+                fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 700,
+                whiteSpace: 'nowrap',
               }}>
                 Huyết thống
               </span>
@@ -318,7 +420,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
         </AnimatePresence>
       </motion.div>
 
-      {/* ── FAB THÊM THÀNH VIÊN — Chỉ dấu +, hình tròn, trên MiniMap ── */}
+      {/* ── FAB THÊM THÀNH VIÊN — trên MiniMap ── */}
       <AnimatePresence>
         {isAdmin && onAddMember && (
           <motion.button
@@ -333,7 +435,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             style={{
               background: 'linear-gradient(135deg, #B8860B 0%, #8B6914 100%)',
               zIndex: 10,
-              bottom: 168,   // trên minimap (~150px cao + offset)
+              bottom: 168,
               right: 12,
               width: 54,
               height: 54,
