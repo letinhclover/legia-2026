@@ -9,14 +9,29 @@ interface Props {
   title?: string;
 }
 
+// Counter toàn cục để track bao nhiêu BottomSheet đang mở
+// Tránh trường hợp sheet 1 đóng reset overflow, trong khi sheet 2 vẫn còn mở
+let openSheetCount = 0;
+
 export default function BottomSheet({ isOpen, onClose, children, height = '90vh', title }: Props) {
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 260], [0.48, 0.02]);
   const handleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (isOpen) {
+      openSheetCount++;
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      if (isOpen) {
+        openSheetCount--;
+        if (openSheetCount <= 0) {
+          openSheetCount = 0;
+          document.body.style.overflow = '';
+        }
+      }
+    };
   }, [isOpen]);
 
   useEffect(() => {
