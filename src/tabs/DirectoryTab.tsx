@@ -1,12 +1,12 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, SlidersHorizontal, RefreshCw } from 'lucide-react';
-import { Member, MemberType, MEMBER_TYPE_LABEL, getMemberTypeColor } from '../types';
+import { Member, MemberType, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
 
 interface Props {
   members: Member[];
-  onSelectMember: (m: Member, navList?: Member[]) => void;
+  onSelectMember: (m: Member) => void;
   onEditMember?: (m: Member) => void;
   onShowTree?: (m: Member) => void;
   darkMode?: boolean;
@@ -249,7 +249,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                   transition={{ delay: Math.min(i*0.02, 0.25), duration:0.2 }}
                   className="rounded-2xl shadow-sm cursor-pointer"
                   style={{ background: cardBg, border: `1px solid ${border}` }}
-                  onClick={()=>onSelectMember(m, filtered)}
+                  onClick={()=>onSelectMember(m)}
                 >
                   <div className="flex items-start gap-3 p-3">
                     <div className="relative flex-shrink-0">
@@ -269,7 +269,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                         <p className="font-bold text-sm leading-snug" style={{ color: textMain }}>{m.name}</p>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {(m.memberType && m.memberType !== 'chinh') && (() => {
-                            const col = getMemberTypeColor(m.memberType ?? 'chinh', darkMode ?? false);
+                            const col = MEMBER_TYPE_COLOR[m.memberType!];
                             return (
                               <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
                                 style={{ background: col.bg, color: col.text }}>
@@ -300,7 +300,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       whileTap={{ scale: 0.93 }}
                       onClick={e => {
                         e.stopPropagation();
-                        onEditMember ? onEditMember(m) : onSelectMember(m, filtered);
+                        onEditMember ? onEditMember(m) : onSelectMember(m);
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-bl-2xl transition-colors"
                       style={{
@@ -323,7 +323,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       whileTap={{ scale: 0.93 }}
                       onClick={e => {
                         e.stopPropagation();
-                        onShowTree ? onShowTree(m) : onSelectMember(m, filtered);
+                        onShowTree ? onShowTree(m) : onSelectMember(m);
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-colors"
                       style={{
@@ -349,7 +349,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       whileTap={{ scale: 0.93 }}
                       onClick={e => {
                         e.stopPropagation();
-                        onSelectMember(m, filtered);
+                        onSelectMember(m);
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-br-2xl transition-colors"
                       style={{
