@@ -18,6 +18,45 @@ function calcAge(birthDate: string): number | null {
   return isNaN(y) ? null : new Date().getFullYear() - y;
 }
 
+// ── Icons SVG to và rõ ràng hơn ──────────────────────────────────────────
+function WeddingRingIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8" stroke="#A855F7" strokeWidth="2.5"/>
+      <circle cx="12" cy="12" r="4" fill="#A855F7" opacity="0.3"/>
+      <path d="M8 12 C8 9.8 9.8 8 12 8 C14.2 8 16 9.8 16 12" stroke="#A855F7" strokeWidth="2" fill="none"/>
+    </svg>
+  );
+}
+
+function SonInLawIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="7" r="4" stroke="#3B82F6" strokeWidth="2.2"/>
+      <path d="M4 20 C4 16 7.6 13 12 13 C16.4 13 20 16 20 20" stroke="#3B82F6" strokeWidth="2.2" strokeLinecap="round"/>
+      <path d="M18 3 L21 6 L18 9" stroke="#3B82F6" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+    </svg>
+  );
+}
+
+function GrandchildIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="8" r="4" stroke="#10B981" strokeWidth="2.2"/>
+      <path d="M6 20 C6 17 8.7 15 12 15 C15.3 15 18 17 18 20" stroke="#10B981" strokeWidth="2.2" strokeLinecap="round"/>
+      <path d="M8 4 C9.5 2.5 14.5 2.5 16 4" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+    </svg>
+  );
+}
+
+function HeartIcon({ size = 16, color = '#EC4899' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  );
+}
+
 const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
   const isAlive = !data.deathDate && !(data as any).deathYear;
   const isMale  = data.gender === 'Nam';
@@ -29,6 +68,11 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
   if (!deathY && data.deathDate) deathY = parseInt(data.deathDate.slice(0, 4));
 
   const age = isAlive && data.birthDate ? calcAge(data.birthDate) : null;
+
+  const memberType = data.memberType ?? 'chinh';
+  const isDau       = memberType === 'dau';
+  const isRe        = memberType === 're';
+  const isChauNgoai = memberType === 'chau_ngoai';
 
   // ── Màu Neo-Traditional ─────────────────────────────────────────────────
   const accentColor = isMale ? '#1D3A6B' : '#8B2252';
@@ -55,15 +99,10 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
   const opacity = data.dimmed ? 0.3 : 1;
   const filter  = (!isAlive || data.dimmed) ? 'grayscale(75%)' : 'none';
 
-  // ── Tên hiển thị: cắt bớt nếu quá dài để không xuống hàng ─────────────
-  // Mục tiêu: Tên + (đời) nằm trên 1 dòng
-  // Nếu tên dài hơn 12 ký tự → rút gọn phần đầu (họ)
   const displayName = (() => {
     const full = data.name.trim();
-    // Lấy 2 từ cuối (tên + đệm cuối) nếu quá dài
     const parts = full.split(' ');
     if (full.length <= 13) return full;
-    // Giữ họ viết tắt + tên
     const lastName  = parts[0]?.[0] ?? '';
     const firstName = parts.slice(-1)[0] ?? '';
     const midAbbr   = parts.length > 2 ? parts[1]?.[0] + '.' : '';
@@ -134,7 +173,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
           transition: 'box-shadow 0.2s',
         }}
       >
-        {/* ── TÊN + (ĐỜI) — 1 hàng ngang, không xuống dòng ── */}
+        {/* TÊN + (ĐỜI) */}
         <div
           className="flex items-baseline justify-center gap-0.5 px-0.5 w-full"
           style={{ minHeight: 16 }}
@@ -146,11 +185,10 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
               color: textMain,
               fontFamily: "'Be Vietnam Pro', sans-serif",
               fontWeight: 700,
-              // Cho phép wrap tên nếu thật sự quá dài, nhưng ưu tiên 1 dòng
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              maxWidth: 76,   // 108 - 2*padding - gen badge
+              maxWidth: 76,
             }}
             title={data.name}
           >
@@ -194,6 +232,31 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
             >
               ({age}t)
             </span>
+          )}
+        </div>
+
+        {/* ── ICONS NHẬN DẠNG VAI VẾ — To và rõ ── */}
+        <div className="flex items-center justify-center gap-1 mt-1 flex-wrap">
+          {isDau && (
+            <div title="Con dâu" style={{ lineHeight: 1 }}>
+              <WeddingRingIcon size={18} />
+            </div>
+          )}
+          {isRe && (
+            <div title="Con rể" style={{ lineHeight: 1 }}>
+              <SonInLawIcon size={18} />
+            </div>
+          )}
+          {isChauNgoai && (
+            <div title="Cháu ngoại" style={{ lineHeight: 1 }}>
+              <GrandchildIcon size={18} />
+            </div>
+          )}
+          {/* Tim xanh - còn sống */}
+          {isAlive && memberType === 'chinh' && (
+            <div title="Còn sống" style={{ lineHeight: 1 }}>
+              <HeartIcon size={16} color="#10B981" />
+            </div>
           )}
         </div>
 
