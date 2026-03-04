@@ -1,12 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { Member, MemberType, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
 
 interface Props {
   members: Member[];
   onSelectMember: (m: Member) => void;
+  onEditMember?: (m: Member) => void;
+  onShowTree?: (m: Member) => void;
   darkMode?: boolean;
 }
 
@@ -27,13 +29,45 @@ function initials(name: string) {
   return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length-1][0]).toUpperCase();
 }
 
-export default function DirectoryTab({ members, onSelectMember, darkMode }: Props) {
-  const [query, setQuery]       = useState('');
+export default function DirectoryTab({ members, onSelectMember, onEditMember, onShowTree, darkMode }: Props) {
+  const [query, setQuery]         = useState('');
   const [genFilter, setGenFilter] = useState<number|'all'>('all');
   const [showFilter, setShowFilter] = useState(false);
-  const [genderF, setGenderF]   = useState<'all'|'Nam'|'Nữ'>('all');
-  const [statusF, setStatusF]   = useState<'all'|'alive'|'deceased'>('all');
-  const [typeF, setTypeF]       = useState<'all'|MemberType>('all');
+  const [genderF, setGenderF]     = useState<'all'|'Nam'|'Nữ'>('all');
+  const [statusF, setStatusF]     = useState<'all'|'alive'|'deceased'>('all');
+  const [typeF, setTypeF]         = useState<'all'|MemberType>('all');
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Pull-to-refresh
+  const scrollRef    = useRef<HTMLDivElement>(null);
+  const pullStartY   = useRef(0);
+  const pulling      = useRef(false);
+  const [pullDelta, setPullDelta] = useState(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const el = scrollRef.current;
+    if (!el || el.scrollTop > 0) return;
+    pullStartY.current = e.touches[0].clientY;
+    pulling.current = true;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!pulling.current) return;
+    const delta = e.touches[0].clientY - pullStartY.current;
+    if (delta > 0 && delta < 100) setPullDelta(delta);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!pulling.current) return;
+    pulling.current = false;
+    if (pullDelta > 60) {
+      setRefreshing(true);
+      setPullDelta(0);
+      setTimeout(() => setRefreshing(false), 900);
+    } else {
+      setPullDelta(0);
+    }
+  }, [pullDelta]);
 
   // Theme tokens
   const bg       = darkMode ? '#0f1724' : '#F9FAFB';
@@ -66,7 +100,32 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
   [members, query, genFilter, genderF, statusF, typeF]);
 
   return (
-    <div className="flex flex-col h-full" style={{ background: bg }}>
+    <div
+      className="flex flex-col h-full"
+      style={{ background: bg }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      <AnimatePresence>
+        {(pullDelta > 10 || refreshing) && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: Math.min(pullDelta * 0.5 + 4, 44), opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="flex items-center justify-center gap-2 overflow-hidden flex-shrink-0"
+            style={{ background: headerBg }}
+          >
+            <motion.div animate={refreshing ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 0.7, linear: true }}>
+              <RefreshCw size={14} color="#800000" />
+            </motion.div>
+            <span style={{ fontSize: 12, color: '#800000', fontWeight: 700, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              {refreshing ? 'Đang tải lại...' : pullDelta > 60 ? 'Thả để tải lại' : 'Kéo xuống để tải lại'}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <div className="flex-shrink-0 border-b shadow-sm" style={{ background: headerBg, borderColor: border }}>
@@ -127,7 +186,6 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
                     </button>
                   ))}
                 </div>
-                {/* Lọc vai vế */}
                 <div>
                   <p className="text-[10px] font-bold uppercase mb-1" style={{ color: textSub }}>Vai vế trong họ</p>
                   <div className="flex gap-1.5 flex-wrap">
@@ -165,7 +223,11 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ touchAction: 'pan-y' }}>
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 pb-4"
+        style={{ touchAction: 'pan-y' }}
+      >
         <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: textSub }}>
           {filtered.length} thành viên
         </p>
@@ -230,15 +292,79 @@ export default function DirectoryTab({ members, onSelectMember, darkMode }: Prop
                       </div>
                     </div>
                   </div>
+
+                  {/* ── 3 nút hành động CÓ CHỨC NĂNG CỤ THỂ ── */}
                   <div className="flex border-t divide-x" style={{ borderColor: border }}>
-                    {[{icon:'✏️',label:'Sửa'},{icon:'🌳',label:'Phả hệ'},{icon:'👁️',label:'Chi tiết'}].map(a=>(
-                      <button key={a.label}
-                        onClick={e=>{ e.stopPropagation(); if(a.label!=='Sửa') onSelectMember(m); }}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-semibold"
-                        style={{ color: textSub, borderColor: border }}>
-                        <span>{a.icon}</span>{a.label}
-                      </button>
-                    ))}
+                    {/* NÚT SỬA */}
+                    <motion.button
+                      whileTap={{ scale: 0.93 }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        onEditMember ? onEditMember(m) : onSelectMember(m);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-bl-2xl transition-colors"
+                      style={{
+                        color: '#800000',
+                        borderColor: border,
+                        background: 'transparent',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = darkMode ? 'rgba(128,0,0,0.12)' : '#FEF2F2')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Sửa
+                    </motion.button>
+
+                    {/* NÚT PHẢ HỆ */}
+                    <motion.button
+                      whileTap={{ scale: 0.93 }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        onShowTree ? onShowTree(m) : onSelectMember(m);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-colors"
+                      style={{
+                        color: '#1D4ED8',
+                        borderColor: border,
+                        background: 'transparent',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = darkMode ? 'rgba(29,78,216,0.1)' : '#EFF6FF')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+                        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+                        <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+                        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+                        <circle cx="12" cy="12" r="4"/>
+                      </svg>
+                      Phả hệ
+                    </motion.button>
+
+                    {/* NÚT CHI TIẾT */}
+                    <motion.button
+                      whileTap={{ scale: 0.93 }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        onSelectMember(m);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-br-2xl transition-colors"
+                      style={{
+                        color: '#166534',
+                        borderColor: border,
+                        background: 'transparent',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = darkMode ? 'rgba(22,101,52,0.1)' : '#F0FDF4')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                      </svg>
+                      Chi tiết
+                    </motion.button>
                   </div>
                 </motion.div>
               );
