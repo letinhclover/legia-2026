@@ -59,10 +59,18 @@ export const MEMBER_TYPE_LABEL: Record<string, string> = {
   ngoai_toc:  '🔗 Ngoại tộc',
 };
 
-export const MEMBER_TYPE_COLOR: Record<string, { bg: string; text: string }> = {
-  chinh:      { bg: '#FEF2F2', text: '#991B1B' },
-  dau:        { bg: '#FDF4FF', text: '#7E22CE' },
-  re:         { bg: '#EFF6FF', text: '#1D4ED8' },
-  chau_ngoai: { bg: '#F0FDF4', text: '#15803D' },
-  ngoai_toc:  { bg: '#FFFBEB', text: '#92400E' },
+export const MEMBER_TYPE_COLOR: Record<string, { bg: string; text: string; darkBg: string; darkText: string }> = {
+  chinh:      { bg: '#FEF2F2', text: '#991B1B', darkBg: '#3b0a0a', darkText: '#FCA5A5' },
+  dau:        { bg: '#FDF4FF', text: '#7E22CE', darkBg: '#2e0a40', darkText: '#D8B4FE' },
+  re:         { bg: '#EFF6FF', text: '#1D4ED8', darkBg: '#0d1f3c', darkText: '#93C5FD' },
+  chau_ngoai: { bg: '#F0FDF4', text: '#15803D', darkBg: '#0a2e1a', darkText: '#6EE7B7' },
+  ngoai_toc:  { bg: '#FFFBEB', text: '#92400E', darkBg: '#2a1f08', darkText: '#FCD34D' },
 };
+
+// Helper để lấy màu đúng theo theme
+export function getMemberTypeColor(type: string, darkMode: boolean): { bg: string; text: string } {
+  const c = MEMBER_TYPE_COLOR[type] ?? MEMBER_TYPE_COLOR['chinh'];
+  return darkMode
+    ? { bg: c.darkBg, text: c.darkText }
+    : { bg: c.bg,     text: c.text };
+}
