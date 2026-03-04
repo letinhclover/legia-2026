@@ -6,7 +6,7 @@ import { cloudinaryThumb } from '../utils/imageCompress';
 
 interface Props {
   members: Member[];
-  onSelectMember: (m: Member) => void;
+  onSelectMember: (m: Member, navList?: Member[]) => void;
   onEditMember?: (m: Member) => void;
   onShowTree?: (m: Member) => void;
   darkMode?: boolean;
@@ -249,7 +249,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                   transition={{ delay: Math.min(i*0.02, 0.25), duration:0.2 }}
                   className="rounded-2xl shadow-sm cursor-pointer"
                   style={{ background: cardBg, border: `1px solid ${border}` }}
-                  onClick={()=>onSelectMember(m)}
+                  onClick={()=>onSelectMember(m, filtered)}
                 >
                   <div className="flex items-start gap-3 p-3">
                     <div className="relative flex-shrink-0">
@@ -300,7 +300,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       whileTap={{ scale: 0.93 }}
                       onClick={e => {
                         e.stopPropagation();
-                        onEditMember ? onEditMember(m) : onSelectMember(m);
+                        onEditMember ? onEditMember(m) : onSelectMember(m, filtered);
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-bl-2xl transition-colors"
                       style={{
@@ -323,7 +323,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       whileTap={{ scale: 0.93 }}
                       onClick={e => {
                         e.stopPropagation();
-                        onShowTree ? onShowTree(m) : onSelectMember(m);
+                        onShowTree ? onShowTree(m) : onSelectMember(m, filtered);
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-colors"
                       style={{
@@ -349,7 +349,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       whileTap={{ scale: 0.93 }}
                       onClick={e => {
                         e.stopPropagation();
-                        onSelectMember(m);
+                        onSelectMember(m, filtered);
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-br-2xl transition-colors"
                       style={{
