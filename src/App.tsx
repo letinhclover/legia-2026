@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -49,28 +49,6 @@ export default function App() {
   const [isFormOpen, setIsFormOpen]       = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [filterGen, setFilterGen]         = useState<number | 'all'>('all');
-
-  // navList: danh sách để ← → điều hướng trong MemberBottomSheet
-  // Khi mở từ DirectoryTab → nhận filtered list (đã lọc)
-  // Khi mở từ tab khác → dùng toàn bộ members
-  const [navList, setNavList] = useState<Member[]>([]);
-
-  // Danh sách điều hướng mặc định: toàn bộ members sắp xếp đời → năm sinh
-  const defaultNavList = useMemo(() =>
-    [...members].sort((a, b) => {
-      if (a.generation !== b.generation) return a.generation - b.generation;
-      const ya = a.birthDate ? parseInt(a.birthDate) : ((a as any).birthYear ?? 9999);
-      const yb = b.birthDate ? parseInt(b.birthDate) : ((b as any).birthYear ?? 9999);
-      return ya - yb;
-    }),
-    [members]
-  );
-
-  // Helper: mở chi tiết với navList phù hợp
-  const openMember = useCallback((m: Member, list?: Member[]) => {
-    setNavList(list ?? defaultNavList);
-    setViewingMember(m);
-  }, [defaultNavList]);
   const [showStats, setShowStats]         = useState(false);
   const [showMemorial, setShowMemorial]   = useState(false);
   const [showGraveMap, setShowGraveMap]   = useState(false);
@@ -82,13 +60,7 @@ export default function App() {
   }, []);
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('darkMode');
-      // Nếu người dùng đã chọn thủ công → dùng lựa chọn đó
-      if (saved !== null) return saved === 'true';
-      // Chưa chọn → đọc từ hệ thống
-      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-    } catch { return false; }
+    try { return localStorage.getItem('darkMode') === 'true'; } catch { return false; }
   });
   const toggleDark = useCallback(() => {
     setDarkMode(d => {
@@ -331,6 +303,32 @@ export default function App() {
           {/* Phần phải: filter + darkMode toggle + badge */}
           <div className="flex items-center gap-2 flex-shrink-0">
 
+            {/* Filter đời — chỉ ở tab Tree */}
+            {activeTab === 'tree' && (
+              <select
+                aria-label="Lọc theo đời"
+                value={filterGen}
+                onChange={e => setFilterGen(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+                style={{
+                  background: 'rgba(0,0,0,0.28)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                  borderRadius: 10,
+                  padding: '4px 8px',
+                  fontSize: 11,
+                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                  fontWeight: 600,
+                  outline: 'none',
+                  maxWidth: 92,
+                }}
+              >
+                <option value="all">Tất cả đời</option>
+                {Array.from({ length: maxGen }, (_, i) => i + 1).map(g => (
+                  <option key={g} value={g}>Đời {g}</option>
+                ))}
+              </select>
+            )}
+
             {/* ── NÚT BẬT/TẮT CHẾ ĐỘ TỐI — Mặt trăng / Mặt trời ── */}
             <motion.button
               whileTap={{ scale: 0.85 }}
@@ -405,7 +403,7 @@ export default function App() {
       <NotificationBanner
         members={members}
         darkMode={darkMode}
-        onSelectMember={(m) => openMember(m)}
+        onSelectMember={setViewingMember}
       />
 
       {/* ── Tab Content ── */}
@@ -421,7 +419,7 @@ export default function App() {
               <TreeTab
                 members={members} filterGen={filterGen}
                 isAdmin={canEdit}
-                onNodeClick={(m) => openMember(m)}
+                onNodeClick={setViewingMember}
                 onAddMember={canEdit ? () => { setEditingMember(null); setIsFormOpen(true); } : undefined}
                 darkMode={darkMode}
                 onRefresh={loadMembers}
@@ -430,7 +428,7 @@ export default function App() {
             {activeTab === 'directory' && (
               <DirectoryTab
                 members={members}
-                onSelectMember={(m, list) => openMember(m, list)}
+                onSelectMember={setViewingMember}
                 onEditMember={canEdit ? (m) => {
                   setEditingMember(m);
                   setIsFormOpen(true);
@@ -439,13 +437,13 @@ export default function App() {
                   // Chuyển sang tab Tree và highlight thành viên đó
                   handleTabChange('tree');
                   // Delay nhỏ để tab animation xong rồi mới mở detail
-                  setTimeout(() => openMember(m), 350);
+                  setTimeout(() => setViewingMember(m), 350);
                 }}
                 darkMode={darkMode}
               />
             )}
             {activeTab === 'events' && (
-              <EventsTab members={members} onSelectMember={(m) => openMember(m)} darkMode={darkMode} />
+              <EventsTab members={members} onSelectMember={setViewingMember} darkMode={darkMode} />
             )}
             {activeTab === 'settings' && (
               <SettingsTab
@@ -471,8 +469,7 @@ export default function App() {
         {viewingMember && (
           <MemberBottomSheet
             member={viewingMember} members={members}
-            navList={navList}
-            onSelectMember={(m) => openMember(m)}
+            onSelectMember={setViewingMember}
             onClose={() => setViewingMember(null)}
             onEdit={handleEdit} isAdmin={canEdit}
             darkMode={darkMode}
