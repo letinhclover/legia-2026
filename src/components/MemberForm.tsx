@@ -285,7 +285,7 @@ export default function MemberForm({
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           border: 'none', cursor: 'pointer',
                         }}
-                      >×</button>
+                      >X</button>
                     </div>
                   </div>
                   <div style={{ flex: 1 }}>
