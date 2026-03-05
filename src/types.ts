@@ -41,6 +41,7 @@ export interface Member {
   photoUrl?: string;
   biography?: string;
   email?: string;
+  eventNote?: string;   // Ghi chú ngày giỗ: địa điểm, người phụ trách...
   createdAt?: string;
 }
 
