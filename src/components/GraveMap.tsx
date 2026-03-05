@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { m as motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, MapPin, Navigation, Map, Search } from 'lucide-react';
 import { Member } from '../types';
 

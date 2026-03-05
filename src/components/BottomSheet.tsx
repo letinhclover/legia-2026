@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { m as motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 
 interface Props {
   isOpen: boolean;

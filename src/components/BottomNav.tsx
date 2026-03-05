@@ -1,4 +1,4 @@
-import { m as motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Network, Users, Calendar, Settings } from 'lucide-react';
 import VisitorCounter from './VisitorCounter';
 

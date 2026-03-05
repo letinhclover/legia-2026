@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { m as motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Member } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
 

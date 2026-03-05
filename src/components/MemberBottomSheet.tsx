@@ -1,4 +1,4 @@
-import { m as motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Edit2, QrCode, X, MapPin, ExternalLink } from 'lucide-react';
 import { Member, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 
