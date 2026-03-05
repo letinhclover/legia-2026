@@ -89,7 +89,6 @@ export function buildFamilyLayout(
     rankdir:  'TB',
     nodesep:  NODE_SEP,
     ranksep:  RANK_SEP,
-    align:    'UL',   // căn trái-trên → giảm "drift" ngang
   });
   g.setDefaultEdgeLabel(() => ({}));
 
@@ -161,8 +160,8 @@ export function buildFamilyLayout(
           source: m.fatherId,
           target: m.id,
           type:   'smoothstep',
-          style:  { stroke: '#800000', strokeWidth: 1.6 },
-          markerEnd: { type: 'arrowclosed' as any, color: '#800000', width: 14, height: 14 },
+          style:  { stroke: '#CC0000', strokeWidth: 1.6 },
+          markerEnd: { type: 'arrowclosed' as any, color: '#CC0000', width: 14, height: 14 },
         });
         addedLinks.add(key);
       }
