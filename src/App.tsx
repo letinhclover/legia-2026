@@ -4,7 +4,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
 import { Member, AuthUser } from './types';
-import { Moon, Sun } from 'lucide-react';
+
 
 import BottomNav, { TabId } from './components/BottomNav';
 import BottomSheet from './components/BottomSheet';
@@ -15,6 +15,7 @@ import MemorialPage from './components/MemorialPage';
 import GraveMap from './components/GraveMap';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import NotificationBanner from './components/NotificationBanner';
+import Footer from './components/Footer';
 
 import TreeTab from './tabs/TreeTab';
 import DirectoryTab from './tabs/DirectoryTab';
@@ -212,25 +213,25 @@ export default function App() {
   };
 
   // ── Theme ─────────────────────────────────────────────────────────────────
-  const appBg    = darkMode ? '#0f1724' : '#F5F0E8';
+  const appBg    = darkMode ? '#111214' : '#f8fafc';
   const headerBg = darkMode
-    ? 'linear-gradient(135deg, #1a0808 0%, #2d1212 100%)'
-    : 'linear-gradient(135deg, #800000 0%, #5C0000 100%)';
+    ? 'linear-gradient(90deg, #1a0000 0%, #3d0020 100%)'
+    : 'linear-gradient(90deg, #CC0000 0%, #dd2476 100%)';
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="fixed inset-0 flex items-center justify-center"
-      style={{ background: 'linear-gradient(160deg, #800000 0%, #2D0000 100%)' }}>
+      style={{ background: 'linear-gradient(90deg, #CC0000 0%, #dd2476 100%)' }}>
       <div className="text-center text-white px-8">
         <motion.div
           animate={{ scale: [1, 1.07, 1] }}
           transition={{ repeat: Infinity, duration: 2.2 }}
           className="text-7xl mb-5"
         >🏛️</motion.div>
-        <h1 className="text-2xl font-black" style={{ fontFamily: "'Merriweather', serif" }}>
+        <h1 className="text-2xl font-black" style={{ fontFamily: "'Roboto', sans-serif" }}>
           Gia Phả Dòng Họ Lê
         </h1>
-        <p className="text-sm mt-2 opacity-60" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+        <p className="text-sm mt-2 opacity-60" style={{ fontFamily: "'Roboto', sans-serif" }}>
           Truyền thống · Đoàn kết · Phát triển
         </p>
         <motion.div
@@ -252,7 +253,7 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 flex flex-col"
-      style={{ background: appBg, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+      style={{ background: appBg, fontFamily: "'Roboto', sans-serif" }}>
 
       {/* ════ HEADER ════ */}
       <div className="flex-shrink-0 safe-top" style={{ background: headerBg }}>
@@ -263,8 +264,8 @@ export default function App() {
             className="flex items-center justify-center rounded-xl font-black text-white flex-shrink-0"
             style={{
               width: 40, height: 40,
-              background: 'linear-gradient(135deg, #D4AF37 0%, #8B6914 100%)',
-              fontFamily: "'Merriweather', serif",
+              background: 'rgba(0,0,0,0.25)',
+              fontFamily: "'Roboto', sans-serif",
               fontSize: 17,
               boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
               letterSpacing: '-1px',
@@ -278,8 +279,9 @@ export default function App() {
             <h1
               className="font-bold text-white leading-none"
               style={{
-                fontFamily: "'Merriweather', serif",
-                fontSize: 14,
+                fontFamily: "'Roboto', sans-serif",
+                fontWeight: 900,
+                fontSize: 15,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -293,7 +295,7 @@ export default function App() {
                 fontSize: 11,
                 color: 'rgba(255,255,255,0.75)',
                 whiteSpace: 'nowrap',
-                fontFamily: "'Be Vietnam Pro', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
               }}
             >
               {members.length} thành viên · {maxGen} đời
@@ -316,7 +318,7 @@ export default function App() {
                   borderRadius: 10,
                   padding: '4px 8px',
                   fontSize: 11,
-                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   fontWeight: 600,
                   outline: 'none',
                   maxWidth: 92,
@@ -329,34 +331,19 @@ export default function App() {
               </select>
             )}
 
-            {/* ── NÚT BẬT/TẮT CHẾ ĐỘ TỐI — Mặt trăng / Mặt trời ── */}
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              whileHover={{ scale: 1.1 }}
+            {/* ── NÚT DARK MODE — emoji thuần như HTML mẫu ── */}
+            <button
               onClick={toggleDark}
               aria-label={darkMode ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-              className="flex items-center justify-center rounded-full flex-shrink-0"
               style={{
-                width: 34, height: 34,
-                background: darkMode ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.15)',
-                border: `1.5px solid ${darkMode ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.3)'}`,
+                background: 'none', border: 'none',
+                color: '#fff', fontSize: 20,
+                cursor: 'pointer', padding: '5px',
+                lineHeight: 1,
               }}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={darkMode ? 'sun' : 'moon'}
-                  initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
-                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                  exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {darkMode
-                    ? <Sun size={16} color="#D4AF37" />
-                    : <Moon size={16} color="white" />
-                  }
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
+              {darkMode ? '☀️' : '🌙'}
+            </button>
 
             {/* Badge phân quyền */}
             {canEdit && (
@@ -367,7 +354,7 @@ export default function App() {
                   padding: '3px 9px',
                   whiteSpace: 'nowrap',
                   ...(isSuperAdmin
-                    ? { background: '#D4AF37', color: '#1C1410' }
+                    ? { background: '#D4AF37', color: '#0b0b0b' }
                     : { background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }
                   ),
                 }}
@@ -391,7 +378,7 @@ export default function App() {
             className="fixed top-20 left-4 right-4 z-[100] px-4 py-3 rounded-2xl shadow-xl text-sm font-semibold text-center text-white"
             style={{
               background: TOAST_COLORS[toast.type],
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}
           >
             {toast.msg}
@@ -460,6 +447,9 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* ── Footer ── */}
+      <Footer darkMode={darkMode} />
 
       {/* ── Bottom Nav ── */}
       <BottomNav active={activeTab} onChange={handleTabChange} darkMode={darkMode} />
