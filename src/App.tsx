@@ -184,6 +184,24 @@ export default function App() {
     }
   };
 
+  const handleDeleteAllMembers = async () => {
+    try {
+      const snap = await getDocs(collection(db, 'members'));
+      const total = snap.docs.length;
+      // Xoá theo batch nhỏ tránh timeout
+      const chunks: typeof snap.docs[] = [];
+      for (let i = 0; i < snap.docs.length; i += 20)
+        chunks.push(snap.docs.slice(i, i + 20));
+      for (const chunk of chunks)
+        await Promise.all(chunk.map(d => deleteDoc(doc(db, 'members', d.id))));
+      setMembers([]);
+      setViewingMember(null);
+      showToast(`🗑️ Đã xóa ${total} thành viên`, 'info');
+    } catch {
+      showToast('❌ Lỗi khi xóa toàn bộ!', 'error');
+    }
+  };
+
   const handleEdit = (member: Member) => {
     setViewingMember(null);
     setEditingMember(member);
@@ -439,6 +457,7 @@ export default function App() {
                 onShowMemorial={() => setShowMemorial(true)}
                 onShowGraveMap={() => setShowGraveMap(true)}
                 onImportMembers={handleImportMembers}
+                onDeleteAllMembers={handleDeleteAllMembers}
                 darkMode={darkMode}
               />
             )}
