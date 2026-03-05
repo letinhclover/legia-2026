@@ -38,7 +38,7 @@ function TreeSkeleton({ dark }: { dark: boolean }) {
   return (
     <div
       className="w-full h-full flex items-center justify-center"
-      style={{ background: dark ? '#0f1724' : '#F5F0E8' }}
+      style={{ background: dark ? '#111214' : '#f8fafc' }}
     >
       <div className="space-y-8 text-center">
         {[2, 4, 3].map((n, row) => (
@@ -47,14 +47,14 @@ function TreeSkeleton({ dark }: { dark: boolean }) {
               <motion.div
                 key={i}
                 className="rounded-2xl"
-                style={{ width: 100, height: 130, background: dark ? '#1e2d42' : '#E8DFCF' }}
+                style={{ width: 100, height: 130, background: dark ? '#1d1f21' : '#E8DFCF' }}
                 animate={{ opacity: [0.5, 0.9, 0.5] }}
                 transition={{ repeat: Infinity, duration: 1.6, delay: i * 0.15 }}
               />
             ))}
           </div>
         ))}
-        <p className="text-sm mt-2" style={{ color: dark ? '#64748b' : '#9C8E82', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+        <p className="text-sm mt-2" style={{ color: dark ? '#64748b' : '#9C8E82', fontFamily: "'Roboto', sans-serif" }}>
           Đang tải cây gia phả…
         </p>
       </div>
@@ -101,7 +101,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
   const pulling = useRef(false);
   const [pullDelta, setPullDelta] = useState(0);
 
-  const { fitView } = useReactFlow();
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 100);
@@ -218,11 +218,11 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
   }, [pullDelta, fitView, onRefresh]);
 
   // ── Màu sắc ─────────────────────────────────────────────────────────────
-  const bgColor    = darkMode ? '#0f1724' : '#F5F0E8';
+  const bgColor    = darkMode ? '#111214' : '#f8fafc';
   const dotColor   = darkMode ? '#5C3A1E' : '#B8A07A';
-  const cardBg     = darkMode ? 'rgba(20,30,46,0.97)' : 'rgba(255,253,247,0.97)';
-  const cardBorder = darkMode ? '#2d3d52'              : '#E2D8CA';
-  const cardText   = darkMode ? '#8A9BB0'              : '#6B5E52';
+  const cardBg     = darkMode ? '#1d1f21' : 'rgba(255,255,255,0.97)';
+  const cardBorder = darkMode ? '#2d3748'              : '#e2e8f0';
+  const cardText   = darkMode ? '#aaaaaa'              : '#555555';
 
   if (!ready || members.length === 0) return <TreeSkeleton dark={darkMode} />;
 
@@ -253,7 +253,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             <motion.div animate={refreshing ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 0.7 }}>
               <RefreshCw size={14} color="#B8860B" />
             </motion.div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#B8860B', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#B8860B', fontFamily: "'Roboto', sans-serif" }}>
               {refreshing ? 'Đang tải lại...' : pullDelta > 60 ? 'Thả để tải lại' : 'Kéo xuống để tải lại'}
             </span>
           </motion.div>
@@ -282,7 +282,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           proOptions={{ hideAttribution: true }}
           panOnScroll panOnDrag={[1, 2]}
           zoomOnPinch zoomOnScroll
-          zoomOnDoubleClick={false}
+          zoomOnDoubleClick={true}
           selectionOnDrag={false}
           preventScrolling
           nodesDraggable={false}
@@ -305,7 +305,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           {/* ── MiniMap — góc dưới phải, màu sắc nổi bật ── */}
           <MiniMap
             style={{
-              background: darkMode ? '#0a1220' : '#FFF4E0',
+              background: darkMode ? '#111214' : '#FFF4E0',
               border: `2px solid ${darkMode ? '#3d5a70' : '#D4AF37'}`,
               borderRadius: 14,
               overflow: 'hidden',
@@ -314,7 +314,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             position="bottom-right"
             nodeColor={n => {
               if (bloodlineIds) {
-                if (!bloodlineIds.has(n.id)) return darkMode ? '#1a2535' : '#DDD6CA';
+                if (!bloodlineIds.has(n.id)) return darkMode ? '#1d1f21' : '#DDD6CA';
                 // Highlighted nodes: bright colors
                 if (n.data?.gender === 'Nam') return '#2563EB';
                 if (n.data?.gender === 'Nữ') return '#DB2777';
@@ -351,7 +351,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
         {/* Nút + phóng to */}
         <motion.button
           whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.88 }}
-          onClick={() => fitView({ padding: 0.08, duration: 400 })}
+          onClick={() => zoomIn({ duration: 300 })}
           className="flex items-center justify-center rounded-2xl font-black text-white"
           style={{
             width: 52, height: 52,
@@ -359,9 +359,9 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             border: `1.5px solid ${cardBorder}`,
             boxShadow: '0 4px 16px rgba(28,20,16,0.12)',
             fontSize: 26,
-            color: darkMode ? '#E8DDD0' : '#1C1410',
+            color: darkMode ? '#f5f5f5' : '#0b0b0b',
           }}
-          title="Phóng to vừa màn hình"
+          title="Phóng to"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -372,16 +372,16 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
         {/* Nút − thu nhỏ */}
         <motion.button
           whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.88 }}
-          onClick={() => fitView({ padding: 0.5, duration: 400 })}
+          onClick={() => zoomOut({ duration: 300 })}
           className="flex items-center justify-center rounded-2xl"
           style={{
             width: 52, height: 52,
             background: cardBg,
             border: `1.5px solid ${cardBorder}`,
             boxShadow: '0 4px 16px rgba(28,20,16,0.12)',
-            color: darkMode ? '#E8DDD0' : '#1C1410',
+            color: darkMode ? '#f5f5f5' : '#0b0b0b',
           }}
-          title="Thu nhỏ toàn cảnh"
+          title="Thu nhỏ"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -397,32 +397,27 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
               className="flex items-center gap-2 rounded-2xl px-3 py-2 mt-1"
+              onClick={() => {
+                setHighlightId(null);
+                lastTapRef.current = null;
+              }}
               style={{
                 background: cardBg,
                 border: `1.5px solid #D4AF37`,
                 boxShadow: '0 4px 16px rgba(212,175,55,0.2)',
                 minWidth: 52,
+                cursor: 'pointer',
               }}
             >
               <div className="w-3 h-3 rounded-full border-2 border-yellow-500 flex-shrink-0" />
               <span style={{
                 fontSize: 10, color: '#D4AF37',
-                fontFamily: "'Be Vietnam Pro', sans-serif", fontWeight: 700,
+                fontFamily: "'Roboto', sans-serif", fontWeight: 700,
                 whiteSpace: 'nowrap',
               }}>
-                Huyết thống
+                Tắt huyết thống
               </span>
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={() => {
-                  setHighlightId(null);
-                  lastTapRef.current = null; // Reset double-tap khi tắt highlight thủ công
-                }}
-                className="ml-auto flex-shrink-0 rounded-lg p-0.5"
-                title="Tắt highlight"
-              >
-                <Minimize2 size={12} style={{ color: cardText }} />
-              </motion.button>
+              <Minimize2 size={12} style={{ color: cardText, marginLeft: 'auto' }} />
             </motion.div>
           )}
         </AnimatePresence>
