@@ -83,7 +83,7 @@ h1, h2, h3, h4, h5, h6, p, span, div, button, input, select, textarea,
 }
 
 .glass-dark {
-  background: rgba(15, 23, 36, 0.78);
+  background: rgba(17, 18, 20, 0.82);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -99,7 +99,7 @@ h1, h2, h3, h4, h5, h6, p, span, div, button, input, select, textarea,
 }
 
 .bottom-nav-glass-dark {
-  background: rgba(15, 23, 36, 0.88);
+  background: rgba(17, 18, 20, 0.92);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid rgba(45, 61, 82, 0.8);
