@@ -70,13 +70,23 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
+          'vendor-react':    ['react', 'react-dom'],
           'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/storage'],
-          'vendor-flow': ['reactflow', 'dagre'],
+          'vendor-flow':     ['reactflow', 'dagre'],
+          'vendor-motion':   ['framer-motion'],
         },
       },
     },
     minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,   // Xoá console.log khỏi production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.warn'],
+      },
+    },
     chunkSizeWarningLimit: 1000,
+    // Tách CSS ra file riêng để tải song song
+    cssCodeSplit: true,
   },
 });

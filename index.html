@@ -12,25 +12,41 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192.svg" />
     <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
-    <!-- Preconnect cho CDNs quan trọng (giảm FCP) -->
+
+    <!-- Preconnect sớm nhất có thể -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+
     <!-- Open Graph -->
     <meta property="og:title" content="Gia Phả Dòng Họ Lê" />
     <meta property="og:description" content="Gia phả số – Truyền thống · Đoàn kết · Phát triển" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://legia-2026.pages.dev" />
-    <!-- Canonical -->
     <link rel="canonical" href="https://legia-2026.pages.dev/" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Preload font để tránh FOIT, display=swap tránh blocking render -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" /></noscript>
+
+    <!-- Font: chỉ load 2 weight cần thiết, display=swap tránh block -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+
     <style>
-      * { font-family: 'Roboto', system-ui, -apple-system, sans-serif; }
+      /* Inline critical CSS — tránh FOUC và CLS */
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body, #root {
+        margin: 0; padding: 0;
+        height: 100%; width: 100%;
+        background: #f8fafc;
+        font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+        overscroll-behavior: none;
+      }
+      /* Skeleton màn hình loading — tránh CLS */
+      #root:empty::before {
+        content: '';
+        display: block;
+        width: 100%; height: 100%;
+        background: #f8fafc;
+      }
       .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-      body { margin: 0; background: #F8F9FA; overscroll-behavior: none; }
-      /* Safe area cho iPhone */
       .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
       .safe-top { padding-top: env(safe-area-inset-top); }
     </style>
