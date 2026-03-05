@@ -23,7 +23,7 @@ const emptyForm = {
   deathDate:'',deathDateLunar:'',deathPlace:'',
   burialAddress:'',burialMapLink:'',
   residence:'',fatherId:'',motherId:'',spouseId:'',
-  photoUrl:'',biography:'',
+  photoUrl:'',biography:'',eventNote:'',
 };
 
 export default function MemberForm({
@@ -83,6 +83,7 @@ export default function MemberForm({
         spouseId: editingMember.spouseId || '',
         photoUrl: editingMember.photoUrl || '',
         biography: editingMember.biography || '',
+        eventNote: editingMember.eventNote || '',
       });
     } else {
       setForm(emptyForm);
@@ -94,12 +95,30 @@ export default function MemberForm({
 
   if (!isOpen) return null;
 
+  // Kiểm tra form có thay đổi so với dữ liệu gốc không
+  const isDirty = (() => {
+    if (!editingMember) return Object.values(form).some(v => v !== '' && v !== 'chinh' && v !== 'Nam' && v !== '1');
+    return (
+      form.name !== (editingMember.name || '') ||
+      form.biography !== (editingMember.biography || '') ||
+      form.birthDate !== (editingMember.birthDate || '') ||
+      form.deathDate !== (editingMember.deathDate || '') ||
+      form.burialAddress !== (editingMember.burialAddress || editingMember.burialPlace || '') ||
+      form.burialMapLink !== (editingMember.burialMapLink || '')
+    );
+  })();
+
+  const safeClose = () => {
+    if (isDirty && !window.confirm('Bạn có thay đổi chưa lưu. Thoát mà không lưu?')) return;
+    onClose();
+  };
+
   const handleHeaderTouchStart = (e: React.TouchEvent) => {
     swipeStartY.current = e.touches[0].clientY;
   };
   const handleHeaderTouchEnd = (e: React.TouchEvent) => {
     const delta = e.changedTouches[0].clientY - swipeStartY.current;
-    if (delta > 80) onClose();
+    if (delta > 80) safeClose();
   };
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -149,6 +168,7 @@ export default function MemberForm({
       burialAddress: form.burialAddress || null,
       burialMapLink: form.burialMapLink || null,
       burialPlace: form.burialAddress || null,
+      eventNote: form.eventNote || null,
       id: editingMember?.id,
     });
   };
@@ -261,7 +281,7 @@ export default function MemberForm({
           </p>
         </div>
         <button
-          onClick={onClose}
+          onClick={safeClose}
           style={{
             background: 'rgba(255,255,255,0.18)',
             border: 'none', borderRadius: '50%',
@@ -485,6 +505,19 @@ export default function MemberForm({
                   ⚠️ Ngày giỗ âm lịch dùng để gửi thông báo nhắc nhở tự động
                 </p>
               </SectionBox>
+
+              {/* Ghi chú ngày giỗ */}
+              {form.deathDate && (
+                <SectionBox>
+                  <label style={lblStyle}>📝 Ghi chú ngày giỗ</label>
+                  <textarea
+                    style={{ ...inpStyle, minHeight: 80, resize: 'vertical' }}
+                    value={form.eventNote}
+                    onChange={e => set('eventNote', e.target.value)}
+                    placeholder="Ví dụ: Tổ chức tại nhà anh Lê Văn A, liên hệ 0901 234 567. Chuẩn bị mâm cỗ 10 người..."
+                  />
+                </SectionBox>
+              )}
             </div>
           )}
 

@@ -211,6 +211,66 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
             )}
           </div>
 
+          {/* ── BIỂU ĐỒ TUỔI THỌ THEO ĐỜI ── */}
+          {(() => {
+            const lifespanByGen = byGen.map(g => {
+              const withDates = members.filter(m =>
+                m.generation === g.gen && m.birthDate && m.deathDate
+              );
+              if (withDates.length === 0) return null;
+              const avg = withDates.reduce((sum, m) => {
+                const by = parseInt(m.birthDate!.slice(0, 4));
+                const dy = parseInt(m.deathDate!.slice(0, 4));
+                return sum + (dy - by);
+              }, 0) / withDates.length;
+              return { gen: g.gen, avg: Math.round(avg), count: withDates.length };
+            }).filter(Boolean) as { gen: number; avg: number; count: number }[];
+
+            if (lifespanByGen.length < 2) return null;
+            const maxAvg = Math.max(...lifespanByGen.map(g => g.avg), 1);
+
+            return (
+              <div style={{
+                marginTop: 20, padding: 18, borderRadius: 20,
+                background: cardBg, border: `1px solid ${border}`,
+                boxShadow: '0 2px 10px rgba(28,20,16,0.06)',
+              }}>
+                <p style={{ fontSize: 13, fontWeight: 800, color: textMain, marginBottom: 14, fontFamily: "'Roboto', sans-serif" }}>
+                  🕰️ Tuổi thọ trung bình theo đời
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {lifespanByGen.map(g => (
+                    <div key={g.gen}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: textSub, fontFamily: "'Roboto', sans-serif" }}>
+                          Đời {g.gen}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#CC0000', fontFamily: "'Roboto', sans-serif" }}>
+                          {g.avg} tuổi <span style={{ color: textSub, fontWeight: 400 }}>({g.count} người)</span>
+                        </span>
+                      </div>
+                      <div style={{ height: 10, borderRadius: 99, background: darkMode ? '#2d3748' : '#F3F4F6', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', borderRadius: 99,
+                          width: `${Math.round(g.avg / maxAvg * 100)}%`,
+                          background: g.avg >= 70
+                            ? 'linear-gradient(90deg, #16A34A, #22C55E)'
+                            : g.avg >= 50
+                            ? 'linear-gradient(90deg, #D97706, #F59E0B)'
+                            : 'linear-gradient(90deg, #CC0000, #EF4444)',
+                          transition: 'width 0.8s ease',
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: 11, color: textSub, marginTop: 10, fontStyle: 'italic', fontFamily: "'Roboto', sans-serif" }}>
+                  * Chỉ tính thành viên có đủ ngày sinh & ngày mất
+                </p>
+              </div>
+            );
+          })()}
+
           <div style={{ height: 16 }} />
         </div>
       </div>

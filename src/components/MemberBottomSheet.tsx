@@ -173,7 +173,7 @@ export default function MemberBottomSheet({
             <X size={18} color="white" />
           </motion.button>
 
-          {/* Nút QR & Sửa */}
+          {/* Nút QR & Sửa & Share */}
           <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 8 }}>
             <motion.button whileTap={{ scale: 0.9 }} onClick={handleQR}
               style={{
@@ -183,6 +183,26 @@ export default function MemberBottomSheet({
                 color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
               }}>
               <QrCode size={14} /> QR
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.9 }} onClick={() => {
+              const url = `${window.location.origin}${window.location.pathname}?member=${member.id}`;
+              if (navigator.share) {
+                navigator.share({ title: member.name, text: `Xem thông tin ${member.name} trong Gia Phả Dòng Họ Lê`, url });
+              } else {
+                navigator.clipboard.writeText(url);
+                // Show brief toast via alert (no state available here)
+                const btn = document.activeElement as HTMLButtonElement;
+                if (btn) btn.textContent = '✅ Đã chép!';
+                setTimeout(() => { if (btn) btn.innerHTML = '🔗 Chia sẻ'; }, 1500);
+              }
+            }}
+              style={{
+                background: 'rgba(0,0,0,0.35)', border: 'none',
+                borderRadius: 20, padding: '7px 12px',
+                display: 'flex', alignItems: 'center', gap: 5,
+                color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              }}>
+              🔗 Chia sẻ
             </motion.button>
             {isAdmin && (
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => onEdit(member)}
@@ -321,11 +341,17 @@ export default function MemberBottomSheet({
           </Section>
         )}
 
-        {/* Địa danh */}
-        {(member.residence || member.burialAddress || member.burialPlace) && (
+        {/* Địa danh — cư trú */}
+        {member.residence && (
           <Section title="📍 Địa danh" titleColor={greenTxt} bg={sectionGreen}>
             <Row label="Cư trú" value={member.residence} />
-            {(member.burialAddress || member.burialPlace) && (
+          </Section>
+        )}
+
+        {/* Mộ phần — luôn hiện với người đã mất */}
+        {member.deathDate && (
+          <Section title="⚰️ Mộ phần" titleColor={blueTxt} bg={sectionBlue}>
+            {(member.burialAddress || member.burialPlace) ? (
               <div style={{
                 display: 'flex', gap: 12,
                 paddingTop: 10, paddingBottom: 10,
@@ -337,7 +363,7 @@ export default function MemberBottomSheet({
                   display: 'flex', alignItems: 'center', gap: 4,
                   fontFamily: "'Roboto', sans-serif",
                 }}>
-                  <MapPin size={12} /> Mộ phần
+                  <MapPin size={12} /> Địa chỉ
                 </span>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontSize: 15, color: textMain, flex: 1, lineHeight: 1.5, fontFamily: "'Roboto', sans-serif" }}>
@@ -361,6 +387,13 @@ export default function MemberBottomSheet({
                   )}
                 </div>
               </div>
+            ) : (
+              <p style={{
+                fontSize: 13, color: textSub, fontStyle: 'italic',
+                padding: '8px 0', fontFamily: "'Roboto', sans-serif",
+              }}>
+                Chưa có thông tin mộ phần
+              </p>
             )}
           </Section>
         )}

@@ -135,10 +135,23 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
             alt={data.name}
             className="w-full h-full object-cover"
             loading="lazy"
+            onError={e => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
           />
-        ) : (
-          <span style={{ fontSize: 26 }}>{isMale ? '👨' : '👩'}</span>
-        )}
+        ) : null}
+        <span
+          style={{
+            fontSize: 26,
+            display: data.photoUrl ? 'none' : 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            width: '100%', height: '100%',
+          }}
+        >
+          {isMale ? '👨' : '👩'}
+        </span>
 
         {/* Icon nến — người đã mất */}
         {!isAlive && (
