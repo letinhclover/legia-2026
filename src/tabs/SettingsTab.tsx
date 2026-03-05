@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, LogIn, LogOut, BarChart2, Flame,
   ChevronRight, Download, Upload, FileSpreadsheet,
-  Map, FileText, Share2, Eye, EyeOff, GitMerge,
+  Map, FileText, Share2, Eye, EyeOff, GitMerge, Trash2,
 } from 'lucide-react';
 import { downloadGedcom, importFromGedcom } from '../utils/gedcom';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -23,13 +23,14 @@ interface Props {
   onShowMemorial:  () => void;
   onShowGraveMap:  () => void;
   onImportMembers: (data: Partial<Member>[]) => Promise<void>;
+  onDeleteAllMembers: () => Promise<void>;
   adminEmails:     string[];
 }
 
 export default function SettingsTab({
   user, isAdmin, isSuperAdmin = false, canEdit = false,
   members, onShowStats, onShowMemorial, onShowGraveMap,
-  onImportMembers, adminEmails, darkMode,
+  onImportMembers, onDeleteAllMembers, adminEmails, darkMode,
 }: Props) {
 
   // ── Design tokens — dark/light đồng bộ hoàn toàn ─────────────────────────
@@ -53,8 +54,20 @@ export default function SettingsTab({
   const [loginLoading, setLoginLoading] = useState(false);
   const [msg, setMsg]               = useState<{ text: string; ok: boolean } | null>(null);
   const [pdfProgress, setPdfProgress] = useState('');
+  const [deleteStep, setDeleteStep] = useState<0|1|2>(0); // 0=ẩn, 1=xác nhận lần 1, 2=đang xóa
   const excelImportRef = useRef<HTMLInputElement>(null);
   const gedcomImportRef = useRef<HTMLInputElement>(null);
+
+  const handleDeleteAll = async () => {
+    setDeleteStep(2);
+    try {
+      await onDeleteAllMembers();
+      showMsg('✅ Đã xóa toàn bộ thành viên!');
+    } catch {
+      showMsg('❌ Lỗi khi xóa!', false);
+    }
+    setDeleteStep(0);
+  };
 
   const showMsg = (text: string, ok = true) => {
     setMsg({ text, ok });
@@ -289,6 +302,89 @@ export default function SettingsTab({
             )}
           </div>
         </div>
+
+        {/* ── XÓA TOÀN BỘ — chỉ Super Admin ── */}
+        {isSuperAdmin && (
+          <div>
+            <SectionLabel>Vùng Nguy Hiểm</SectionLabel>
+            <div className="mx-4 rounded-2xl overflow-hidden"
+              style={{ background: darkMode ? '#1a0a0a' : '#FFF5F5', border: '1.5px solid #FCA5A5' }}>
+
+              <div className="px-4 py-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: darkMode ? '#2a1010' : '#FEE2E2' }}>
+                    <Trash2 size={18} color="#DC2626" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold" style={{ color: '#DC2626', fontFamily: "'Roboto', sans-serif" }}>
+                      Xóa toàn bộ thành viên
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: darkMode ? '#c0c0c0' : '#6B7280' }}>
+                      Không thể hoàn tác · Chỉ Super Admin
+                    </p>
+                  </div>
+                </div>
+
+                {deleteStep === 0 && (
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setDeleteStep(1)}
+                    className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                    style={{
+                      background: 'transparent',
+                      border: '1.5px solid #DC2626',
+                      color: '#DC2626',
+                      fontFamily: "'Roboto', sans-serif",
+                    }}
+                  >
+                    <Trash2 size={15} /> Xóa toàn bộ {members.length} thành viên
+                  </motion.button>
+                )}
+
+                {deleteStep === 1 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold text-center py-2 px-3 rounded-xl"
+                      style={{ background: darkMode ? '#2a1010' : '#FEE2E2', color: '#DC2626' }}>
+                      ⚠️ Bạn chắc chắn muốn xóa {members.length} thành viên?
+                    </p>
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setDeleteStep(0)}
+                        className="flex-1 py-3 rounded-xl font-bold text-sm"
+                        style={{
+                          background: darkMode ? '#1d1f21' : '#F3F4F6',
+                          color: darkMode ? '#c0c0c0' : '#374151',
+                          fontFamily: "'Roboto', sans-serif",
+                        }}
+                      >
+                        Hủy
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleDeleteAll}
+                        className="flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-1.5"
+                        style={{
+                          background: 'linear-gradient(135deg, #DC2626, #991B1B)',
+                          fontFamily: "'Roboto', sans-serif",
+                        }}
+                      >
+                        <Trash2 size={14} /> Xác nhận xóa
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
+
+                {deleteStep === 2 && (
+                  <div className="py-3 text-center text-sm font-bold" style={{ color: '#DC2626' }}>
+                    ⏳ Đang xóa dữ liệu…
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── QUẢN TRỊ VIÊN ── */}
         <div>
