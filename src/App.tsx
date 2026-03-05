@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
-import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
@@ -251,7 +251,6 @@ export default function App() {
   const maxGen = members.length > 0 ? Math.max(...members.map(m => m.generation || 1)) : 1;
 
   return (
-    <LazyMotion features={domAnimation} strict>
     <div className="fixed inset-0 flex flex-col"
       style={{ background: appBg, fontFamily: "'Roboto', sans-serif" }}>
 
@@ -503,6 +502,5 @@ export default function App() {
 
       <PWAInstallPrompt />
     </div>
-    </LazyMotion>
   );
 }
