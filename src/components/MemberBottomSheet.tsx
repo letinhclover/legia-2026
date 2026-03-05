@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Edit2, QrCode, X, MapPin, ExternalLink } from 'lucide-react';
 import { Member, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 
@@ -37,19 +37,19 @@ export default function MemberBottomSheet({
   if (!member) return null;
 
   // ── Màu theme ──────────────────────────────────────────────────────────────
-  const bg         = darkMode ? '#0f1724'   : '#ffffff';
-  const textMain   = darkMode ? '#E8DDD0'   : '#1C1410';
-  const textSub    = darkMode ? '#8A9BB0'   : '#6B5E52';
-  const border     = darkMode ? '#2d3d52'   : '#F0E8DC';
-  const cardBg     = darkMode ? '#1a2535'   : '#FFFFFF';
-  const sectionBlue   = darkMode ? '#0d1f3c' : '#EFF6FF';
+  const bg         = darkMode ? '#111214'   : '#ffffff';
+  const textMain   = darkMode ? '#f5f5f5'   : '#0b0b0b';
+  const textSub    = darkMode ? '#c0c0c0'   : '#3d3d3d';
+  const border     = darkMode ? '#2d3748'   : '#F0E8DC';
+  const cardBg     = darkMode ? '#1d1f21'   : '#FFFFFF';
+  const sectionBlue   = darkMode ? '#1a1c1e' : '#EFF6FF';
   const sectionGreen  = darkMode ? '#0f2a1a' : '#F0FDF4';
   const sectionPink   = darkMode ? '#2a0d1a' : '#FDF2F8';
-  const sectionGray   = darkMode ? '#141e2e' : '#F8F5F0';
+  const sectionGray   = darkMode ? '#1d1f21' : '#F8F5F0';
   const blueTxt    = darkMode ? '#93C5FD'   : '#1D4ED8';
   const greenTxt   = darkMode ? '#6EE7B7'   : '#166534';
   const pinkTxt    = darkMode ? '#F9A8D4'   : '#9D174D';
-  const grayTxt    = darkMode ? '#8A9BB0'   : '#6B5E52';
+  const grayTxt    = darkMode ? '#c0c0c0'   : '#3d3d3d';
 
   const find     = (id: string | null | undefined) => id ? members.find(m => m.id === id) ?? null : null;
   const father   = find(member.fatherId);
@@ -79,13 +79,13 @@ export default function MemberBottomSheet({
         <span style={{
           fontSize: 12, fontWeight: 700, color: textSub,
           width: 116, flexShrink: 0, textTransform: 'uppercase',
-          letterSpacing: '0.03em', fontFamily: "'Be Vietnam Pro', sans-serif",
+          letterSpacing: '0.03em', fontFamily: "'Roboto', sans-serif",
         }}>
           {label}
         </span>
         <span style={{
           fontSize: 15, color: textMain, flex: 1, lineHeight: 1.5,
-          fontFamily: "'Be Vietnam Pro', sans-serif",
+          fontFamily: "'Roboto', sans-serif",
         }}>
           {value}
         </span>
@@ -99,7 +99,7 @@ export default function MemberBottomSheet({
       <h4 style={{
         fontSize: 12, fontWeight: 800, color: titleColor,
         textTransform: 'uppercase', letterSpacing: '0.05em',
-        marginBottom: 6, fontFamily: "'Be Vietnam Pro', sans-serif",
+        marginBottom: 6, fontFamily: "'Roboto', sans-serif",
       }}>
         {title}
       </h4>
@@ -125,15 +125,15 @@ export default function MemberBottomSheet({
         <span style={{
           fontSize: 12, fontWeight: 700, color: textSub,
           width: 116, flexShrink: 0, textTransform: 'uppercase',
-          letterSpacing: '0.03em', fontFamily: "'Be Vietnam Pro', sans-serif",
+          letterSpacing: '0.03em', fontFamily: "'Roboto', sans-serif",
         }}>
           {label}
         </span>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <span style={{
             fontSize: 15, fontWeight: 700,
-            color: darkMode ? '#B8860B' : '#800000',
-            fontFamily: "'Be Vietnam Pro', sans-serif",
+            color: darkMode ? '#7A5A00' : '#CC0000',
+            fontFamily: "'Roboto', sans-serif",
             textDecoration: 'underline', textDecorationStyle: 'dotted',
           }}>
             {person.name}
@@ -160,7 +160,7 @@ export default function MemberBottomSheet({
           height: 112, width: '100%',
           background: isDeceased
             ? 'linear-gradient(135deg, #374151 0%, #1F2937 100%)'
-            : 'linear-gradient(135deg, #800000 0%, #4a0000 50%, #B8860B 100%)',
+            : 'linear-gradient(135deg, #CC0000 0%, #880000 50%, #B8860B 100%)',
         }}>
           {/* Nút đóng */}
           <motion.button whileTap={{ scale: 0.9 }} onClick={onClose}
@@ -210,7 +210,7 @@ export default function MemberBottomSheet({
               ? <img src={member.photoUrl} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : <div style={{
                   width: '100%', height: '100%',
-                  background: darkMode ? '#1e2d42' : '#E8DFCF',
+                  background: darkMode ? '#1d1f21' : '#E8DFCF',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 36,
                 }}>
@@ -239,7 +239,7 @@ export default function MemberBottomSheet({
         <div>
           <h2 style={{
             fontSize: 24, fontWeight: 900, color: textMain, lineHeight: 1.2,
-            fontFamily: "'Merriweather', serif",
+            fontFamily: "'Roboto', sans-serif",
           }}>
             {member.name}
           </h2>
@@ -257,9 +257,9 @@ export default function MemberBottomSheet({
             <div style={{
               display: 'inline-flex', alignItems: 'center', marginTop: 5,
               padding: '3px 10px', borderRadius: 999,
-              background: '#FFF3CD', color: '#B8860B',
+              background: '#FFF3CD', color: '#7A5A00',
               fontSize: 13, fontWeight: 800,
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}>
               {member.chucTuoc}
             </div>
@@ -271,7 +271,7 @@ export default function MemberBottomSheet({
               {
                 label: member.gender === 'Nam' ? '👨 Nam' : '👩 Nữ',
                 bg: member.gender === 'Nam'
-                  ? (darkMode ? '#0d1f3c' : '#DBEAFE')
+                  ? (darkMode ? '#1a1c1e' : '#DBEAFE')
                   : (darkMode ? '#2a0d1a' : '#FCE7F3'),
                 color: member.gender === 'Nam'
                   ? (darkMode ? '#93C5FD' : '#1D4ED8')
@@ -301,7 +301,7 @@ export default function MemberBottomSheet({
                 fontSize: 13, fontWeight: 700,
                 padding: '4px 12px', borderRadius: 999,
                 background: b.bg, color: b.color,
-                fontFamily: "'Be Vietnam Pro', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
               }}>
                 {b.label}
               </span>
@@ -335,12 +335,12 @@ export default function MemberBottomSheet({
                   fontSize: 12, fontWeight: 700, color: textSub,
                   width: 116, flexShrink: 0, textTransform: 'uppercase',
                   display: 'flex', alignItems: 'center', gap: 4,
-                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                 }}>
                   <MapPin size={12} /> Mộ phần
                 </span>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                  <span style={{ fontSize: 15, color: textMain, flex: 1, lineHeight: 1.5, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  <span style={{ fontSize: 15, color: textMain, flex: 1, lineHeight: 1.5, fontFamily: "'Roboto', sans-serif" }}>
                     {member.burialAddress || member.burialPlace}
                   </span>
                   {member.burialMapLink && (
@@ -353,7 +353,7 @@ export default function MemberBottomSheet({
                         padding: '6px 10px', borderRadius: 10,
                         textDecoration: 'none',
                         display: 'flex', alignItems: 'center', gap: 4,
-                        fontFamily: "'Be Vietnam Pro', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                       }}
                     >
                       <ExternalLink size={12} /> Maps
@@ -379,7 +379,7 @@ export default function MemberBottomSheet({
               <p style={{
                 fontSize: 12, fontWeight: 800, color: pinkTxt,
                 textTransform: 'uppercase', letterSpacing: '0.04em',
-                marginBottom: 10, fontFamily: "'Be Vietnam Pro', sans-serif",
+                marginBottom: 10, fontFamily: "'Roboto', sans-serif",
               }}>
                 Con cái ({children.length})
               </p>
@@ -404,7 +404,7 @@ export default function MemberBottomSheet({
                     <div style={{
                       width: 40, height: 40, borderRadius: 12,
                       overflow: 'hidden', flexShrink: 0,
-                      background: darkMode ? '#1e2d42' : '#E8DFCF',
+                      background: darkMode ? '#1d1f21' : '#E8DFCF',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 20,
                     }}>
@@ -416,11 +416,11 @@ export default function MemberBottomSheet({
                       <p style={{
                         fontSize: 15, fontWeight: 800, color: textMain,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        fontFamily: "'Be Vietnam Pro', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                       }}>
                         {c.name}
                       </p>
-                      <p style={{ fontSize: 13, color: textSub, marginTop: 1, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                      <p style={{ fontSize: 13, color: textSub, marginTop: 1, fontFamily: "'Roboto', sans-serif" }}>
                         {c.gender} ·{' '}
                         {c.birthDate ? new Date(c.birthDate).getFullYear() : '?'}
                         {c.deathDate ? ` — ${new Date(c.deathDate).getFullYear()}` : ''}
@@ -439,7 +439,7 @@ export default function MemberBottomSheet({
           <Section title="📝 Tiểu sử & Công trạng" titleColor={grayTxt} bg={sectionGray}>
             <p style={{
               fontSize: 15, color: textMain, lineHeight: 1.7,
-              whiteSpace: 'pre-line', fontFamily: "'Be Vietnam Pro', sans-serif",
+              whiteSpace: 'pre-line', fontFamily: "'Roboto', sans-serif",
             }}>
               {member.biography}
             </p>

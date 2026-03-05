@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Member } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
 
@@ -77,13 +77,13 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
   // ── Màu Neo-Traditional ─────────────────────────────────────────────────
   const accentColor = isMale ? '#1D3A6B' : '#8B2252';
   const accentLight = isMale
-    ? (isDark ? '#0d1f3c' : '#EEF2FF')
-    : (isDark ? '#2d0e20' : '#FFF0F6');
+    ? (isDark ? '#1a1c1e' : '#EEF2FF')
+    : (isDark ? '#2a0a1a' : '#FFF0F6');
 
-  const cardBg   = isDark ? '#1a2535' : '#FFFDF7';
-  const textMain = isDark ? '#E8DDD0' : '#1C1410';
-  const textSub  = isDark ? '#8A9BB0' : '#6B5E52';
-  const border   = isDark ? '#2d3d52' : '#E2D8CA';
+  const cardBg   = isDark ? '#1d1f21' : '#ffffff';
+  const textMain = isDark ? '#f5f5f5' : '#0b0b0b';
+  const textSub  = isDark ? '#c0c0c0' : '#3d3d3d';
+  const border   = isDark ? '#2d3748' : '#e2e8f0';
 
   // ── Shadow & highlight ──────────────────────────────────────────────────
   const cardShadow = data.highlighted
@@ -122,7 +122,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
     >
       <Handle
         type="target" position={Position.Top}
-        style={{ background: '#800000', width: 6, height: 6, border: 'none', top: 2 }}
+        style={{ background: '#CC0000', width: 6, height: 6, border: 'none', top: 2 }}
       />
 
       {/* ── AVATAR ── */}
@@ -154,9 +154,9 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
             className="absolute bottom-0 right-0 rounded-full flex items-center justify-center"
             style={{
               width: 17, height: 17,
-              background: isDark ? '#1a2535' : '#F5F0E8',
+              background: isDark ? '#1d1f21' : '#f8fafc',
               border: `1px solid ${border}`,
-              fontSize: 10,
+              fontSize: 12,
             }}
           >🕯️</div>
         )}
@@ -181,9 +181,9 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
           <span
             className="font-bold leading-tight text-center"
             style={{
-              fontSize: 10,
+              fontSize: 12,
               color: textMain,
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
               fontWeight: 700,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -196,7 +196,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
           </span>
           <span
             style={{
-              fontSize: 9,
+              fontSize: 11,
               color: textSub,
               fontWeight: 500,
               flexShrink: 0,
@@ -211,7 +211,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
         {data.chucTuoc && (
           <div
             className="truncate w-full px-1 mt-0.5"
-            style={{ fontSize: 8, color: '#B8860B', fontWeight: 600 }}
+            style={{ fontSize: 11, color: '#7A5A00', fontWeight: 600 }}
           >
             {data.chucTuoc}
           </div>
@@ -220,7 +220,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
         {/* ── NĂM SINH – NĂM MẤT + TUỔI ── */}
         <div
           className="flex items-center justify-center gap-1 mt-0.5"
-          style={{ fontSize: 9, color: textSub }}
+          style={{ fontSize: 11, color: textSub }}
         >
           <span style={{ whiteSpace: 'nowrap' }}>
             {birthY ? birthY : '????'}
@@ -228,7 +228,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
           </span>
           {isAlive && age !== null && (
             <span
-              style={{ color: accentColor, fontWeight: 700, fontSize: 8.5, whiteSpace: 'nowrap' }}
+              style={{ color: accentColor, fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap' }}
             >
               ({age}t)
             </span>
@@ -271,7 +271,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
 
       <Handle
         type="source" position={Position.Bottom}
-        style={{ background: '#800000', width: 6, height: 6, border: 'none', bottom: -3 }}
+        style={{ background: '#CC0000', width: 6, height: 6, border: 'none', bottom: -3 }}
       />
     </motion.div>
   );

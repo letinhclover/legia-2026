@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Member } from '../types';
 
 interface Props {
@@ -27,7 +27,7 @@ export default function MemberCard({ member, onClick, index = 0 }: Props) {
           className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center text-2xl"
           style={{
             background: isDeceased ? '#E5E7EB' : '#FFF3E0',
-            border: `2.5px solid ${member.gender === 'Nam' ? '#B8860B' : '#BE185D'}`,
+            border: `2.5px solid ${member.gender === 'Nam' ? '#7A5A00' : '#BE185D'}`,
             filter: isDeceased ? 'grayscale(60%)' : 'none',
           }}
         >
@@ -38,7 +38,7 @@ export default function MemberCard({ member, onClick, index = 0 }: Props) {
         {/* Badge đời */}
         <div
           className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white font-bold"
-          style={{ fontSize: 9, background: '#800000' }}
+          style={{ fontSize: 11, background: '#CC0000' }}
         >
           {member.generation}
         </div>
@@ -51,7 +51,7 @@ export default function MemberCard({ member, onClick, index = 0 }: Props) {
           <div className="text-xs text-gray-400 italic truncate">Húy: {member.tenHuy}</div>
         )}
         {member.chucTuoc && (
-          <div className="text-xs font-semibold truncate" style={{ color: '#B8860B' }}>{member.chucTuoc}</div>
+          <div className="text-xs font-semibold truncate" style={{ color: '#7A5A00' }}>{member.chucTuoc}</div>
         )}
         <div className="text-xs text-gray-400 mt-0.5">
           {birthYear && <span>🎂 {birthYear}</span>}

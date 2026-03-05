@@ -16,22 +16,22 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
   if (!member) return null;
 
   // ── Màu theme ─────────────────────────────────────────────────────────────
-  const bg       = darkMode ? '#0f1724'   : '#F5F0E8';
-  const cardBg   = darkMode ? '#1a2535'   : '#FFFDF7';
-  const textMain = darkMode ? '#E8DDD0'   : '#1C1410';
-  const textSub  = darkMode ? '#8A9BB0'   : '#6B5E52';
-  const border   = darkMode ? '#2d3d52'   : '#E2D8CA';
-  const divider  = darkMode ? '#1e2d42'   : '#F0E8DC';
+  const bg       = darkMode ? '#111214'   : '#f8fafc';
+  const cardBg   = darkMode ? '#1d1f21'   : '#ffffff';
+  const textMain = darkMode ? '#f5f5f5'   : '#0b0b0b';
+  const textSub  = darkMode ? '#c0c0c0'   : '#3d3d3d';
+  const border   = darkMode ? '#2d3748'   : '#e2e8f0';
+  const divider  = darkMode ? '#1d1f21'   : '#F0E8DC';
 
   // Section colors
-  const sectionDate   = darkMode ? '#0d1f3c' : '#EFF6FF';
+  const sectionDate   = darkMode ? '#1a1c1e' : '#EFF6FF';
   const sectionDateTxt = darkMode ? '#93C5FD' : '#1D4ED8';
   const sectionPlace  = darkMode ? '#0f2a1a' : '#F0FDF4';
   const sectionPlaceTxt = darkMode ? '#6EE7B7' : '#166534';
   const sectionFamily = darkMode ? '#2a0d1a' : '#FDF2F8';
   const sectionFamilyTxt = darkMode ? '#F9A8D4' : '#9D174D';
-  const sectionBio    = darkMode ? '#141e2e' : '#F8F5F0';
-  const sectionBioTxt = darkMode ? '#8A9BB0' : '#6B5E52';
+  const sectionBio    = darkMode ? '#1d1f21' : '#F8F5F0';
+  const sectionBioTxt = darkMode ? '#c0c0c0' : '#3d3d3d';
   const sectionName   = darkMode ? '#1a1500' : '#FFFBEB';
   const sectionNameTxt = darkMode ? '#FCD34D' : '#92400E';
 
@@ -63,11 +63,11 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
         <span style={{
           fontSize: 12, fontWeight: 700, color: textSub,
           width: 130, flexShrink: 0, textTransform: 'uppercase',
-          fontFamily: "'Be Vietnam Pro', sans-serif", letterSpacing: '0.03em',
+          fontFamily: "'Roboto', sans-serif", letterSpacing: '0.03em',
         }}>
           {label}
         </span>
-        <span style={{ fontSize: 15, color: textMain, fontFamily: "'Be Vietnam Pro', sans-serif", lineHeight: 1.5 }}>
+        <span style={{ fontSize: 15, color: textMain, fontFamily: "'Roboto', sans-serif", lineHeight: 1.5 }}>
           {value}
         </span>
       </div>
@@ -94,11 +94,11 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
           style={{
             background: isDeceased
               ? 'linear-gradient(135deg, #374151, #4B5563)'
-              : 'linear-gradient(135deg, #800000, #A00000)',
+              : 'linear-gradient(135deg, #CC0000, #dd2476)',
             borderRadius: '24px 24px 0 0',
           }}
         >
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'white', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'white', fontFamily: "'Roboto', sans-serif" }}>
             {isDeceased ? '🕯️ Hồ sơ thành viên' : '👤 Hồ sơ thành viên'}
           </h3>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -147,9 +147,9 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 84, height: 84, borderRadius: 18,
-              border: `3px solid ${isDeceased ? '#6B7280' : '#B8860B'}`,
+              border: `3px solid ${isDeceased ? '#6B7280' : '#7A5A00'}`,
               overflow: 'hidden', flexShrink: 0,
-              background: darkMode ? '#1e2d42' : '#E8DFCF',
+              background: darkMode ? '#1d1f21' : '#E8DFCF',
               boxShadow: darkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(28,20,16,0.15)',
             }}>
               {member.photoUrl
@@ -162,8 +162,8 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <h2 style={{
-                fontSize: 22, fontWeight: 900, color: '#800000',
-                fontFamily: "'Merriweather', serif", lineHeight: 1.2, marginBottom: 3,
+                fontSize: 22, fontWeight: 900, color: '#CC0000',
+                fontFamily: "'Roboto', sans-serif", lineHeight: 1.2, marginBottom: 3,
               }}>
                 {member.name}
               </h2>
@@ -173,7 +173,7 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
                 </p>
               )}
               {member.chucTuoc && (
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#B8860B', marginBottom: 2 }}>{member.chucTuoc}</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#7A5A00', marginBottom: 2 }}>{member.chucTuoc}</p>
               )}
               <p style={{ fontSize: 13, color: textSub }}>
                 {member.gender} · Đời thứ {member.generation}
@@ -181,10 +181,10 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
               {relation && (
                 <div style={{
                   display: 'inline-block', marginTop: 5,
-                  background: 'rgba(128,0,0,0.12)', color: '#800000',
+                  background: 'rgba(128,0,0,0.12)', color: '#CC0000',
                   fontSize: 13, fontWeight: 800,
                   padding: '3px 10px', borderRadius: 999,
-                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                 }}>
                   👥 {relation.label}
                 </div>
@@ -195,7 +195,7 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
           {/* Tên chữ / Tên Thụy */}
           {(member.tenTu || member.tenThuy) && (
             <div style={{ background: sectionName, borderRadius: 14, padding: 14 }}>
-              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionNameTxt, textTransform: 'uppercase', marginBottom: 8, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionNameTxt, textTransform: 'uppercase', marginBottom: 8, fontFamily: "'Roboto', sans-serif" }}>
                 📜 Tên chữ
               </h4>
               <Row label="Tự (Tên chữ)" value={member.tenTu} />
@@ -205,7 +205,7 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
 
           {/* Ngày sinh / Mất */}
           <div style={{ background: sectionDate, borderRadius: 14, padding: 14 }}>
-            <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionDateTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionDateTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Roboto', sans-serif" }}>
               📅 Ngày sinh & Ngày mất
             </h4>
             <Row label="Sinh (DL)"     value={member.birthDate ? new Date(member.birthDate).toLocaleDateString('vi-VN') : undefined} />
@@ -217,7 +217,7 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
           {/* Địa danh */}
           {(member.birthPlace || member.residence || (member.burialAddress || member.burialPlace) || member.deathPlace) && (
             <div style={{ background: sectionPlace, borderRadius: 14, padding: 14 }}>
-              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionPlaceTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionPlaceTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Roboto', sans-serif" }}>
                 📍 Địa danh
               </h4>
               <Row label="Nơi sinh"  value={member.birthPlace} />
@@ -230,10 +230,10 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
                     href={member.burialMapLink} target="_blank" rel="noreferrer"
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
-                      background: 'linear-gradient(135deg, #800000, #6B0000)',
+                      background: 'linear-gradient(135deg, #CC0000, #990000)',
                       color: 'white', textDecoration: 'none',
                       padding: '8px 14px', borderRadius: 10,
-                      fontSize: 13, fontWeight: 700, fontFamily: "'Be Vietnam Pro', sans-serif",
+                      fontSize: 13, fontWeight: 700, fontFamily: "'Roboto', sans-serif",
                     }}
                   >
                     🗺️ Xem trên Google Maps
@@ -245,7 +245,7 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
 
           {/* Gia đình */}
           <div style={{ background: sectionFamily, borderRadius: 14, padding: 14 }}>
-            <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionFamilyTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionFamilyTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Roboto', sans-serif" }}>
               👨‍👩‍👧 Gia đình
             </h4>
             <Row label="Cha" value={father?.name} />
@@ -256,11 +256,11 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
                 <span style={{
                   fontSize: 12, fontWeight: 700, color: textSub,
                   width: 130, flexShrink: 0, textTransform: 'uppercase',
-                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                 }}>
                   Con ({children.length})
                 </span>
-                <span style={{ fontSize: 15, color: textMain, lineHeight: 1.6, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                <span style={{ fontSize: 15, color: textMain, lineHeight: 1.6, fontFamily: "'Roboto', sans-serif" }}>
                   {children.map(c => c.name).join(' · ')}
                 </span>
               </div>
@@ -270,10 +270,10 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
           {/* Tiểu sử */}
           {member.biography && (
             <div style={{ background: sectionBio, borderRadius: 14, padding: 14, border: `1px solid ${border}` }}>
-              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionBioTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: sectionBioTxt, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em', fontFamily: "'Roboto', sans-serif" }}>
                 📝 Tiểu sử & Công trạng
               </h4>
-              <p style={{ fontSize: 15, color: textMain, whiteSpace: 'pre-line', lineHeight: 1.7, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              <p style={{ fontSize: 15, color: textMain, whiteSpace: 'pre-line', lineHeight: 1.7, fontFamily: "'Roboto', sans-serif" }}>
                 {member.biography}
               </p>
             </div>

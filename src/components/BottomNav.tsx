@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Network, Users, Calendar, Settings } from 'lucide-react';
 import VisitorCounter from './VisitorCounter';
 
@@ -84,9 +84,9 @@ export default function BottomNav({ active, onChange, darkMode = false }: Props)
               <span
                 className="font-semibold tracking-wide relative"
                 style={{
-                  fontSize: 9,
+                  fontSize: 11,
                   color: on ? activeColor : inactiveColor,
-                  fontFamily: "'Be Vietnam Pro', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   fontWeight: on ? 700 : 500,
                 }}
               >

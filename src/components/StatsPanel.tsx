@@ -9,12 +9,12 @@ interface Props {
 
 export default function StatsPanel({ members, onClose, darkMode = false }: Props) {
   // ── Màu theo theme ────────────────────────────────────────────────────────
-  const bg       = darkMode ? '#0f1724'   : '#F5F0E8';
-  const cardBg   = darkMode ? '#1a2535'   : '#FFFDF7';
-  const textMain = darkMode ? '#E8DDD0'   : '#1C1410';
-  const textSub  = darkMode ? '#8A9BB0'   : '#6B5E52';
-  const border   = darkMode ? '#2d3d52'   : '#E2D8CA';
-  const headerBg = 'linear-gradient(135deg, #800000, #A00000)';
+  const bg       = darkMode ? '#111214'   : '#f8fafc';
+  const cardBg   = darkMode ? '#1d1f21'   : '#ffffff';
+  const textMain = darkMode ? '#f5f5f5'   : '#0b0b0b';
+  const textSub  = darkMode ? '#c0c0c0'   : '#3d3d3d';
+  const border   = darkMode ? '#2d3748'   : '#e2e8f0';
+  const headerBg = 'linear-gradient(135deg, #CC0000, #dd2476)';
 
   // ── Thống kê ──────────────────────────────────────────────────────────────
   const alive    = members.filter(m => !m.deathDate).length;
@@ -34,7 +34,7 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
 
   // ── Card thống kê ─────────────────────────────────────────────────────────
   const statCards = [
-    { icon: <Users size={28} color="#800000" />, label: 'Tổng thành viên', value: members.length, accent: darkMode ? '#2a1010' : '#FEF2F2' },
+    { icon: <Users size={28} color="#CC0000" />, label: 'Tổng thành viên', value: members.length, accent: darkMode ? '#2a1010' : '#FEF2F2' },
     { icon: <UserCheck size={28} color="#16A34A" />, label: 'Còn sống', value: alive, accent: darkMode ? '#0f2a1a' : '#F0FDF4' },
     { icon: <span style={{ fontSize: 26 }}>🕯️</span>, label: 'Đã mất', value: deceased, accent: darkMode ? '#1a1a1a' : '#F3F4F6' },
     { icon: <Heart size={28} color="#EC4899" />, label: 'Cặp vợ chồng', value: Math.round(married), accent: darkMode ? '#2a0d1a' : '#FDF2F8' },
@@ -61,10 +61,10 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
           style={{ background: headerBg }}
         >
           <div>
-            <h3 style={{ fontFamily: "'Merriweather', serif", fontSize: 20, fontWeight: 900, color: 'white' }}>
+            <h3 style={{ fontFamily: "'Roboto', sans-serif", fontSize: 20, fontWeight: 900, color: 'white' }}>
               📊 Thống kê Dòng Họ
             </h3>
-            <p style={{ fontSize: 12, color: '#FCD34D', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            <p style={{ fontSize: 12, color: '#FCD34D', fontFamily: "'Roboto', sans-serif" }}>
               Gia Phả Dòng Họ Lê
             </p>
           </div>
@@ -100,11 +100,11 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
                 <div>
                   <div style={{
                     fontSize: 30, fontWeight: 900, color: textMain,
-                    fontFamily: "'Merriweather', serif", lineHeight: 1,
+                    fontFamily: "'Roboto', sans-serif", lineHeight: 1,
                   }}>
                     {c.value}
                   </div>
-                  <div style={{ fontSize: 13, color: textSub, marginTop: 2, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  <div style={{ fontSize: 13, color: textSub, marginTop: 2, fontFamily: "'Roboto', sans-serif" }}>
                     {c.label}
                   </div>
                 </div>
@@ -113,35 +113,35 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
           </div>
 
           {/* Nam / Nữ */}
-          <div style={{ background: darkMode ? '#0d1f3c' : '#EFF6FF', borderRadius: 18, padding: 16, border: `1px solid ${border}` }}>
+          <div style={{ background: darkMode ? '#1a1c1e' : '#EFF6FF', borderRadius: 18, padding: 16, border: `1px solid ${border}` }}>
             <h4 style={{
               fontWeight: 800, fontSize: 16,
               color: darkMode ? '#93C5FD' : '#1D4ED8',
               marginBottom: 14,
               display: 'flex', alignItems: 'center', gap: 8,
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}>
               <TrendingUp size={20} /> Tỷ lệ Nam / Nữ
             </h4>
             <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ fontSize: 36, fontWeight: 900, color: darkMode ? '#60A5FA' : '#1D4ED8', fontFamily: "'Merriweather', serif" }}>
+                <div style={{ fontSize: 36, fontWeight: 900, color: darkMode ? '#60A5FA' : '#1D4ED8', fontFamily: "'Roboto', sans-serif" }}>
                   {male}
                 </div>
-                <div style={{ fontSize: 14, color: textSub, marginTop: 2, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                <div style={{ fontSize: 14, color: textSub, marginTop: 2, fontFamily: "'Roboto', sans-serif" }}>
                   👨 Nam ({malePercent}%)
                 </div>
               </div>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ fontSize: 36, fontWeight: 900, color: darkMode ? '#F9A8D4' : '#BE185D', fontFamily: "'Merriweather', serif" }}>
+                <div style={{ fontSize: 36, fontWeight: 900, color: darkMode ? '#F9A8D4' : '#BE185D', fontFamily: "'Roboto', sans-serif" }}>
                   {female}
                 </div>
-                <div style={{ fontSize: 14, color: textSub, marginTop: 2, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                <div style={{ fontSize: 14, color: textSub, marginTop: 2, fontFamily: "'Roboto', sans-serif" }}>
                   👩 Nữ ({femalePercent}%)
                 </div>
               </div>
             </div>
-            <div style={{ height: 12, background: darkMode ? '#1e2d42' : '#E0E7FF', borderRadius: 999, overflow: 'hidden' }}>
+            <div style={{ height: 12, background: darkMode ? '#1d1f21' : '#E0E7FF', borderRadius: 999, overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
                 background: 'linear-gradient(90deg, #1D4ED8, #60A5FA)',
@@ -158,7 +158,7 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
               fontWeight: 800, fontSize: 16,
               color: darkMode ? '#FCD34D' : '#92400E',
               marginBottom: 14,
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}>
               📜 Phân bổ theo đời
             </h4>
@@ -168,18 +168,18 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
                   <div style={{
                     fontSize: 14, fontWeight: 700,
                     color: textSub, width: 52, flexShrink: 0,
-                    fontFamily: "'Be Vietnam Pro', sans-serif",
+                    fontFamily: "'Roboto', sans-serif",
                   }}>
                     Đời {g.gen}
                   </div>
                   <div style={{
                     flex: 1, height: 28, borderRadius: 999,
-                    background: darkMode ? '#1e2d42' : '#FEF3C7',
+                    background: darkMode ? '#1d1f21' : '#FEF3C7',
                     overflow: 'hidden', position: 'relative',
                   }}>
                     <div style={{
                       height: '100%',
-                      background: 'linear-gradient(90deg, #800000, #B8860B)',
+                      background: 'linear-gradient(90deg, #CC0000, #B8860B)',
                       borderRadius: 999,
                       width: `${members.length > 0 ? Math.round(g.count / members.length * 100) : 0}%`,
                       transition: 'width 0.5s ease',
@@ -202,7 +202,7 @@ export default function StatsPanel({ members, onClose, darkMode = false }: Props
                 marginTop: 12, fontSize: 13, padding: '8px 12px',
                 background: darkMode ? 'rgba(255,200,0,0.08)' : '#FEF3C7',
                 borderRadius: 10, color: darkMode ? '#FCD34D' : '#92400E',
-                fontFamily: "'Be Vietnam Pro', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
               }}>
                 Tổng cộng {maxGen} đời — đời đông nhất: Đời{' '}
                 <strong>{[...byGen].sort((a, b) => b.count - a.count)[0]?.gen}</strong>{' '}

@@ -4,7 +4,7 @@
  * + Nút bật thông báo Push
  */
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Bell, BellOff, X, ChevronRight } from 'lucide-react';
 import { Member } from '../types';
 import {
@@ -30,10 +30,10 @@ export default function NotificationBanner({ members, darkMode, onSelectMember }
   const [currentIdx, setCurrentIdx] = useState(0);
 
   // Theme
-  const bg     = darkMode ? '#1a2535' : '#FFFDF7';
-  const border = darkMode ? '#2d3d52' : '#E2D8CA';
-  const textM  = darkMode ? '#E8DDD0' : '#1C1410';
-  const textS  = darkMode ? '#8A9BB0' : '#6B5E52';
+  const bg     = darkMode ? '#1d1f21' : '#ffffff';
+  const border = darkMode ? '#2d3748' : '#e2e8f0';
+  const textM  = darkMode ? '#f5f5f5' : '#0b0b0b';
+  const textS  = darkMode ? '#c0c0c0' : '#3d3d3d';
 
   useEffect(() => {
     if (members.length === 0) return;
@@ -71,10 +71,10 @@ export default function NotificationBanner({ members, darkMode, onSelectMember }
   const evt = events[currentIdx];
   const isToday = evt.daysLeft === 0;
   const isTomorrow = evt.daysLeft === 1;
-  const accentColor = evt.type === 'death' ? '#800000' : '#1D4ED8';
+  const accentColor = evt.type === 'death' ? '#CC0000' : '#1D4ED8';
   const accentBg    = evt.type === 'death'
     ? (darkMode ? '#2a0808' : '#FEF2F2')
-    : (darkMode ? '#0d1f3c' : '#EFF6FF');
+    : (darkMode ? '#1a1c1e' : '#EFF6FF');
 
   return (
     <>
@@ -108,14 +108,14 @@ export default function NotificationBanner({ members, darkMode, onSelectMember }
           >
             <div style={{
               fontSize: 12, fontWeight: 800, color: accentColor,
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {evt.eventLabel} — {evt.member.name}
             </div>
             <div style={{
-              fontSize: 10, color: textS,
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontSize: 12, color: textS,
+              fontFamily: "'Roboto', sans-serif",
               display: 'flex', gap: 6, alignItems: 'center',
             }}>
               <span style={{ fontWeight: 700, color: isToday ? '#DC2626' : isTomorrow ? '#D97706' : textS }}>
@@ -123,7 +123,7 @@ export default function NotificationBanner({ members, darkMode, onSelectMember }
               </span>
               {evt.lunar && <span>· Âm: {evt.lunar}</span>}
               {events.length > 1 && (
-                <span style={{ color: textS, opacity: 0.6 }}>
+                <span style={{ color: textS, opacity: 1 }}>
                   · {currentIdx + 1}/{events.length}
                 </span>
               )}
@@ -139,10 +139,10 @@ export default function NotificationBanner({ members, darkMode, onSelectMember }
                 background: accentColor, color: 'white',
                 border: 'none', borderRadius: 8,
                 padding: '4px 8px',
-                fontSize: 10, fontWeight: 700,
+                fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', flexShrink: 0,
                 display: 'flex', alignItems: 'center', gap: 3,
-                fontFamily: "'Be Vietnam Pro', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
               }}
             >
               Xem <ChevronRight size={10} />
@@ -177,7 +177,7 @@ export default function NotificationBanner({ members, darkMode, onSelectMember }
               borderRadius: 20, padding: '16px 18px',
               boxShadow: '0 8px 32px rgba(28,20,16,0.18)',
               zIndex: 200,
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}
           >
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -195,7 +195,7 @@ export default function NotificationBanner({ members, darkMode, onSelectMember }
                     onClick={handleRequestPermission}
                     style={{
                       flex: 1, padding: '8px 0',
-                      background: 'linear-gradient(135deg, #800000, #5C0000)',
+                      background: 'linear-gradient(135deg, #CC0000, #990000)',
                       color: 'white', border: 'none', borderRadius: 12,
                       fontSize: 13, fontWeight: 700, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,

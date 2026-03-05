@@ -38,24 +38,24 @@ export default function MemberForm({
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Màu sắc Dark/Light ────────────────────────────────────────────────────
-  const bg         = darkMode ? '#0f1724'   : '#ffffff';
-  const cardBg     = darkMode ? '#1a2535'   : '#F8F5F0';
-  const textMain   = darkMode ? '#E8DDD0'   : '#1C1410';
-  const textSub    = darkMode ? '#8A9BB0'   : '#6B5E52';
-  const border     = darkMode ? '#2d3d52'   : '#E2D8CA';
+  const bg         = darkMode ? '#111214'   : '#ffffff';
+  const cardBg     = darkMode ? '#1d1f21'   : '#F8F5F0';
+  const textMain   = darkMode ? '#f5f5f5'   : '#0b0b0b';
+  const textSub    = darkMode ? '#c0c0c0'   : '#3d3d3d';
+  const border     = darkMode ? '#2d3748'   : '#e2e8f0';
   const inputBg    = darkMode ? '#0f1a28'   : '#FFFFFF';
   const inputBorder = darkMode ? '#3a4d63'  : '#D0C4B4';
-  const inputFocus = '#800000';
-  const sectionBg  = darkMode ? '#141e2e'   : '#F0EBE1';
-  const labelColor = darkMode ? '#8A9BB0'   : '#7A6A5E';
-  const tabActive  = darkMode ? '#1a2535'   : '#FFFFFF';
-  const tabInactive = darkMode ? '#0f1724'  : '#F0EBE1';
-  const tabActiveTxt = '#800000';
+  const inputFocus = '#CC0000';
+  const sectionBg  = darkMode ? '#1d1f21'   : '#F0EBE1';
+  const labelColor = darkMode ? '#c0c0c0'   : '#7A6A5E';
+  const tabActive  = darkMode ? '#1d1f21'   : '#FFFFFF';
+  const tabInactive = darkMode ? '#111214'  : '#F0EBE1';
+  const tabActiveTxt = '#CC0000';
   const tabInactiveTxt = darkMode ? '#6B7E96' : '#9C8E82';
   const dangerBg   = darkMode ? '#2a1010'   : '#FEF2F2';
   const warningBg  = darkMode ? '#2a1f08'   : '#FFFBEB';
   const successBg  = darkMode ? '#0f2a1a'   : '#F0FDF4';
-  const infoBg     = darkMode ? '#0d1f3c'   : '#EFF6FF';
+  const infoBg     = darkMode ? '#1a1c1e'   : '#EFF6FF';
 
   useEffect(() => {
     if (editingMember) {
@@ -200,7 +200,7 @@ export default function MemberForm({
     background: inputBg,
     color: textMain,
     fontSize: 16,
-    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontFamily: "'Roboto', sans-serif",
     outline: 'none',
     transition: 'border-color 0.2s',
   };
@@ -210,7 +210,7 @@ export default function MemberForm({
     fontWeight: 700,
     color: labelColor,
     marginBottom: 6,
-    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontFamily: "'Roboto', sans-serif",
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
   };
@@ -234,15 +234,15 @@ export default function MemberForm({
       <div
         className="flex justify-between items-center px-4 py-4 flex-shrink-0"
         style={{
-          background: 'linear-gradient(135deg, #800000, #A00000)',
+          background: 'linear-gradient(135deg, #CC0000, #dd2476)',
           borderRadius: '24px 24px 0 0',
         }}
       >
         <div>
-          <h3 style={{ fontFamily: "'Merriweather', serif", fontSize: 18, fontWeight: 900, color: 'white' }}>
+          <h3 style={{ fontFamily: "'Roboto', sans-serif", fontSize: 18, fontWeight: 900, color: 'white' }}>
             {editingMember ? '✏️ Sửa thông tin' : '➕ Thêm thành viên'}
           </h3>
-          <p style={{ fontSize: 12, color: '#FFD700', opacity: 0.85, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+          <p style={{ fontSize: 12, color: '#FFD700', opacity: 0.85, fontFamily: "'Roboto', sans-serif" }}>
             Gia Phả Dòng Họ Lê
           </p>
         </div>
@@ -276,10 +276,10 @@ export default function MemberForm({
               whiteSpace: 'nowrap',
               background: tab === t.id ? tabActive : 'transparent',
               color: tab === t.id ? tabActiveTxt : tabInactiveTxt,
-              borderBottom: tab === t.id ? '3px solid #800000' : '3px solid transparent',
+              borderBottom: tab === t.id ? '3px solid #CC0000' : '3px solid transparent',
               border: 'none',
               cursor: 'pointer',
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
               transition: 'all 0.15s',
             }}
           >
@@ -330,14 +330,14 @@ export default function MemberForm({
                       type="button" onClick={() => fileRef.current?.click()}
                       disabled={uploading}
                       style={{
-                        background: '#800000', color: 'white',
+                        background: '#CC0000', color: 'white',
                         padding: '10px 16px', borderRadius: 12,
                         fontSize: 14, fontWeight: 700,
                         display: 'flex', alignItems: 'center', gap: 8,
                         width: '100%', justifyContent: 'center',
                         border: 'none', cursor: uploading ? 'not-allowed' : 'pointer',
                         opacity: uploading ? 0.6 : 1,
-                        fontFamily: "'Be Vietnam Pro', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                       }}
                     >
                       {uploading ? <>⏳ {uploadProgress}</> : <><Camera size={16} /> Chọn ảnh</>}
@@ -433,7 +433,7 @@ export default function MemberForm({
                     </span>
                   </label>
                   <input
-                    style={{ ...inpStyle, background: darkMode ? '#0d1f3c' : '#EFF6FF' }}
+                    style={{ ...inpStyle, background: darkMode ? '#1a1c1e' : '#EFF6FF' }}
                     value={form.birthDateLunar}
                     onChange={e => set('birthDateLunar', e.target.value)}
                     placeholder="Tự động khi chọn dương lịch"
@@ -579,7 +579,7 @@ export default function MemberForm({
         <div style={{
           display: 'flex', gap: 12, padding: '14px 16px',
           borderTop: `1px solid ${border}`,
-          background: darkMode ? '#141e2e' : '#F8F5F0',
+          background: darkMode ? '#1d1f21' : '#F8F5F0',
           position: 'sticky', bottom: 0, zIndex: 10,
         }}>
           <button
@@ -594,7 +594,7 @@ export default function MemberForm({
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               border: 'none', cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(184,134,11,0.35)',
-              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}
           >
             <Save size={20} /> Lưu thông tin
