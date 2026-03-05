@@ -99,15 +99,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
   const opacity = data.dimmed ? 0.3 : 1;
   const filter  = (!isAlive || data.dimmed) ? 'grayscale(75%)' : 'none';
 
-  const displayName = (() => {
-    const full = data.name.trim();
-    const parts = full.split(' ');
-    if (full.length <= 13) return full;
-    const lastName  = parts[0]?.[0] ?? '';
-    const firstName = parts.slice(-1)[0] ?? '';
-    const midAbbr   = parts.length > 2 ? parts[1]?.[0] + '.' : '';
-    return `${lastName}.${midAbbr} ${firstName}`;
-  })();
+  const displayName = data.name.trim();
 
   const genLabel = `(${data.generation})`;
 
@@ -118,7 +110,7 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
       whileTap={{ scale: 0.93 }}
       transition={{ type: 'spring', stiffness: 380, damping: 22 }}
       className="relative flex flex-col items-center select-none"
-      style={{ width: 108, opacity, filter }}
+      style={{ width: 116, opacity, filter }}
     >
       <Handle
         type="target" position={Position.Top}
@@ -173,37 +165,27 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
           transition: 'box-shadow 0.2s',
         }}
       >
-        {/* TÊN + (ĐỜI) */}
+        {/* TÊN */}
         <div
-          className="flex items-baseline justify-center gap-0.5 px-0.5 w-full"
-          style={{ minHeight: 16 }}
+          className="flex flex-col items-center w-full px-1"
+          style={{ gap: 1 }}
         >
           <span
             className="font-bold leading-tight text-center"
             style={{
-              fontSize: 12,
+              fontSize: 11,
               color: textMain,
               fontFamily: "'Roboto', sans-serif",
               fontWeight: 700,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: 76,
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              lineHeight: 1.3,
+              width: '100%',
+              textAlign: 'center',
             }}
             title={data.name}
           >
             {displayName}
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              color: textSub,
-              fontWeight: 500,
-              flexShrink: 0,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {genLabel}
           </span>
         </div>
 
@@ -258,6 +240,10 @@ const FamilyNode = memo(function FamilyNode({ data }: FamilyNodeProps) {
               <HeartIcon size={16} color="#10B981" />
             </div>
           )}
+          {/* Số đời — cùng hàng tim */}
+          <span style={{ fontSize: 10, color: textSub, fontWeight: 600 }}>
+            {genLabel}
+          </span>
         </div>
 
         {/* Đường accent vàng khi highlighted */}
