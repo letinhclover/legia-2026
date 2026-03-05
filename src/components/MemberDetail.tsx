@@ -58,7 +58,7 @@ export default function MemberDetail({ member, members, onClose, onEdit, isAdmin
     value ? (
       <div style={{
         display: 'flex', gap: 10, paddingTop: 10, paddingBottom: 10,
-        borderBottom: `1px solid ${divider}',
+        borderBottom: `1px solid ${divider}`,
       }}>
         <span style={{
           fontSize: 12, fontWeight: 700, color: textSub,
