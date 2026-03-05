@@ -3,8 +3,8 @@ import { Node, Edge } from 'reactflow';
 import { Member } from '../types';
 
 // ── KÍCH THƯỚC NODE ────────────────────────────────────────────────────────
-export const NODE_W   = 108;   // rộng hơn chút để tên không xuống hàng
-export const NODE_H   = 148;
+export const NODE_W   = 116;   // rộng hơn để tên đủ chỗ
+export const NODE_H   = 160;   // cao hơn để tên 2 dòng không bị cắt
 const SPOUSE_GAP      = 16;    // khoảng cách giữa vợ chồng
 const RANK_SEP        = 110;   // khoảng cách giữa các đời (dọc)
 const NODE_SEP        = 52;    // khoảng cách giữa các cụm (ngang)
