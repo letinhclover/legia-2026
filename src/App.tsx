@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useState, useCallback, lazy } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -445,7 +445,6 @@ export default function App() {
             )}
           </motion.div>
         </AnimatePresence>
-        </Suspense>
       </div>
 
       {/* ── Bottom Nav ── */}
