@@ -6,7 +6,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Plus, Minimize2, RefreshCw } from 'lucide-react';
-import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
 import FamilyNode from '../components/FamilyNode';
 import { buildFamilyLayout } from '../utils/layout';

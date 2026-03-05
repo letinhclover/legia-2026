@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Bell, X, RefreshCw } from 'lucide-react';
 import { Member } from '../types';
 
