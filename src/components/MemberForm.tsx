@@ -34,6 +34,8 @@ export default function MemberForm({
   const [tab, setTab]   = useState<'basic'|'dates'|'places'|'relations'|'bio'>('basic');
   const [uploading, setUploading]         = useState(false);
   const [uploadError, setUploadError]     = useState('');
+  const headerRef = useRef<HTMLDivElement>(null);
+  const swipeStartY = useRef(0);
   const [uploadProgress, setUploadProgress] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -91,6 +93,14 @@ export default function MemberForm({
   }, [editingMember, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleHeaderTouchStart = (e: React.TouchEvent) => {
+    swipeStartY.current = e.touches[0].clientY;
+  };
+  const handleHeaderTouchEnd = (e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientY - swipeStartY.current;
+    if (delta > 80) onClose();
+  };
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -232,10 +242,14 @@ export default function MemberForm({
 
       {/* Header */}
       <div
+        ref={headerRef}
+        onTouchStart={handleHeaderTouchStart}
+        onTouchEnd={handleHeaderTouchEnd}
         className="flex justify-between items-center px-4 py-4 flex-shrink-0"
         style={{
           background: 'linear-gradient(135deg, #CC0000, #dd2476)',
           borderRadius: '24px 24px 0 0',
+          touchAction: 'pan-y',
         }}
       >
         <div>
