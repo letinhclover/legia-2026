@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
@@ -8,18 +8,18 @@ import { Member, AuthUser } from './types';
 
 import BottomNav, { TabId } from './components/BottomNav';
 import BottomSheet from './components/BottomSheet';
-import MemberBottomSheet from './components/MemberBottomSheet';
-import MemberForm from './components/MemberForm';
-import StatsPanel from './components/StatsPanel';
-import MemorialPage from './components/MemorialPage';
-import GraveMap from './components/GraveMap';
+const MemberBottomSheet = lazy(() => import('./components/MemberBottomSheet'));
+const MemberForm = lazy(() => import('./components/MemberForm'));
+const StatsPanel = lazy(() => import('./components/StatsPanel'));
+const MemorialPage = lazy(() => import('./components/MemorialPage'));
+const GraveMap = lazy(() => import('./components/GraveMap'));
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import NotificationBanner from './components/NotificationBanner';
 
-import TreeTab from './tabs/TreeTab';
-import DirectoryTab from './tabs/DirectoryTab';
-import EventsTab from './tabs/EventsTab';
-import SettingsTab from './tabs/SettingsTab';
+const TreeTab = lazy(() => import('./tabs/TreeTab'));
+const DirectoryTab = lazy(() => import('./tabs/DirectoryTab'));
+const EventsTab = lazy(() => import('./tabs/EventsTab'));
+const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
 
 const SUPER_ADMIN_EMAILS = ['letinhclover@gmail.com'];
 const EDITOR_EMAILS      = ['quanlylegia2026@gmail.com'];
@@ -251,6 +251,7 @@ export default function App() {
   const maxGen = members.length > 0 ? Math.max(...members.map(m => m.generation || 1)) : 1;
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <div className="fixed inset-0 flex flex-col"
       style={{ background: appBg, fontFamily: "'Roboto', sans-serif" }}>
 
@@ -349,7 +350,7 @@ export default function App() {
               <div
                 className="font-black rounded-full flex-shrink-0"
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   padding: '3px 9px',
                   whiteSpace: 'nowrap',
                   ...(isSuperAdmin
@@ -445,6 +446,7 @@ export default function App() {
             )}
           </motion.div>
         </AnimatePresence>
+        </Suspense>
       </div>
 
       {/* ── Bottom Nav ── */}
@@ -501,5 +503,6 @@ export default function App() {
 
       <PWAInstallPrompt />
     </div>
+    </LazyMotion>
   );
 }

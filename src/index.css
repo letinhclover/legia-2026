@@ -16,8 +16,8 @@
   /* Màu chủ đạo */
   --color-primary:     #CC0000;   /* Đỏ tươi */
   --color-primary-dk:  #990000;
-  --color-gold:        #B8860B;   /* Vàng antique */
-  --color-gold-lt:     #D4AF37;
+  --color-gold:        #7A5A00;   /* Vàng antique */
+  --color-gold-lt:     #A07800;
 
   /* Nền */
   --color-bg:          #f8fafc;   /* Trắng xanh nhạt như HTML mẫu */
@@ -27,9 +27,9 @@
 
   /* Chữ */
   --color-text:        #0b0b0b;
-  --color-text-sub:    #555555;
+  --color-text-sub:    #3d3d3d;
   --color-text-dk:     #f5f5f5;
-  --color-text-sub-dk: #aaaaaa;
+  --color-text-sub-dk: #c0c0c0;
 
   /* Border */
   --color-border:      #e2e8f0;
