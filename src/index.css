@@ -5,8 +5,7 @@
    v17 — Redesign hoàn toàn
 ════════════════════════════════════════════════════ */
 
-/* 1. GOOGLE FONTS — Roboto */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+/* Font Roboto được load trong index.html */
 
 @tailwind base;
 @tailwind components;
