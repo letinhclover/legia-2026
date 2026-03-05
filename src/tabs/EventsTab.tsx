@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Bell, X, RefreshCw } from 'lucide-react';
 import { Member } from '../types';
 
@@ -61,7 +61,7 @@ function EventCard({ ev, onSelect, isDark }: { ev: Evt; onSelect: () => void; is
   const cardBg   = isDark ? '#1e2a3a' : 'white';
   const textMain = isDark ? '#f1f5f9' : '#111827';
   const textSub  = isDark ? '#64748b' : '#9CA3AF';
-  const border   = isDark ? '#2d3d52' : '#F3F4F6';
+  const border   = isDark ? '#2d3748' : '#F3F4F6';
 
   const urgencyColor = ev.daysLeft === 0 ? '#EF4444' : ev.daysLeft <= 3 ? '#F97316' : ev.daysLeft <= 7 ? '#D97706' : '#6B7280';
   const dispDate = `${ev.day}/${ev.month + 1}`;
@@ -107,7 +107,7 @@ function EventCard({ ev, onSelect, isDark }: { ev: Evt; onSelect: () => void; is
           {ordinalInfo && <p className="text-xs font-semibold" style={{ color: ev.type === 'death' ? '#D97706' : '#2563EB' }}>{ordinalInfo}</p>}
           {lifespanInfo && <p className="text-xs" style={{ color: textSub }}>{lifespanInfo}</p>}
           {ev.lunar
-            ? <p className="text-xs" style={{ color: '#B8860B' }}>🌙 {ev.lunar} Âm lịch</p>
+            ? <p className="text-xs" style={{ color: '#7A5A00' }}>🌙 {ev.lunar} Âm lịch</p>
             : <p className="text-xs" style={{ color: textSub }}>📅 {dispDate} Dương lịch</p>
           }
         </div>
@@ -159,11 +159,11 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
   }, [pullDelta]);
 
   // Theme
-  const bg       = darkMode ? '#0f1724' : '#F9FAFB';
+  const bg       = darkMode ? '#111214' : '#F9FAFB';
   const cardBg   = darkMode ? '#1e2a3a' : 'white';
   const textMain = darkMode ? '#f1f5f9' : '#111827';
   const textSub  = darkMode ? '#64748b' : '#6B7280';
-  const border   = darkMode ? '#2d3d52' : '#F3F4F6';
+  const border   = darkMode ? '#2d3748' : '#F3F4F6';
   const headerBg = darkMode ? '#1a2030' : 'white';
 
   const events  = useMemo(() => buildEvents(members, today), [members, today]);
@@ -241,9 +241,9 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
             style={{ background: darkMode ? '#1a2030' : 'white' }}
           >
             <motion.div animate={refreshing ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 0.7, linear: true }}>
-              <RefreshCw size={14} color="#800000" />
+              <RefreshCw size={14} color="#CC0000" />
             </motion.div>
-            <span style={{ fontSize: 12, color: '#800000', fontWeight: 700 }}>
+            <span style={{ fontSize: 12, color: '#CC0000', fontWeight: 700 }}>
               {refreshing ? 'Đang tải lại...' : pullDelta > 60 ? 'Thả để tải lại' : 'Kéo xuống để tải lại'}
             </span>
           </motion.div>
@@ -255,8 +255,8 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold" style={{ color: textMain }}>Lịch Dòng Họ Lê</h2>
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl" style={{ background: darkMode ? '#2d1a1a' : '#FEF3C7' }}>
-            <Bell size={13} style={{ color: '#800000' }} />
-            <span className="text-xs font-bold" style={{ color: '#800000' }}>{events.length} sự kiện</span>
+            <Bell size={13} style={{ color: '#CC0000' }} />
+            <span className="text-xs font-bold" style={{ color: '#CC0000' }}>{events.length} sự kiện</span>
           </div>
         </div>
       </div>
@@ -269,13 +269,13 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
           <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: border }}>
             <motion.button whileTap={{ scale: 0.85 }} onClick={prevMonth}
               className="w-8 h-8 flex items-center justify-center rounded-full"
-              style={{ background: darkMode ? '#2d3d52' : '#F3F4F6' }}>
+              style={{ background: darkMode ? '#2d3748' : '#F3F4F6' }}>
               <ChevronLeft size={17} style={{ color: textMain }} />
             </motion.button>
             <p className="font-bold" style={{ color: textMain }}>{MONTHS_VN[cal.m]}, {cal.y}</p>
             <motion.button whileTap={{ scale: 0.85 }} onClick={nextMonth}
               className="w-8 h-8 flex items-center justify-center rounded-full"
-              style={{ background: darkMode ? '#2d3d52' : '#F3F4F6' }}>
+              style={{ background: darkMode ? '#2d3748' : '#F3F4F6' }}>
               <ChevronRight size={17} style={{ color: textMain }} />
             </motion.button>
           </div>
@@ -302,7 +302,7 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
                   <div
                     className="w-8 h-8 flex items-center justify-center rounded-full font-semibold text-sm transition-all"
                     style={{
-                      background: isSelected ? '#800000' : isToday ? `${darkMode ? '#ff3333' : '#800000'}22` : 'transparent',
+                      background: isSelected ? '#CC0000' : isToday ? `${darkMode ? '#ff3333' : '#CC0000'}22` : 'transparent',
                       color: isSelected ? 'white' : cell.cur ? textMain : (darkMode ? '#334155' : '#D1D5DB'),
                       cursor: cell.cur ? 'pointer' : 'default',
                     }}
@@ -313,7 +313,7 @@ export default function EventsTab({ members, onSelectMember, darkMode }: Props) 
                   {hasEvt && (
                     <div className="flex gap-0.5 absolute bottom-0.5">
                       {Array(Math.min(evtCount, 2)).fill(0).map((_, di) => (
-                        <div key={di} className="w-1.5 h-1.5 rounded-full" style={{ background: '#B8860B' }} />
+                        <div key={di} className="w-1.5 h-1.5 rounded-full" style={{ background: '#7A5A00' }} />
                       ))}
                     </div>
                   )}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Search, X, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { Member, MemberType, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
@@ -70,12 +70,12 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
   }, [pullDelta]);
 
   // Theme tokens
-  const bg       = darkMode ? '#0f1724' : '#F9FAFB';
+  const bg       = darkMode ? '#111214' : '#F9FAFB';
   const cardBg   = darkMode ? '#1e2a3a' : 'white';
   const headerBg = darkMode ? '#1a2030' : 'white';
   const textMain = darkMode ? '#f1f5f9' : '#111827';
   const textSub  = darkMode ? '#64748b' : '#6B7280';
-  const border   = darkMode ? '#2d3d52' : '#F3F4F6';
+  const border   = darkMode ? '#2d3748' : '#F3F4F6';
   const inputBg  = darkMode ? '#253040' : '#F3F4F6';
 
   const generations = useMemo(() =>
@@ -118,9 +118,9 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
             style={{ background: headerBg }}
           >
             <motion.div animate={refreshing ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 0.7, linear: true }}>
-              <RefreshCw size={14} color="#800000" />
+              <RefreshCw size={14} color="#CC0000" />
             </motion.div>
-            <span style={{ fontSize: 12, color: '#800000', fontWeight: 700, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            <span style={{ fontSize: 12, color: '#CC0000', fontWeight: 700, fontFamily: "'Roboto', sans-serif" }}>
               {refreshing ? 'Đang tải lại...' : pullDelta > 60 ? 'Thả để tải lại' : 'Kéo xuống để tải lại'}
             </span>
           </motion.div>
@@ -135,7 +135,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
             <motion.button whileTap={{ scale: 0.9 }}
               onClick={() => setShowFilter(v=>!v)}
               className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1"
-              style={{ background: hasFilter ? '#800000' : inputBg, color: hasFilter ? 'white' : textSub }}
+              style={{ background: hasFilter ? '#CC0000' : inputBg, color: hasFilter ? 'white' : textSub }}
             >
               <SlidersHorizontal size={13}/> {hasFilter ? 'Đang lọc' : 'Lọc'}
             </motion.button>
@@ -156,7 +156,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
             {(['all', ...generations] as const).map(g=>(
               <button key={g} onClick={()=>setGenFilter(g as any)}
                 className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all"
-                style={{ background: genFilter===g ? '#800000' : inputBg, color: genFilter===g ? 'white' : textSub }}>
+                style={{ background: genFilter===g ? '#CC0000' : inputBg, color: genFilter===g ? 'white' : textSub }}>
                 {g==='all' ? 'Tất cả' : `Đời ${g}`}
               </button>
             ))}
@@ -172,7 +172,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                   {(['all','Nam','Nữ'] as const).map(gv=>(
                     <button key={gv} onClick={()=>setGenderF(gv)}
                       className="flex-1 py-1.5 rounded-lg text-xs font-bold"
-                      style={{ background: genderF===gv ? '#800000' : inputBg, color: genderF===gv ? 'white' : textSub }}>
+                      style={{ background: genderF===gv ? '#CC0000' : inputBg, color: genderF===gv ? 'white' : textSub }}>
                       {gv==='all'?'Tất cả':gv==='Nam'?'👨 Nam':'👩 Nữ'}
                     </button>
                   ))}
@@ -181,7 +181,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                   {(['all','alive','deceased'] as const).map(sv=>(
                     <button key={sv} onClick={()=>setStatusF(sv)}
                       className="flex-1 py-1.5 rounded-lg text-xs font-bold"
-                      style={{ background: statusF===sv ? '#800000' : inputBg, color: statusF===sv ? 'white' : textSub }}>
+                      style={{ background: statusF===sv ? '#CC0000' : inputBg, color: statusF===sv ? 'white' : textSub }}>
                       {sv==='all'?'Tất cả':sv==='alive'?'💚 Sống':'🕯️ Đã mất'}
                     </button>
                   ))}
@@ -193,7 +193,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       <button key={tv} onClick={()=>setTypeF(tv)}
                         className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
                         style={{
-                          background: typeF===tv ? '#800000' : inputBg,
+                          background: typeF===tv ? '#CC0000' : inputBg,
                           color: typeF===tv ? 'white' : textSub,
                         }}>
                         {tv==='all' ? '👥 Tất cả' : MEMBER_TYPE_LABEL[tv]}
@@ -260,7 +260,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                           : initials(m.name)}
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white font-black border-2"
-                        style={{ fontSize:8, background:'#800000', borderColor: cardBg }}>
+                        style={{ fontSize:8, background:'#CC0000', borderColor: cardBg }}>
                         {m.generation}
                       </div>
                     </div>
@@ -285,7 +285,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                         </div>
                       </div>
                       {m.tenHuy && <p className="text-xs italic" style={{ color: textSub }}>Húy: {m.tenHuy}</p>}
-                      {m.chucTuoc && <p className="text-xs font-semibold" style={{ color:'#B8860B' }}>{m.chucTuoc}</p>}
+                      {m.chucTuoc && <p className="text-xs font-semibold" style={{ color:'#7A5A00' }}>{m.chucTuoc}</p>}
                       <div className="flex items-center gap-2 mt-0.5 text-xs" style={{ color: textSub }}>
                         {birthY && <span>🎂 {birthY}</span>}
                         {deathY  && <span>🕯️ {deathY}</span>}
@@ -304,7 +304,7 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-bl-2xl transition-colors"
                       style={{
-                        color: '#800000',
+                        color: '#CC0000',
                         borderColor: border,
                         background: 'transparent',
                       }}

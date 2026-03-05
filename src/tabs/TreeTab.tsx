@@ -6,7 +6,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Plus, Minimize2, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Member } from '../types';
 import FamilyNode from '../components/FamilyNode';
 import { buildFamilyLayout } from '../utils/layout';
@@ -222,7 +222,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
   const dotColor   = darkMode ? '#5C3A1E' : '#B8A07A';
   const cardBg     = darkMode ? '#1d1f21' : 'rgba(255,255,255,0.97)';
   const cardBorder = darkMode ? '#2d3748'              : '#e2e8f0';
-  const cardText   = darkMode ? '#aaaaaa'              : '#555555';
+  const cardText   = darkMode ? '#c0c0c0'              : '#3d3d3d';
 
   if (!ready || members.length === 0) return <TreeSkeleton dark={darkMode} />;
 
@@ -251,9 +251,9 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             }}
           >
             <motion.div animate={refreshing ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 0.7 }}>
-              <RefreshCw size={14} color="#B8860B" />
+              <RefreshCw size={14} color="#7A5A00" />
             </motion.div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#B8860B', fontFamily: "'Roboto', sans-serif" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#7A5A00', fontFamily: "'Roboto', sans-serif" }}>
               {refreshing ? 'Đang tải lại...' : pullDelta > 60 ? 'Thả để tải lại' : 'Kéo xuống để tải lại'}
             </span>
           </motion.div>
@@ -411,7 +411,7 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
             >
               <div className="w-3 h-3 rounded-full border-2 border-yellow-500 flex-shrink-0" />
               <span style={{
-                fontSize: 10, color: '#D4AF37',
+                fontSize: 12, color: '#D4AF37',
                 fontFamily: "'Roboto', sans-serif", fontWeight: 700,
                 whiteSpace: 'nowrap',
               }}>

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import {
   Shield, LogIn, LogOut, BarChart2, Flame,
   ChevronRight, Download, Upload, FileSpreadsheet,
@@ -33,15 +33,15 @@ export default function SettingsTab({
 }: Props) {
 
   // ── Design tokens — dark/light đồng bộ hoàn toàn ─────────────────────────
-  const bg        = darkMode ? '#0f1724' : '#F5F0E8';
-  const cardBg    = darkMode ? '#1a2535' : '#FFFDF7';
-  const headerBg  = darkMode ? '#141e2e' : '#FFFDF7';
-  const textMain  = darkMode ? '#E8DDD0' : '#1C1410';
-  const textSub   = darkMode ? '#6B7E96' : '#6B5E52';
-  const border    = darkMode ? '#2d3d52' : '#E2D8CA';
-  const divider   = darkMode ? '#1e2d42' : '#F0E8DC';
+  const bg        = darkMode ? '#111214' : '#f8fafc';
+  const cardBg    = darkMode ? '#1d1f21' : '#ffffff';
+  const headerBg  = darkMode ? '#1d1f21' : '#ffffff';
+  const textMain  = darkMode ? '#f5f5f5' : '#0b0b0b';
+  const textSub   = darkMode ? '#6B7E96' : '#3d3d3d';
+  const border    = darkMode ? '#2d3748' : '#e2e8f0';
+  const divider   = darkMode ? '#1d1f21' : '#F0E8DC';
   const inputBg   = darkMode ? '#0f1a28' : '#F0EBE1';
-  const inputBorder = darkMode ? '#2d3d52' : '#D8CCBB';
+  const inputBorder = darkMode ? '#2d3748' : '#D8CCBB';
   const secLabel  = darkMode ? '#4a6080' : '#9C8E82';
   const hoverBg   = darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
 
@@ -135,7 +135,7 @@ export default function SettingsTab({
   // ── Sub-components ────────────────────────────────────────────────────────
   const SectionLabel = ({ children }: { children: string }) => (
     <p className="text-xs font-bold uppercase px-4 mb-2 tracking-widest"
-      style={{ color: secLabel, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+      style={{ color: secLabel, fontFamily: "'Roboto', sans-serif" }}>
       {children}
     </p>
   );
@@ -164,7 +164,7 @@ export default function SettingsTab({
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold"
-          style={{ color: textMain, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+          style={{ color: textMain, fontFamily: "'Roboto', sans-serif" }}>
           {label}
         </div>
         {(sub || lockNote) && (
@@ -183,13 +183,13 @@ export default function SettingsTab({
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full overflow-y-auto"
-      style={{ background: bg, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+      style={{ background: bg, fontFamily: "'Roboto', sans-serif" }}>
 
       {/* Header */}
       <div className="flex-shrink-0 px-4 pt-5 pb-3 border-b"
         style={{ background: headerBg, borderColor: border }}>
         <h2 className="text-lg font-bold"
-          style={{ color: textMain, fontFamily: "'Merriweather', serif" }}>
+          style={{ color: textMain, fontFamily: "'Roboto', sans-serif" }}>
           Quản Trị & Cài Đặt
         </h2>
         <p className="text-xs mt-0.5" style={{ color: textSub }}>
@@ -202,13 +202,13 @@ export default function SettingsTab({
         {/* ── THỐNG KÊ NHANH ── */}
         <div className="px-4 grid grid-cols-3 gap-3">
           {[
-            { label: 'Thành viên', value: members.length, color: '#800000' },
+            { label: 'Thành viên', value: members.length, color: '#CC0000' },
             { label: 'Còn sống',   value: alive,          color: '#16A34A' },
-            { label: 'Mộ phần',    value: withGrave,      color: '#B8860B' },
+            { label: 'Mộ phần',    value: withGrave,      color: '#7A5A00' },
           ].map(s => (
             <div key={s.label} className="rounded-2xl p-3 text-center"
               style={{ background: cardBg, border: `1px solid ${border}`, boxShadow: '0 2px 8px rgba(28,20,16,0.06)' }}>
-              <div className="text-2xl font-black" style={{ color: s.color, fontFamily: "'Merriweather', serif" }}>
+              <div className="text-2xl font-black" style={{ color: s.color, fontFamily: "'Roboto', sans-serif" }}>
                 {s.value}
               </div>
               <div className="text-xs mt-0.5" style={{ color: textSub }}>{s.label}</div>
@@ -235,11 +235,11 @@ export default function SettingsTab({
           <SectionLabel>Công Cụ</SectionLabel>
           <div className="mx-4 rounded-2xl overflow-hidden"
             style={{ background: cardBg, border: `1px solid ${border}`, boxShadow: '0 2px 10px rgba(28,20,16,0.06)' }}>
-            <MenuItem icon={<BarChart2 size={18} color="#800000" />} label="Thống kê dòng họ" sub="Biểu đồ theo đời, nam/nữ" onClick={onShowStats} />
+            <MenuItem icon={<BarChart2 size={18} color="#CC0000" />} label="Thống kê dòng họ" sub="Biểu đồ theo đời, nam/nữ" onClick={onShowStats} />
             <Divider />
-            <MenuItem icon={<Flame size={18} color="#800000" />} label="Trang tưởng nhớ" sub="Tưởng nhớ người đã mất" onClick={onShowMemorial} />
+            <MenuItem icon={<Flame size={18} color="#CC0000" />} label="Trang tưởng nhớ" sub="Tưởng nhớ người đã mất" onClick={onShowMemorial} />
             <Divider />
-            <MenuItem icon={<Map size={18} color="#800000" />} label="Bản đồ mộ phần" sub={`${withGrave} mộ có địa chỉ · Chỉ đường Google Maps`} onClick={onShowGraveMap} />
+            <MenuItem icon={<Map size={18} color="#CC0000" />} label="Bản đồ mộ phần" sub={`${withGrave} mộ có địa chỉ · Chỉ đường Google Maps`} onClick={onShowGraveMap} />
           </div>
         </div>
 
@@ -267,7 +267,7 @@ export default function SettingsTab({
             )}
 
             {/* Xuất PDF */}
-            <MenuItem icon={<FileText size={18} color={isSuperAdmin ? '#800000' : '#9CA3AF'} />}
+            <MenuItem icon={<FileText size={18} color={isSuperAdmin ? '#CC0000' : '#9CA3AF'} />}
               label={pdfProgress || 'Xuất PDF in ấn'} sub="Phả đồ khổ lớn · Thiết kế đẹp để in"
               onClick={handleExportPDF} disabled={!isSuperAdmin} lockNote="Chỉ dành cho Super Admin" />
             <Divider />
@@ -304,12 +304,12 @@ export default function SettingsTab({
                 <div className="px-4 py-4 flex items-center gap-3"
                   style={{ borderBottom: `1px solid ${divider}` }}>
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: isSuperAdmin ? (darkMode ? '#0f2a1a' : '#dcfce7') : (darkMode ? '#0d1f3c' : '#dbeafe') }}>
+                    style={{ background: isSuperAdmin ? (darkMode ? '#0f2a1a' : '#dcfce7') : (darkMode ? '#1a1c1e' : '#dbeafe') }}>
                     <Shield size={20} style={{ color: isSuperAdmin ? '#16a34a' : '#2563eb' }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold"
-                      style={{ color: isSuperAdmin ? '#16a34a' : '#2563eb', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                      style={{ color: isSuperAdmin ? '#16a34a' : '#2563eb', fontFamily: "'Roboto', sans-serif" }}>
                       {isSuperAdmin ? '⭐ Super Admin' : '✏️ Biên tập viên'}
                     </div>
                     <div className="text-xs truncate mt-0.5" style={{ color: textSub }}>
@@ -331,7 +331,7 @@ export default function SettingsTab({
                   onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = darkMode ? '#2a1010' : '#FEF2F2')}
                   onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'transparent')}>
                   <LogOut size={18} />
-                  <span className="font-semibold text-sm" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  <span className="font-semibold text-sm" style={{ fontFamily: "'Roboto', sans-serif" }}>
                     Đăng xuất
                   </span>
                 </motion.button>
@@ -342,9 +342,9 @@ export default function SettingsTab({
               <div className="rounded-2xl p-5"
                 style={{ background: cardBg, border: `1px solid ${border}`, boxShadow: '0 2px 10px rgba(28,20,16,0.06)' }}>
                 <div className="flex items-center gap-2 mb-5">
-                  <Shield size={20} style={{ color: '#800000' }} />
+                  <Shield size={20} style={{ color: '#CC0000' }} />
                   <h3 className="font-bold text-base"
-                    style={{ color: textMain, fontFamily: "'Merriweather', serif" }}>
+                    style={{ color: textMain, fontFamily: "'Roboto', sans-serif" }}>
                     Đăng nhập Quản trị
                   </h3>
                 </div>
@@ -364,7 +364,7 @@ export default function SettingsTab({
                       style={{
                         background: inputBg, color: textMain,
                         border: `1.5px solid ${inputBorder}`,
-                        fontFamily: "'Be Vietnam Pro', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                         fontSize: 15,   // to hơn cho người già dễ nhìn
                       }}
                       placeholder="admin@example.com"
@@ -387,7 +387,7 @@ export default function SettingsTab({
                         style={{
                           background: inputBg, color: textMain,
                           border: `1.5px solid ${inputBorder}`,
-                          fontFamily: "'Be Vietnam Pro', sans-serif",
+                          fontFamily: "'Roboto', sans-serif",
                           fontSize: 15,
                         }}
                         placeholder="••••••••"
@@ -421,9 +421,9 @@ export default function SettingsTab({
                     disabled={loginLoading || !email || !pw}
                     className="w-full py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50 mt-1"
                     style={{
-                      background: 'linear-gradient(135deg, #800000, #5C0000)',
+                      background: 'linear-gradient(135deg, #CC0000, #990000)',
                       fontSize: 15,
-                      fontFamily: "'Be Vietnam Pro', sans-serif",
+                      fontFamily: "'Roboto', sans-serif",
                       boxShadow: '0 4px 14px rgba(128,0,0,0.3)',
                     }}>
                     <LogIn size={18} />
@@ -443,16 +443,16 @@ export default function SettingsTab({
           <div className="px-5 pt-5 pb-4 flex items-center gap-4"
             style={{ borderBottom: `1px solid ${divider}` }}>
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
-              style={{ background: 'linear-gradient(135deg, #800000 0%, #4a0000 60%, #B8860B 100%)' }}>
+              style={{ background: 'linear-gradient(135deg, #CC0000 0%, #880000 60%, #B8860B 100%)' }}>
               <span className="text-white text-2xl font-black"
-                style={{ fontFamily: "'Merriweather', serif" }}>Lê</span>
+                style={{ fontFamily: "'Roboto', sans-serif" }}>Lê</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-black text-base"
-                style={{ color: textMain, fontFamily: "'Merriweather', serif" }}>
+                style={{ color: textMain, fontFamily: "'Roboto', sans-serif" }}>
                 Gia Phả Dòng Họ Lê
               </p>
-              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#800000' }}>
+              <p className="text-[11px] font-bold mt-0.5" style={{ color: '#CC0000' }}>
                 v18 — Phiên bản thử nghiệm
               </p>
               <p className="text-[10px] mt-1" style={{ color: textSub }}>
@@ -475,7 +475,7 @@ export default function SettingsTab({
                 else navigator.clipboard.writeText(url).then(() => showMsg('✅ Đã sao chép link!'));
               }}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
-              style={{ background: '#800000', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              style={{ background: '#CC0000', fontFamily: "'Roboto', sans-serif" }}>
               <Share2 size={13} /> Chia sẻ
             </button>
           </div>
@@ -494,7 +494,7 @@ export default function SettingsTab({
               </div>
               <a href="https://zalo.me/0708312789" target="_blank" rel="noopener noreferrer"
                 className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white"
-                style={{ background: '#0068FF', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                style={{ background: '#0068FF', fontFamily: "'Roboto', sans-serif" }}>
                 <span>💬</span> Zalo
               </a>
             </div>
