@@ -8,18 +8,18 @@ import { Member, AuthUser } from './types';
 
 import BottomNav, { TabId } from './components/BottomNav';
 import BottomSheet from './components/BottomSheet';
-const MemberBottomSheet = lazy(() => import('./components/MemberBottomSheet'));
-const MemberForm = lazy(() => import('./components/MemberForm'));
-const StatsPanel = lazy(() => import('./components/StatsPanel'));
+import MemberBottomSheet from './components/MemberBottomSheet';
+import MemberForm from './components/MemberForm';
+const StatsPanel   = lazy(() => import('./components/StatsPanel'));
 const MemorialPage = lazy(() => import('./components/MemorialPage'));
-const GraveMap = lazy(() => import('./components/GraveMap'));
+const GraveMap     = lazy(() => import('./components/GraveMap'));
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import NotificationBanner from './components/NotificationBanner';
 
-const TreeTab = lazy(() => import('./tabs/TreeTab'));
+const TreeTab      = lazy(() => import('./tabs/TreeTab'));
 const DirectoryTab = lazy(() => import('./tabs/DirectoryTab'));
-const EventsTab = lazy(() => import('./tabs/EventsTab'));
-const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
+const EventsTab    = lazy(() => import('./tabs/EventsTab'));
+const SettingsTab  = lazy(() => import('./tabs/SettingsTab'));
 
 const SUPER_ADMIN_EMAILS = ['letinhclover@gmail.com'];
 const EDITOR_EMAILS      = ['quanlylegia2026@gmail.com'];
