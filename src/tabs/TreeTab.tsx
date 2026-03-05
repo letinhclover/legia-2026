@@ -5,7 +5,7 @@ import ReactFlow, {
   ReactFlowProvider, Node, Edge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Plus, Minimize2, RefreshCw } from 'lucide-react';
+import { Plus, Minimize2, RefreshCw, Search, X as XIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Member } from '../types';
 import FamilyNode from '../components/FamilyNode';
@@ -93,6 +93,9 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
   const [ready, setReady]             = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(initialHighlightId ?? null);
   const [refreshing, setRefreshing]   = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen]   = useState(false);
+  const [searchResults, setSearchResults] = useState<typeof members>([]);
   const lastTapRef = useRef<{ id: string; time: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -216,6 +219,26 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
       setPullDelta(0);
     }
   }, [pullDelta, fitView, onRefresh]);
+
+  // ── Search ───────────────────────────────────────────────────────────────
+  const handleSearch = useCallback((q: string) => {
+    setSearchQuery(q);
+    if (!q.trim()) { setSearchResults([]); return; }
+    const lower = q.toLowerCase();
+    setSearchResults(
+      members.filter(m =>
+        m.name.toLowerCase().includes(lower) ||
+        (m.tenHuy || '').toLowerCase().includes(lower)
+      ).slice(0, 6)
+    );
+  }, [members]);
+
+  const jumpToMember = useCallback((m: typeof members[0]) => {
+    setHighlightId(m.id);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchOpen(false);
+  }, []);
 
   // ── Màu sắc ─────────────────────────────────────────────────────────────
   const bgColor    = darkMode ? '#111214' : '#f8fafc';
@@ -449,6 +472,95 @@ function TreeInner({ members, filterGen, isAdmin, onNodeClick, onAddMember, dark
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* ── TÌM KIẾM — góc trên phải ── */}
+      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 20 }}>
+        <AnimatePresence>
+          {searchOpen ? (
+            <motion.div
+              initial={{ width: 44, opacity: 0.8 }}
+              animate={{ width: 220, opacity: 1 }}
+              exit={{ width: 44, opacity: 0 }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: cardBg, border: `1.5px solid ${cardBorder}`,
+                borderRadius: 16, padding: '8px 12px',
+                boxShadow: '0 4px 16px rgba(28,20,16,0.15)',
+                overflow: 'hidden',
+              }}
+            >
+              <Search size={16} color="#CC0000" style={{ flexShrink: 0 }} />
+              <input
+                autoFocus
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                placeholder="Tìm tên..."
+                style={{
+                  flex: 1, border: 'none', outline: 'none', background: 'transparent',
+                  fontSize: 13, color: cardText, fontFamily: "'Roboto', sans-serif",
+                  minWidth: 0,
+                }}
+              />
+              <button onClick={() => { setSearchOpen(false); handleSearch(''); }}>
+                <XIcon size={15} color={cardText} />
+              </button>
+            </motion.div>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setSearchOpen(true)}
+              style={{
+                width: 44, height: 44,
+                background: cardBg, border: `1.5px solid ${cardBorder}`,
+                borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 16px rgba(28,20,16,0.12)',
+                cursor: 'pointer',
+              }}
+            >
+              <Search size={20} color="#CC0000" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Kết quả tìm kiếm */}
+        <AnimatePresence>
+          {searchResults.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              style={{
+                position: 'absolute', top: 52, right: 0, width: 220,
+                background: cardBg, border: `1.5px solid ${cardBorder}`,
+                borderRadius: 16, overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(28,20,16,0.18)',
+              }}
+            >
+              {searchResults.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => jumpToMember(m)}
+                  style={{
+                    width: '100%', textAlign: 'left',
+                    padding: '10px 14px', borderBottom: `1px solid ${cardBorder}`,
+                    background: 'transparent', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', gap: 2,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = darkMode ? 'rgba(255,255,255,0.05)' : '#FFF5F5')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 700, color: cardText, fontFamily: "'Roboto', sans-serif" }}>
+                    {m.name}
+                  </span>
+                  <span style={{ fontSize: 11, color: darkMode ? '#6B7E96' : '#9C8E82' }}>
+                    Đời {m.generation} · {m.gender}
+                  </span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

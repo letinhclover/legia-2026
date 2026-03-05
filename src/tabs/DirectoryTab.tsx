@@ -256,7 +256,23 @@ export default function DirectoryTab({ members, onSelectMember, onEditMember, on
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br ${grad} overflow-hidden`}
                         style={{ filter: isDeceased ? 'grayscale(50%) brightness(0.8)' : 'none' }}>
                         {m.photoUrl
-                          ? <img src={cloudinaryThumb(m.photoUrl, 100)} alt={m.name} className="w-full h-full object-cover" loading="lazy"/>
+                          ? <img
+                              src={cloudinaryThumb(m.photoUrl, 100)}
+                              alt={m.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={e => {
+                                const el = e.currentTarget as HTMLImageElement;
+                                el.style.display = 'none';
+                                const parent = el.parentElement;
+                                if (parent) {
+                                  const span = document.createElement('span');
+                                  span.className = 'text-sm font-bold';
+                                  span.textContent = initials(m.name);
+                                  parent.appendChild(span);
+                                }
+                              }}
+                            />
                           : initials(m.name)}
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white font-black border-2"

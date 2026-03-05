@@ -126,6 +126,22 @@ function EventCard({ ev, onSelect, isDark }: { ev: Evt; onSelect: () => void; is
           </div>
         </div>
       </div>
+      {ev.type === 'death' && ev.member.eventNote && (
+        <div style={{
+          margin: '0 12px 10px',
+          padding: '8px 12px',
+          borderRadius: 10,
+          background: isDark ? '#1a1c1e' : '#FFFBEB',
+          borderLeft: '3px solid #D97706',
+        }}>
+          <p style={{ fontSize: 12, color: isDark ? '#FCD34D' : '#92400E', fontWeight: 600, marginBottom: 2 }}>
+            📝 Ghi chú ngày giỗ
+          </p>
+          <p style={{ fontSize: 12, color: isDark ? '#c0c0c0' : '#6B7280', lineHeight: 1.5 }}>
+            {ev.member.eventNote}
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 }
