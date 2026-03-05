@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { m as motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { Member, MemberType, MEMBER_TYPE_LABEL, MEMBER_TYPE_COLOR } from '../types';
 import { cloudinaryThumb } from '../utils/imageCompress';
