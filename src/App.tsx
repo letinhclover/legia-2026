@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
 import { Member, AuthUser } from './types';
@@ -214,10 +214,16 @@ export default function App() {
         const payload: any = { ...m };
         if (payload.birthYear)  payload.birthYear  = Number(payload.birthYear);
         if (payload.generation) payload.generation = Number(payload.generation);
+
+        // Dọn null/rỗng để không ghi đè quan hệ bằng null
+        Object.keys(payload).forEach(k => {
+          if (payload[k] === null || payload[k] === '') delete payload[k];
+        });
+
         if (payload.id) {
           const { id, ...rest } = payload;
-          try { await updateDoc(doc(db, 'members', id), rest); }
-          catch { await addDoc(collection(db, 'members'), { ...rest, createdAt: new Date().toISOString() }); }
+          // setDoc với merge: giữ nguyên ID gốc → quan hệ cha/mẹ/vợ chồng không bị mất
+          await setDoc(doc(db, 'members', id), { ...rest, updatedAt: new Date().toISOString() }, { merge: true });
         } else {
           await addDoc(collection(db, 'members'), { ...payload, createdAt: new Date().toISOString() });
         }
