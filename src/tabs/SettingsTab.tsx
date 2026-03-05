@@ -54,7 +54,8 @@ export default function SettingsTab({
   const [loginLoading, setLoginLoading] = useState(false);
   const [msg, setMsg]               = useState<{ text: string; ok: boolean } | null>(null);
   const [pdfProgress, setPdfProgress] = useState('');
-  const [deleteStep, setDeleteStep] = useState<0|1|2>(0); // 0=ẩn, 1=xác nhận lần 1, 2=đang xóa
+  const [deleteStep, setDeleteStep] = useState<0|1|2>(0);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const excelImportRef = useRef<HTMLInputElement>(null);
   const gedcomImportRef = useRef<HTMLInputElement>(null);
 
@@ -67,6 +68,7 @@ export default function SettingsTab({
       showMsg('❌ Lỗi khi xóa!', false);
     }
     setDeleteStep(0);
+    setDeleteConfirmText('');
   };
 
   const showMsg = (text: string, ok = true) => {
@@ -303,86 +305,83 @@ export default function SettingsTab({
           </div>
         </div>
 
-        {/* ── XÓA TOÀN BỘ — chỉ Super Admin ── */}
+        {/* ── XÓA TOÀN BỘ — chỉ Super Admin, ẩn cuối trang ── */}
         {isSuperAdmin && (
-          <div>
-            <SectionLabel>Vùng Nguy Hiểm</SectionLabel>
-            <div className="mx-4 rounded-2xl overflow-hidden"
-              style={{ background: darkMode ? '#1a0a0a' : '#FFF5F5', border: '1.5px solid #FCA5A5' }}>
+          <div className="mx-4 mb-2">
+            {deleteStep === 0 && (
+              <button
+                onClick={() => setDeleteStep(1)}
+                className="w-full py-2 text-xs font-medium rounded-xl"
+                style={{
+                  background: 'transparent',
+                  border: `1px dashed ${darkMode ? '#3a2020' : '#FECACA'}`,
+                  color: darkMode ? '#6b3030' : '#FCA5A5',
+                  fontFamily: "'Roboto', sans-serif",
+                  letterSpacing: '0.03em',
+                }}
+              >
+                Xóa toàn bộ dữ liệu…
+              </button>
+            )}
 
-              <div className="px-4 py-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: darkMode ? '#2a1010' : '#FEE2E2' }}>
-                    <Trash2 size={18} color="#DC2626" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold" style={{ color: '#DC2626', fontFamily: "'Roboto', sans-serif" }}>
-                      Xóa toàn bộ thành viên
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: darkMode ? '#c0c0c0' : '#6B7280' }}>
-                      Không thể hoàn tác · Chỉ Super Admin
-                    </p>
-                  </div>
+            {deleteStep === 1 && (
+              <div className="rounded-2xl p-4 space-y-3"
+                style={{ background: darkMode ? '#1a0a0a' : '#FFF5F5', border: '1px solid #FCA5A5' }}>
+                <p className="text-xs font-bold" style={{ color: '#DC2626' }}>
+                  ⚠️ Hành động này sẽ xóa vĩnh viễn {members.length} thành viên, không thể hoàn tác.
+                </p>
+                <p className="text-xs" style={{ color: darkMode ? '#c0c0c0' : '#6B7280' }}>
+                  Gõ chính xác cụm từ bên dưới để xác nhận:
+                </p>
+                <div className="text-xs font-black text-center py-2 px-3 rounded-lg select-all"
+                  style={{ background: darkMode ? '#2a1010' : '#FEE2E2', color: '#DC2626', letterSpacing: '0.08em' }}>
+                  XOA TOAN BO DU LIEU
                 </div>
-
-                {deleteStep === 0 && (
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={e => setDeleteConfirmText(e.target.value)}
+                  placeholder="Gõ lại cụm từ trên..."
+                  className="w-full px-3 py-2.5 rounded-xl text-sm focus:outline-none"
+                  style={{
+                    background: darkMode ? '#0f1a28' : '#fff',
+                    color: darkMode ? '#f5f5f5' : '#0b0b0b',
+                    border: `1.5px solid ${deleteConfirmText === 'XOA TOAN BO DU LIEU' ? '#DC2626' : (darkMode ? '#3a4d63' : '#D0C4B4')}`,
+                    fontFamily: "'Roboto', sans-serif",
+                  }}
+                  autoCorrect="off" autoCapitalize="characters" spellCheck={false}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setDeleteStep(0); setDeleteConfirmText(''); }}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold"
+                    style={{ background: darkMode ? '#1d1f21' : '#F3F4F6', color: darkMode ? '#c0c0c0' : '#374151' }}
+                  >
+                    Hủy
+                  </button>
                   <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setDeleteStep(1)}
-                    className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                    whileTap={deleteConfirmText === 'XOA TOAN BO DU LIEU' ? { scale: 0.97 } : {}}
+                    onClick={deleteConfirmText === 'XOA TOAN BO DU LIEU' ? handleDeleteAll : undefined}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 transition-opacity"
                     style={{
-                      background: 'transparent',
-                      border: '1.5px solid #DC2626',
-                      color: '#DC2626',
+                      background: 'linear-gradient(135deg, #DC2626, #991B1B)',
+                      opacity: deleteConfirmText === 'XOA TOAN BO DU LIEU' ? 1 : 0.35,
+                      cursor: deleteConfirmText === 'XOA TOAN BO DU LIEU' ? 'pointer' : 'not-allowed',
                       fontFamily: "'Roboto', sans-serif",
                     }}
                   >
-                    <Trash2 size={15} /> Xóa toàn bộ {members.length} thành viên
+                    <Trash2 size={13} /> Xóa vĩnh viễn
                   </motion.button>
-                )}
-
-                {deleteStep === 1 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-bold text-center py-2 px-3 rounded-xl"
-                      style={{ background: darkMode ? '#2a1010' : '#FEE2E2', color: '#DC2626' }}>
-                      ⚠️ Bạn chắc chắn muốn xóa {members.length} thành viên?
-                    </p>
-                    <div className="flex gap-2">
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => setDeleteStep(0)}
-                        className="flex-1 py-3 rounded-xl font-bold text-sm"
-                        style={{
-                          background: darkMode ? '#1d1f21' : '#F3F4F6',
-                          color: darkMode ? '#c0c0c0' : '#374151',
-                          fontFamily: "'Roboto', sans-serif",
-                        }}
-                      >
-                        Hủy
-                      </motion.button>
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
-                        onClick={handleDeleteAll}
-                        className="flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-1.5"
-                        style={{
-                          background: 'linear-gradient(135deg, #DC2626, #991B1B)',
-                          fontFamily: "'Roboto', sans-serif",
-                        }}
-                      >
-                        <Trash2 size={14} /> Xác nhận xóa
-                      </motion.button>
-                    </div>
-                  </div>
-                )}
-
-                {deleteStep === 2 && (
-                  <div className="py-3 text-center text-sm font-bold" style={{ color: '#DC2626' }}>
-                    ⏳ Đang xóa dữ liệu…
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {deleteStep === 2 && (
+              <div className="py-3 text-center text-xs font-bold rounded-xl"
+                style={{ background: darkMode ? '#1a0a0a' : '#FFF5F5', color: '#DC2626' }}>
+                ⏳ Đang xóa dữ liệu…
+              </div>
+            )}
           </div>
         )}
 
