@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, lazy } from 'react';
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -394,6 +394,7 @@ export default function App() {
 
       {/* ── Tab Content ── */}
       <div className="flex-1 overflow-hidden relative">
+        <Suspense fallback={<div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', color: darkMode ? '#c0c0c0' : '#3d3d3d', fontSize:14 }}>Đang tải...</div>}>
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={activeTab} custom={direction} variants={tabVariants}
@@ -420,9 +421,7 @@ export default function App() {
                   setIsFormOpen(true);
                 } : undefined}
                 onShowTree={(m) => {
-                  // Chuyển sang tab Tree và highlight thành viên đó
                   handleTabChange('tree');
-                  // Delay nhỏ để tab animation xong rồi mới mở detail
                   setTimeout(() => setViewingMember(m), 350);
                 }}
                 darkMode={darkMode}
@@ -445,12 +444,14 @@ export default function App() {
             )}
           </motion.div>
         </AnimatePresence>
+        </Suspense>
       </div>
 
       {/* ── Bottom Nav ── */}
       <BottomNav active={activeTab} onChange={handleTabChange} darkMode={darkMode} />
 
       {/* ── Bottom Sheets ── */}
+      <Suspense fallback={null}>
       <BottomSheet isOpen={!!viewingMember} onClose={() => setViewingMember(null)} height="90vh">
         {viewingMember && (
           <MemberBottomSheet
@@ -498,6 +499,7 @@ export default function App() {
           darkMode={darkMode}
         />
       )}
+      </Suspense>
 
       <PWAInstallPrompt />
     </div>
