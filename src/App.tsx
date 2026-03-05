@@ -15,7 +15,6 @@ import MemorialPage from './components/MemorialPage';
 import GraveMap from './components/GraveMap';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import NotificationBanner from './components/NotificationBanner';
-import Footer from './components/Footer';
 
 import TreeTab from './tabs/TreeTab';
 import DirectoryTab from './tabs/DirectoryTab';
@@ -448,8 +447,22 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* ── Footer ── */}
-      <Footer darkMode={darkMode} />
+      {/* ── Footer inline ── */}
+      <div style={{
+        padding: '10px 16px', textAlign: 'center',
+        background: darkMode ? '#1d1f21' : '#ffffff',
+        borderTop: `1px solid ${darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+        fontSize: 12,
+        fontFamily: "'Roboto', sans-serif",
+        flexShrink: 0,
+      }}>
+        <div style={{ color: darkMode ? '#CC0000' : '#CC0000', fontWeight: 700 }}>
+          Gia Phả Dòng Họ Lê © {new Date().getFullYear()}
+        </div>
+        <div style={{ color: darkMode ? '#aaaaaa' : '#555555', fontSize: 11, marginTop: 2 }}>
+          Truyền thống · Đoàn kết · Phát triển
+        </div>
+      </div>
 
       {/* ── Bottom Nav ── */}
       <BottomNav active={activeTab} onChange={handleTabChange} darkMode={darkMode} />
